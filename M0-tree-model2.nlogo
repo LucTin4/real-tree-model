@@ -5,13 +5,13 @@ globals [
 patches-own [
 
   tree-influence
-  crops
+  under-tree
 
 ]
 turtles-own []
 breed [trees tree]
 breed [fields field]
-trees-own []
+trees-own [crops-1 crops-2]
 fields-own [my-patches]
 
 to setup
@@ -20,13 +20,14 @@ to setup
   set gtree-influence 30
   ask patches [
    set  tree-influence FALSE
-   set crops FALSE
+   set under-tree FALSE
   ]
 
 
   parcels-generator
   trees-generator
-
+  crops-assignment ; a faire
+  trees-range
 
 end
 
@@ -109,6 +110,17 @@ end
 
 to crops-assignment
   ; trouver un meilleur moyen d'assigner les cultures aux parcelles
+end
+
+to trees-range
+
+    ask trees [
+
+    set crops-1 patches in-radius 2 with [pcolor = yellow]
+    set crops-2 patches in-radius 1 with [pcolor = 36]
+    ask crops-1 [set pcolor orange]
+    ask crops-2 [set pcolor orange]]
+
 end
 
 
