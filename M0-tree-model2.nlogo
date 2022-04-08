@@ -6,13 +6,14 @@ globals [
   ;; Mes variables globale dans les moniteur ou graph
   total-mil-area        ; en m2
   total-groundnuts-area ; m2
+  total-under-tree-area ; m2
 ]
 patches-own [
 
   tree-influence
-  under-tree
+  under-tree ; TRUE/FALSE
   culture ; can be mil or groundnut
-
+  rendement ; rendement de patch (à calibrer plus tard)
 ]
 turtles-own []
 breed [trees tree]
@@ -26,18 +27,22 @@ fields-own [
 to setup
   ca
   set-default-shape trees "tree"
-  set gtree-influence 30
+  set gtree-influence 5
   set patch-area 10
+
   ask patches [
    set  tree-influence FALSE
    set under-tree FALSE
+   set rendement 10
   ]
 
 
   parcels-generator
   trees-generator
   crops-assignment
+  crop-tree-influence
   update-variables
+
 end
 
 
@@ -48,7 +53,7 @@ end
     create-trees 1[
       setxy random-xcor random-ycor ; avec une condition d'éloignement minimum entre les arbres (random mais avec une certaine régularité)
       set color green
-      set size 10
+      set size 4
       if [tree-influence] of patch-here = TRUE  [
         let pWithouT one-of patches with[ tree-influence = FALSE]
         ifelse not any? patches with[ tree-influence = FALSE][
@@ -127,9 +132,23 @@ to crops-assignment
 
 end
 
+to crop-tree-influence
+  ask trees [
+    ask patches with [culture = "mil"] in-radius 2 [
+      set under-tree TRUE
+      set rendement rendement + rendement * 0.5
+    ]
+    ask patches with [culture = "groundnuts"] in-radius 1 [
+      set under-tree TRUE
+      set rendement rendement + rendement * 0.1
+    ]
+  ]
+end
+
 to update-variables
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
+  set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
 end
 
 
@@ -187,8 +206,8 @@ SLIDER
 number-trees
 number-trees
 0
-30
-30.0
+1000
+217.0
 1
 1
 NIL
@@ -212,28 +231,13 @@ HORIZONTAL
 MONITOR
 126
 62
-204
+233
 99
 NIL
-count trees
+count trees / 100
 17
 1
 9
-
-SLIDER
-30
-190
-202
-223
-number-fields
-number-fields
-0
-5
-3.0
-1
-1
-NIL
-HORIZONTAL
 
 SLIDER
 30
@@ -244,7 +248,7 @@ parcels-size
 parcels-size
 0
 100
-43.0
+20.0
 1
 1
 NIL
@@ -255,11 +259,32 @@ MONITOR
 285
 127
 330
-NIL
-total-mil-area
-17
+%-mil
+(total-mil-area / (count patches * patch-area)) * 100
+1
 1
 11
+
+MONITOR
+35
+340
+180
+385
+%-under-tree
+(total-under-tree-area / (count patches * patch-area)) * 100
+2
+1
+11
+
+TEXTBOX
+645
+20
+795
+41
+1 patch = 10 m2\nEnv = 1 000 000 m2 = 100 ha
+9
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
