@@ -21,7 +21,9 @@ to setup
    set  tree-influence FALSE
   ]
 
+  parcels-generator
   trees-generator
+
 
 end
 
@@ -47,6 +49,37 @@ end
     ]
 
     set n n + 1
+  ]
+
+end
+
+to parcels-generator
+
+  set gfield-influence 30
+   while [count patches with [pcolor = black] != 0][ ; ici il faudrait changer la condition avec un stop "créer des fields jusqu'à ce que tous les patches est une couleur"
+    create-fields 1 [
+      setxy random-xcor random-ycor
+      set size 1
+      ifelse [pcolor] of patch-here != black [
+
+          let _pblack one-of patches with [pcolor = black]
+          ifelse not any? patches with [pcolor = black]
+           [
+            die
+          ][
+            move-to  _pblack
+            set my-patches patches in-radius gfield-influence with [pcolor = black]
+            ask my-patches [set pcolor [color] of myself
+        ]
+        ]; il faudrait le faire bouger avec plus de contrainte et ne pas pouvoir recouvrir d'autres parcelles
+
+        ][
+        set my-patches patches in-radius gfield-influence with [pcolor = black]
+        ask my-patches [set pcolor [color] of myself ]
+      ]
+
+    ]
+
   ]
 
 end
