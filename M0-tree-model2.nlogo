@@ -1,23 +1,33 @@
 globals [
   gtree-influence ; le radius de non recouvrement des arbres
   gfield-influence
+  patch-area
+
+  ;; Mes variables globale dans les moniteur ou graph
+  total-mil-area        ; en m2
+  total-groundnuts-area ; m2
 ]
 patches-own [
 
   tree-influence
   under-tree
+  culture ; can be mil or groundnut
 
 ]
 turtles-own []
 breed [trees tree]
 breed [fields field]
 trees-own [crops-1 crops-2]
-fields-own [my-patches]
+fields-own [
+  my-patches
+  field-area
+]
 
 to setup
   ca
   set-default-shape trees "tree"
   set gtree-influence 30
+  set patch-area 10
   ask patches [
    set  tree-influence FALSE
    set under-tree FALSE
@@ -26,9 +36,8 @@ to setup
 
   parcels-generator
   trees-generator
-  crops-assignment ; a faire
-  trees-range
-
+  crops-assignment
+  update-variables
 end
 
 
@@ -76,30 +85,17 @@ to parcels-generator
           ][
             move-to  _pblack
             set my-patches patches in-radius parcels-size with [pcolor = black]
-
-            let crops-proba random 10
-            ifelse crops-proba >= 6
-              [
-                ask my-patches [set pcolor 36]
-             ][
-                ask my-patches [set pcolor yellow]
-
-
-            ; ask my-patches [set pcolor [color] of myself
+            ask my-patches [set pcolor [color] of myself
 
         ]
         ]; il faudrait le faire bouger avec plus de contrainte et ne pas pouvoir recouvrir d'autres parcelles
 
         ][
         set my-patches patches in-radius parcels-size with [pcolor = black]
-            ; ask my-patches [set pcolor [color] of myself ]
-        let crops-proba random 10
-            ifelse crops-proba >= 6
-              [
-                ask my-patches [set pcolor 36]
-             ][
-                ask my-patches [set pcolor yellow] ; problème ici, probabilité et pas de pourcentage fixe
-      ]
+        ask my-patches [
+          set pcolor [color] of myself
+        ]
+        set field-area count my-patches * patch-area
 
     ]
 
@@ -110,17 +106,30 @@ end
 
 to crops-assignment
   ; trouver un meilleur moyen d'assigner les cultures aux parcelles
+  ; 60% des surfaces en mil
+;  foreach [1.1 2.2 2.6] [ x -> show (word x " -> " round x) ]
+  let fields-id [who] of fields
+  foreach fields-id [ x ->
+    let total-mil-aera count patches with[culture = "mil"] / count patches * 100
+    if total-mil-aera < mil-porcent  [
+     ask field x [
+       ask my-patches [
+          set culture "mil"
+          set pcolor yellow
+        ]
+      ]
+    ]
+  ]
+  ask patches with [culture != "mil"][
+    set pcolor 36
+    set culture "groundnuts"
+  ]
+
 end
 
-to trees-range
-
-    ask trees [
-
-    set crops-1 patches in-radius 2 with [pcolor = yellow]
-    set crops-2 patches in-radius 1 with [pcolor = 36]
-    ask crops-1 [set pcolor orange]
-    ask crops-2 [set pcolor orange]]
-
+to update-variables
+  set total-mil-area count patches with [culture = "mil"] * patch-area
+  set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
 end
 
 
@@ -194,7 +203,7 @@ mil-porcent
 mil-porcent
 0
 100
-55.0
+83.0
 1
 1
 %
@@ -240,6 +249,17 @@ parcels-size
 1
 NIL
 HORIZONTAL
+
+MONITOR
+30
+285
+127
+330
+NIL
+total-mil-area
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
