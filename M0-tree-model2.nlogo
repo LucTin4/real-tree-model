@@ -5,6 +5,7 @@ globals [
 patches-own [
 
   tree-influence
+  crops
 
 ]
 turtles-own []
@@ -19,13 +20,17 @@ to setup
   set gtree-influence 30
   ask patches [
    set  tree-influence FALSE
+   set crops FALSE
   ]
+
 
   parcels-generator
   trees-generator
 
 
 end
+
+
 
   to trees-generator
   let n 1
@@ -53,9 +58,10 @@ end
 
 end
 
+
+
 to parcels-generator
 
-  set gfield-influence 30
    while [count patches with [pcolor = black] != 0][ ; ici il faudrait changer la condition avec un stop "créer des fields jusqu'à ce que tous les patches est une couleur"
     create-fields 1 [
       setxy random-xcor random-ycor
@@ -68,27 +74,44 @@ to parcels-generator
             die
           ][
             move-to  _pblack
-            set my-patches patches in-radius gfield-influence with [pcolor = black]
-            ask my-patches [set pcolor [color] of myself
+            set my-patches patches in-radius parcels-size with [pcolor = black]
+
+            let crops-proba random 10
+            ifelse crops-proba >= 6
+              [
+                ask my-patches [set pcolor 36]
+             ][
+                ask my-patches [set pcolor yellow]
+
+
+            ; ask my-patches [set pcolor [color] of myself
+
         ]
         ]; il faudrait le faire bouger avec plus de contrainte et ne pas pouvoir recouvrir d'autres parcelles
 
         ][
-        set my-patches patches in-radius gfield-influence with [pcolor = black]
-        ask my-patches [set pcolor [color] of myself ]
+        set my-patches patches in-radius parcels-size with [pcolor = black]
+            ; ask my-patches [set pcolor [color] of myself ]
+        let crops-proba random 10
+            ifelse crops-proba >= 6
+              [
+                ask my-patches [set pcolor 36]
+             ][
+                ask my-patches [set pcolor yellow] ; problème ici, probabilité et pas de pourcentage fixe
       ]
 
     ]
 
-  ]
+  ]]
 
 end
 
 
-;    let ratio random 3
-;    ifelse ratio = 2
-;    [set pcolor yellow]
-;    [set pcolor 52]
+to crops-assignment
+  ; trouver un meilleur moyen d'assigner les cultures aux parcelles
+end
+
+
 
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -186,6 +209,21 @@ number-fields
 0
 5
 3.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+30
+240
+202
+273
+parcels-size
+parcels-size
+0
+100
+43.0
 1
 1
 NIL
