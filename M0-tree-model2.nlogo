@@ -1,10 +1,10 @@
 globals [
   gtree-influence ; le radius de non recouvrement des arbres
   gfield-influence
-  patch-area
+  patch-area; 10m * 10m = 100m2
 
   ;; Mes variables globale dans les moniteur ou graph
-  total-mil-area        ; en m2
+  total-mil-area        ; m2
   total-groundnuts-area ; m2
   total-under-tree-area ; m2
 ]
@@ -14,11 +14,24 @@ patches-own [
   under-tree ; TRUE/FALSE
   culture ; can be mil or groundnut
   rendement ; rendement de patch (à calibrer plus tard)
+
 ]
-turtles-own []
+
+
+breed [bergers berger]
+bergers-own [
+  troupeau-nourri
+  arbre-choisi
+]
+breed [villages village]
+
 breed [trees tree]
+trees-own [
+  crops-1 crops-2
+  proche-village
+]
+
 breed [fields field]
-trees-own [crops-1 crops-2]
 fields-own [
   my-patches
   field-area
@@ -27,7 +40,8 @@ fields-own [
 to setup
   ca
   set-default-shape trees "tree"
-  set gtree-influence 5
+  set-default-shape villages "house"
+  set gtree-influence 2
   set patch-area 10
 
   ask patches [
@@ -39,9 +53,13 @@ to setup
 
   parcels-generator
   trees-generator
-  crops-assignment
+  crops-assignment ; chaque parcelle se voit assigner un type de culture, pour l'instant pris seulement entre mil et arachide
   crop-tree-influence
+  villages-generator
+  bergers-generator
   update-variables
+
+  reset-ticks
 
 end
 
@@ -54,6 +72,7 @@ end
       setxy random-xcor random-ycor ; avec une condition d'éloignement minimum entre les arbres (random mais avec une certaine régularité)
       set color green
       set size 4
+      set proche-village FALSE
       if [tree-influence] of patch-here = TRUE  [
         let pWithouT one-of patches with[ tree-influence = FALSE]
         ifelse not any? patches with[ tree-influence = FALSE][
@@ -145,14 +164,67 @@ to crop-tree-influence
   ]
 end
 
+to villages-generator
+  create-villages nombre-villages
+    [
+     set size 10
+     set color red
+;     setxy random-xcor random-ycor
+    setxy 0 0
+     ask trees in-radius 20 [set proche-village TRUE]
+    ]
+end
+
+to bergers-generator
+  create-bergers nombre-bergers ; essayer de faire varier le nombre de bergers dans le temps
+  [
+    set color blue
+    set size 3
+    move-to one-of villages
+    set troupeau-nourri FALSE
+    set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE]
+  ]
+end
+
+
 to update-variables
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
   set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
 end
 
+to go
+  bergers-move
+  berger-coupe-arbre
+  tick
+end
+
+to bergers-move
+  ask bergers [
+    ifelse troupeau-nourri = FALSE [
+      forward 1
+      rt random 45
+;     face one-of tree with [proche-village = FALSE]
+      face arbre-choisi]
+    [
+      forward 1
+      rt random 45
+      face one-of villages
+      ]
+    ]
 
 
+end
+
+to berger-coupe-arbre
+ ask bergers [
+    if any? trees-here with [proche-village = FALSE]
+    [
+      ask trees-here [set color pink]
+      set troupeau-nourri TRUE
+    ]
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -168,8 +240,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -100
 100
@@ -182,10 +254,10 @@ ticks
 30.0
 
 BUTTON
-39
-39
-119
-72
+20
+20
+100
+53
 Set Up
 setup
 NIL
@@ -206,8 +278,8 @@ SLIDER
 number-trees
 number-trees
 0
-1000
-217.0
+4000
+561.0
 1
 1
 NIL
@@ -222,18 +294,18 @@ mil-porcent
 mil-porcent
 0
 100
-83.0
+35.0
 1
 1
 %
 HORIZONTAL
 
 MONITOR
-126
-62
-233
-99
-NIL
+125
+65
+205
+102
+arbres/ha
 count trees / 100
 17
 1
@@ -248,7 +320,7 @@ parcels-size
 parcels-size
 0
 100
-20.0
+50.0
 1
 1
 NIL
@@ -284,6 +356,53 @@ TEXTBOX
 1 patch = 10 m2\nEnv = 1 000 000 m2 = 100 ha
 9
 0.0
+1
+
+SLIDER
+30
+180
+202
+213
+nombre-villages
+nombre-villages
+1
+3
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+645
+100
+817
+133
+nombre-bergers
+nombre-bergers
+0
+100
+10.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+120
+20
+183
+53
+GO
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
 @#$#@#$#@
