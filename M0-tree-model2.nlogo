@@ -169,8 +169,7 @@ to villages-generator
     [
      set size 10
      set color red
-;     setxy random-xcor random-ycor
-    setxy 0 0
+     setxy random-xcor random-ycor
      ask trees in-radius 20 [set proche-village TRUE]
     ]
 end
@@ -212,6 +211,13 @@ to bergers-move
       face one-of villages
       ]
     ]
+
+ask bergers[
+  if any? villages-here
+    [set troupeau-nourri FALSE
+     set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE and color = green]]
+  ] ; bug pourquoi certains bergers s'arrêtent?
+
 
 
 end
@@ -294,7 +300,7 @@ mil-porcent
 mil-porcent
 0
 100
-35.0
+70.0
 1
 1
 %
