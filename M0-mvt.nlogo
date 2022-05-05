@@ -20,7 +20,9 @@ end
 to go
   ask turtles [
     moveOnMap
+    outMap
   ]
+  if count turtles = 0 [stop]
   tick
 end
 
@@ -32,18 +34,9 @@ to moveOnMap
 
 end
 
-to-report randomAngleTriangular [
-  #maxAngle  ;(number) angle in degrees
-  ]
-  let _maxAngle abs #maxAngle
-  if (_maxAngle > 180) [
-    set _maxAngle 180
-  ]
-  report (2 * randomStandardTriangular - 1) * _maxAngle
-end
-
-to-report randomStandardTriangular
-  report (random-float 1 + (1 - random-float 1)) / 2
+to outMap
+  let _nbVoisin count [neighbors] of patch-here
+  if _nbVoisin < 8 [die]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -106,6 +99,35 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+47
+131
+141
+176
+NIL
+count turtles
+0
+1
+11
+
+PLOT
+8
+207
+208
+357
+nb turtles
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
