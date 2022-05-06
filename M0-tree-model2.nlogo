@@ -9,13 +9,21 @@ globals [
   total-under-tree-area ; m2
   day-of-year ; de 1 à 365 jours
   year
+
+  stock-mil-g
+  stock-mil-p
+  stock-groundnuts-g
+  stock-groundnuts-p
 ]
 patches-own [
 
   tree-influence
   under-tree ; TRUE/FALSE
   culture ; can be mil or groundnut
-  rendement ; rendement de patch (à calibrer plus tard)
+  rendement-mil-g ; rendement de patch (à calibrer plus tard)
+  rendement-mil-p
+  rendement-groundnuts-g
+  rendement-groundnuts-p
   id-parcelle
   pas-rotation
   rotation
@@ -55,7 +63,10 @@ to setup
   ask patches [
    set  tree-influence FALSE
    set under-tree FALSE
-   set rendement 10
+   set rendement-mil-g 0
+   set rendement-mil-p 0
+   set rendement-groundnuts-g 0
+   set rendement-groundnuts-p 0
    set pas-rotation 0
    set rotation FALSE
 
@@ -167,11 +178,9 @@ to crop-tree-influence
   ask trees [
     ask patches with [culture = "mil"] in-radius 2 [
       set under-tree TRUE
-      set rendement rendement + rendement * 0.5
     ]
     ask patches with [culture = "groundnuts"] in-radius 1 [
       set under-tree TRUE
-      set rendement rendement + rendement * 0.1
     ]
   ]
 end
@@ -208,39 +217,41 @@ to go
 
   set day-of-year day-of-year + 1
 
-  if day-of-year = 1 [rotation-cultures]
+  if day-of-year = 1 [
+    récolte
+    rotation-cultures
+    ]
 
   if day-of-year < 92
   []
 if day-of-year >= 92
   [bergers-move
    berger-coupe-arbre]
+
   modeDeSurveillance
+
   update-time
+  update-variables
 
   tick
 end
 
-to rotation-cultures
+to rotation-cultures ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
-  print _myIdParcelle
   foreach _myIdParcelle [ x ->
     ask patches with [id-parcelle = x][
       if culture = "groundnuts" [
         set culture "mil"
         set pcolor yellow
         set rotation TRUE
-
       ]
     ]
   ]
 
   foreach _myIdParcelle [ x ->
     let _total-groundnuts-area (count patches with [culture = "groundnuts"] / count patches) * 100
-    show  _total-groundnuts-area
-      show word "ticks " ticks
     if _total-groundnuts-area < (100 - mil-porcent) [
     ask patches with [id-parcelle = x and rotation = FALSE][
         set culture "groundnuts"
@@ -257,6 +268,46 @@ to rotation-cultures
   ask patches [set rotation FALSE]
 
 end
+
+to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide = 31% Vayssière et al)
+
+  ask patches [ ;reset rendement
+    set rendement-mil-g 0
+    set rendement-mil-p 0
+    set rendement-groundnuts-g 0
+    set rendement-groundnuts-p 0
+  ]
+
+  ask patches [ifelse culture = "mil"[
+    set rendement-mil-g 0.0626
+    set rendement-mil-p 0.1823][
+    set rendement-groundnuts-g 0.0371
+    set rendement-groundnuts-p 0.1171]
+  ]
+
+  ask patches with [under-tree = TRUE][ifelse culture = "mil"[
+    set rendement-mil-g rendement-mil-g * 1.36
+    set rendement-mil-p rendement-mil-p * 1.4][; la valeur est arbitraire ici (à calibrer)
+    set rendement-groundnuts-g rendement-groundnuts-g * 1 ; inutile car effet du F.A pas prouvé
+    set rendement-groundnuts-p rendement-groundnuts-p * 1.5]
+  ]
+
+  ask patches with [pas-rotation > 0][ ; baisse de productivité si pas de rotation - valeurs arbitraires + est-ce utilise pour le modèle
+   set rendement-mil-g rendement-mil-g * 0.8
+   set rendement-mil-p rendement-mil-p * 0.8]
+
+  set stock-mil-g sum [rendement-mil-g] of patches
+  set stock-mil-p sum [rendement-mil-p] of patches
+  set stock-groundnuts-g sum [rendement-groundnuts-g] of patches
+  set stock-groundnuts-p sum [rendement-groundnuts-p] of patches
+
+
+
+
+
+
+end
+
 
 to bergers-move
   ask bergers [
@@ -400,7 +451,7 @@ parcels-size
 parcels-size
 0
 100
-59.0
+20.0
 1
 1
 NIL
@@ -522,6 +573,46 @@ surveillance
 surveillance
 "populaire" "agents de quartier" "agents des eaux et forets"
 0
+
+PLOT
+670
+265
+870
+415
+Volume de mil
+year
+Vol-mil
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot stock-mil-g"
+
+MONITOR
+940
+175
+1022
+220
+NIL
+stock-mil-g
+0
+1
+11
+
+MONITOR
+940
+230
+1077
+275
+NIL
+stock-groundnuts-g
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
