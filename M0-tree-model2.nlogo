@@ -14,6 +14,9 @@ globals [
   stock-mil-p
   stock-groundnuts-g
   stock-groundnuts-p
+  stock-fourrage-moyen
+
+  conso-tête
 ]
 patches-own [
 
@@ -35,6 +38,9 @@ breed [bergers berger]
 bergers-own [
   troupeau-nourri
   arbre-choisi
+  nb-têtes
+  nb-ha
+  stock-fourrage
 ]
 breed [villages village]
 
@@ -57,8 +63,13 @@ to setup
   set-default-shape trees "tree"
   set-default-shape villages "house"
   set-default-shape bergers "person"
+
+  ; globals
   set gtree-influence 2
   set patch-area 10
+  set conso-tête 0.5
+
+
 
   ask patches [
    set  tree-influence FALSE
@@ -67,7 +78,6 @@ to setup
    set rotation FALSE
 
   ]
-
 
   parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
   trees-generator
@@ -89,7 +99,7 @@ end
     create-trees 1[
       setxy random-xcor random-ycor ; avec une condition d'éloignement minimum entre les arbres (random mais avec une certaine régularité)
       set color green
-      set size 4
+      set size 3
       set proche-village FALSE
       if [tree-influence] of patch-here = TRUE  [
         let pWithouT one-of patches with[ tree-influence = FALSE]
@@ -184,7 +194,7 @@ end
 to villages-generator
   create-villages nombre-villages
     [
-     set size 10
+     set size 7
      set color red
      setxy random-xcor random-ycor
      ask trees in-radius 20 [set proche-village TRUE]
@@ -199,6 +209,8 @@ to bergers-generator
     move-to one-of villages
     set troupeau-nourri FALSE
     set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE]
+    set nb-têtes (random 30) + 15
+    set nb-ha (random 3) + 2
   ]
 end
 
@@ -207,11 +219,12 @@ to update-variables
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
   set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
+  set stock-fourrage-moyen mean [stock-fourrage] of bergers
 end
 
 to go
 
-; calendrier: février 32, mars 60, avril 92, mai 123, juin 155, juillet 186, août 218, septembre 249, octobre 279, novembre 310, décembre 339 (5j de trop)
+; calendrier: juillet 1, aout 32, sept 60, oct 92, nov 123, déc 155, jan 186, fév 218, mars 249, avril 279, mai 310, juin 339 (5j de trop)
 
   set day-of-year day-of-year + 1
 
@@ -221,19 +234,22 @@ to go
 ;   récolte
     ]
 
-  if day-of-year < 92
+  if day-of-year < 92 ; HIVERNAGE
   []
-if day-of-year >= 92
-;  [bergers-move
-  [if (day-of-year > 123) and (day-of-year < 218) [berger-coupe]]
+  if day-of-year >= 92 []; SAISON SECHE
+  if day-of-year > 218 [
+    nourrir-troupeau
+    berger-coupe] ; peut-être porter la condition plutôt sur les stocks
 
   modeDeSurveillance
 
   update-time
   update-variables
 
+
   tick
 end
+
 
 to rotation-cultures ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière
 
@@ -278,10 +294,10 @@ to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide
   ]
 
   ask patches [ifelse culture = "mil"[
-    set rendement-mil-g 0.0626
-    set rendement-mil-p 0.1823][
-    set rendement-groundnuts-g 0.0371
-    set rendement-groundnuts-p 0.1171]
+    set rendement-mil-g 6.26
+    set rendement-mil-p 18.23][
+    set rendement-groundnuts-g 3.71
+    set rendement-groundnuts-p 11.71]
   ]
 
   ask patches with [under-tree = TRUE][ifelse culture = "mil"[
@@ -300,6 +316,10 @@ to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide
   set stock-groundnuts-g sum [rendement-groundnuts-g] of patches
   set stock-groundnuts-p sum [rendement-groundnuts-p] of patches
 
+  ask bergers [set stock-fourrage (stock-mil-p / 100) * nb-ha]
+
+
+
 
 
 
@@ -307,61 +327,46 @@ to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide
 
 end
 
-to berger-coupe
+to nourrir-troupeau
+  if day-of-year > 218 [; herbe vient à manquer en fév
   ask bergers [
+     ifelse stock-fourrage - 1.2 * nb-têtes > 0 [
+     set stock-fourrage stock-fourrage - conso-tête * nb-têtes ;dépend nb têtes?
+        set stock-mil-p stock-mil-p - conso-tête * nb-têtes
+      ][
+        set stock-fourrage 0
+       ]
+    ]
+  ]
+
+  ; set troupeau-nourri TRUE
+
+end
+
+;to transhumance
+;  ask bergers [
+;    if (stock-fourrage <= 0) and (nb-têtes > 25)[
+;      ht
+;
+;  ] end
+
+
+to berger-coupe ; à améliorer en la liant au stock de paille d'arachide.
+  ask bergers [
+    if stock-fourrage < 1000 [
     move-to one-of trees with [proche-village = FALSE]
     ask trees-here [
-      set size 0.8
+      set size 1
       ask patches with [culture = "mil"] in-radius 2 [
           set under-tree FALSE]
       ask patches with [culture = "groundnuts"] in-radius 1 [
           set under-tree FALSE]
     ]
+    ]
   ]
   ; potentiellement utiliser home pour les faire revenir au village
 end
 
-
-;to bergers-move
-;  ask bergers [
-;    ifelse troupeau-nourri = FALSE [
-;      forward 1
-;      rt random 45
-;;     face one-of tree with [proche-village = FALSE]
-;      face arbre-choisi]
-;    [
-;      forward 1
-;      rt random 45
-;      face one-of villages
-;    ]
-;    ]
-;
-;ask bergers[
-;  if any? villages-here
-;    [set troupeau-nourri FALSE
-;     set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE and color = green]]
-;    ;bug pourquoi certains bergers s'arrêtent? (problème: la conduite du troupeau ne se fait surement pas selon les arbres mais plutôt selon les points d'eau.)
-;
-;  ]
-;
-;end
-;
-;to berger-coupe
-;  ask bergers with [troupeau-nourri = FALSE] [
-;    if any? trees-here with [proche-village = FALSE]
-;    [
-;      ask trees-here [
-;        set color pink
-;        ask patches with [culture = "mil"] in-radius 2 [
-;          set under-tree FALSE]
-;        ask patches with [culture = "groundnuts"] in-radius 1 [
-;          set under-tree FALSE]
-;      ]
-;      set troupeau-nourri TRUE
-;    ]
-;  ]
-;
-;end
 
 to modeDeSurveillance
   if surveillance = "agents de quartier"[]
@@ -378,8 +383,8 @@ end
 GRAPHICS-WINDOW
 210
 10
-622
-423
+618
+419
 -1
 -1
 4.0
@@ -393,9 +398,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-100
+99
 0
-100
+99
 0
 0
 1
@@ -531,7 +536,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-11.0
+18.0
 1
 1
 NIL
@@ -608,7 +613,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot stock-mil-g"
+"default" 1.0 0 -16777216 true "" "plot stock-mil-p"
 
 MONITOR
 940
@@ -651,6 +656,17 @@ MONITOR
 NIL
 total-mil-area
 17
+1
+11
+
+MONITOR
+950
+345
+1107
+390
+NIL
+stock-fourrage-moyen
+1
 1
 11
 
