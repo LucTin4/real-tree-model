@@ -63,10 +63,6 @@ to setup
   ask patches [
    set  tree-influence FALSE
    set under-tree FALSE
-   set rendement-mil-g 0
-   set rendement-mil-p 0
-   set rendement-groundnuts-g 0
-   set rendement-groundnuts-p 0
    set pas-rotation 0
    set rotation FALSE
 
@@ -215,18 +211,21 @@ end
 
 to go
 
+; calendrier: février 32, mars 60, avril 92, mai 123, juin 155, juillet 186, août 218, septembre 249, octobre 279, novembre 310, décembre 339 (5j de trop)
+
   set day-of-year day-of-year + 1
 
   if day-of-year = 1 [
     récolte
     rotation-cultures
+;   récolte
     ]
 
   if day-of-year < 92
   []
 if day-of-year >= 92
-  [bergers-move
-   berger-coupe-arbre]
+;  [bergers-move
+  [if (day-of-year > 123) and (day-of-year < 218) [berger-coupe]]
 
   modeDeSurveillance
 
@@ -308,47 +307,66 @@ to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide
 
 end
 
-
-to bergers-move
+to berger-coupe
   ask bergers [
-    ifelse troupeau-nourri = FALSE [
-      forward 1
-      rt random 45
-;     face one-of tree with [proche-village = FALSE]
-      face arbre-choisi]
-    [
-      forward 1
-      rt random 45
-      face one-of villages
-    ]
-    ]
-
-ask bergers[
-  if any? villages-here
-    [set troupeau-nourri FALSE
-     set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE and color = green]]
-    ;bug pourquoi certains bergers s'arrêtent? (problème: la conduite du troupeau ne se fait surement pas selon les arbres mais plutôt selon les points d'eau.)
-
-  ]
-
-end
-
-to berger-coupe-arbre ; réflechir à une proportion de coupe plutôt (ici arbre coupé/non-coupé trop simplificateur)
- ask bergers [
-    if any? trees-here with [proche-village = FALSE]
-    [
-      ask trees-here [set color pink]
-      set troupeau-nourri TRUE
-      ; quels effets a ce changement d'état de l'arbre? possible diminution du rayon d'influence des cultures
+    move-to one-of trees with [proche-village = FALSE]
+    ask trees-here [
+      set size 0.8
+      ask patches with [culture = "mil"] in-radius 2 [
+          set under-tree FALSE]
+      ask patches with [culture = "groundnuts"] in-radius 1 [
+          set under-tree FALSE]
     ]
   ]
+  ; potentiellement utiliser home pour les faire revenir au village
 end
+
+
+;to bergers-move
+;  ask bergers [
+;    ifelse troupeau-nourri = FALSE [
+;      forward 1
+;      rt random 45
+;;     face one-of tree with [proche-village = FALSE]
+;      face arbre-choisi]
+;    [
+;      forward 1
+;      rt random 45
+;      face one-of villages
+;    ]
+;    ]
+;
+;ask bergers[
+;  if any? villages-here
+;    [set troupeau-nourri FALSE
+;     set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE and color = green]]
+;    ;bug pourquoi certains bergers s'arrêtent? (problème: la conduite du troupeau ne se fait surement pas selon les arbres mais plutôt selon les points d'eau.)
+;
+;  ]
+;
+;end
+;
+;to berger-coupe
+;  ask bergers with [troupeau-nourri = FALSE] [
+;    if any? trees-here with [proche-village = FALSE]
+;    [
+;      ask trees-here [
+;        set color pink
+;        ask patches with [culture = "mil"] in-radius 2 [
+;          set under-tree FALSE]
+;        ask patches with [culture = "groundnuts"] in-radius 1 [
+;          set under-tree FALSE]
+;      ]
+;      set troupeau-nourri TRUE
+;    ]
+;  ]
+;
+;end
 
 to modeDeSurveillance
-  if surveillance = "agents de quartier"[
-
-  ]
+  if surveillance = "agents de quartier"[]
 end
+
 
 to update-time
   if day-of-year > 364 [
@@ -360,11 +378,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-620
-421
+622
+423
 -1
 -1
-2.0
+4.0
 1
 10
 1
@@ -374,9 +392,9 @@ GRAPHICS-WINDOW
 0
 0
 1
--100
+0
 100
--100
+0
 100
 0
 0
@@ -410,7 +428,7 @@ number-trees
 number-trees
 0
 4000
-561.0
+662.0
 1
 1
 NIL
@@ -611,6 +629,28 @@ MONITOR
 NIL
 stock-groundnuts-g
 0
+1
+11
+
+MONITOR
+945
+285
+1027
+330
+NIL
+stock-mil-p
+0
+1
+11
+
+MONITOR
+950
+120
+1047
+165
+NIL
+total-mil-area
+17
 1
 11
 
