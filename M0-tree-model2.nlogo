@@ -204,7 +204,6 @@ end
 to bergers-generator
   create-bergers nombre-bergers ; essayer de faire varier le nombre de bergers dans le temps (selon départ en transhumance)
   [
-    set color blue
     set size 3
     move-to one-of villages
     set troupeau-nourri FALSE
@@ -245,6 +244,7 @@ to go
 
   update-time
   update-variables
+  update-graph
 
 
   tick
@@ -377,6 +377,23 @@ to update-time
   if day-of-year > 364 [
     set day-of-year 0
     set year year + 1]
+
+end
+
+to update-graph
+  if day-of-year = 1 [
+    set-current-plot "Volume de mil"
+  set-current-plot-pen "pen-0"
+;  set-plot-x-range 0 17
+;  set-plot-y-range 0 25
+  plotxy year stock-mil-p
+  ]
+
+  set-current-plot "paille-berger"
+  ask bergers [
+    set-plot-pen-color color
+    plotxy ticks stock-fourrage
+  ]
 
 end
 @#$#@#$#@
@@ -536,7 +553,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-18.0
+10.0
 1
 1
 NIL
@@ -613,7 +630,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot stock-mil-p"
+"pen-0" 1.0 0 -5298144 true "" ""
 
 MONITOR
 940
@@ -669,6 +686,24 @@ stock-fourrage-moyen
 1
 1
 11
+
+PLOT
+1070
+20
+1270
+170
+paille-berger
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 2 -16777216 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
