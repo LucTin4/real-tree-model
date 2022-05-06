@@ -3,10 +3,12 @@ globals [
   gfield-influence
   patch-area; 10m * 10m = 100m2
 
-  ;; Mes variables globale dans les moniteur ou graph
+  ; Mes variables globale dans les moniteur ou graph
   total-mil-area        ; m2
   total-groundnuts-area ; m2
   total-under-tree-area ; m2
+  day-of-year ; de 1 à 365 jours
+  year
 ]
 patches-own [
 
@@ -14,6 +16,9 @@ patches-own [
   under-tree ; TRUE/FALSE
   culture ; can be mil or groundnut
   rendement ; rendement de patch (à calibrer plus tard)
+  id-parcelle
+  pas-rotation
+  rotation
 
 ]
 
@@ -39,8 +44,11 @@ fields-own [
 
 to setup
   ca
+  set year 0
+  set day-of-year 0
   set-default-shape trees "tree"
   set-default-shape villages "house"
+  set-default-shape bergers "person"
   set gtree-influence 2
   set patch-area 10
 
@@ -48,10 +56,13 @@ to setup
    set  tree-influence FALSE
    set under-tree FALSE
    set rendement 10
+   set pas-rotation 0
+   set rotation FALSE
+
   ]
 
 
-  parcels-generator
+  parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
   trees-generator
   crops-assignment ; chaque parcelle se voit assigner un type de culture, pour l'instant pris seulement entre mil et arachide
   crop-tree-influence
@@ -106,24 +117,25 @@ to parcels-generator
           ifelse not any? patches with [pcolor = black]
            [
             die
-          ][
+           ][
             move-to  _pblack
             set my-patches patches in-radius parcels-size with [pcolor = black]
-            ask my-patches [set pcolor [color] of myself
-
-        ]
-        ]; il faudrait le faire bouger avec plus de contrainte et ne pas pouvoir recouvrir d'autres parcelles
-
+            ask my-patches [
+              set pcolor [color] of myself
+              set id-parcelle [who] of myself
+            ]
+           ] ; ne peut se générer car patch appartenant déjà à une parcelle donc meurt ou se déplace
         ][
         set my-patches patches in-radius parcels-size with [pcolor = black]
         ask my-patches [
           set pcolor [color] of myself
+          set id-parcelle [who] of myself
         ]
         set field-area count my-patches * patch-area
 
-    ]
+    ] ; peut se générer directement car patch n'appartient pas encore à une parcelle
 
-  ]]
+  ]] ; problème de recouvrement des parcelles déjà générées, qui rend impossible le contrôle des surfaces de parcelles
 
 end
 
@@ -175,7 +187,7 @@ to villages-generator
 end
 
 to bergers-generator
-  create-bergers nombre-bergers ; essayer de faire varier le nombre de bergers dans le temps
+  create-bergers nombre-bergers ; essayer de faire varier le nombre de bergers dans le temps (selon départ en transhumance)
   [
     set color blue
     set size 3
@@ -193,9 +205,57 @@ to update-variables
 end
 
 to go
-  bergers-move
-  berger-coupe-arbre
+
+  set day-of-year day-of-year + 1
+
+  if day-of-year = 1 [rotation-cultures]
+
+  if day-of-year < 92
+  []
+if day-of-year >= 92
+  [bergers-move
+   berger-coupe-arbre]
+  modeDeSurveillance
+  update-time
+
   tick
+end
+
+to rotation-cultures
+
+  let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
+  set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
+  print _myIdParcelle
+  foreach _myIdParcelle [ x ->
+    ask patches with [id-parcelle = x][
+      if culture = "groundnuts" [
+        set culture "mil"
+        set pcolor yellow
+        set rotation TRUE
+
+      ]
+    ]
+  ]
+
+  foreach _myIdParcelle [ x ->
+    let _total-groundnuts-area (count patches with [culture = "groundnuts"] / count patches) * 100
+    show  _total-groundnuts-area
+      show word "ticks " ticks
+    if _total-groundnuts-area < (100 - mil-porcent) [
+    ask patches with [id-parcelle = x and rotation = FALSE][
+        set culture "groundnuts"
+        set pcolor brown
+        set rotation TRUE
+
+      ]
+    ]
+  ]
+  ask patches with [rotation = FALSE][
+    set pas-rotation pas-rotation + 1
+  ]
+
+  ask patches [set rotation FALSE]
+
 end
 
 to bergers-move
@@ -209,27 +269,41 @@ to bergers-move
       forward 1
       rt random 45
       face one-of villages
-      ]
+    ]
     ]
 
 ask bergers[
   if any? villages-here
     [set troupeau-nourri FALSE
      set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE and color = green]]
-  ] ; bug pourquoi certains bergers s'arrêtent?
+    ;bug pourquoi certains bergers s'arrêtent? (problème: la conduite du troupeau ne se fait surement pas selon les arbres mais plutôt selon les points d'eau.)
 
-
+  ]
 
 end
 
-to berger-coupe-arbre
+to berger-coupe-arbre ; réflechir à une proportion de coupe plutôt (ici arbre coupé/non-coupé trop simplificateur)
  ask bergers [
     if any? trees-here with [proche-village = FALSE]
     [
       ask trees-here [set color pink]
       set troupeau-nourri TRUE
+      ; quels effets a ce changement d'état de l'arbre? possible diminution du rayon d'influence des cultures
     ]
   ]
+end
+
+to modeDeSurveillance
+  if surveillance = "agents de quartier"[
+
+  ]
+end
+
+to update-time
+  if day-of-year > 364 [
+    set day-of-year 0
+    set year year + 1]
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -293,14 +367,14 @@ HORIZONTAL
 
 SLIDER
 30
-140
+175
 207
-173
+208
 mil-porcent
 mil-porcent
 0
 100
-70.0
+69.0
 1
 1
 %
@@ -308,9 +382,9 @@ HORIZONTAL
 
 MONITOR
 125
-65
+135
 205
-102
+172
 arbres/ha
 count trees / 100
 17
@@ -319,24 +393,24 @@ count trees / 100
 
 SLIDER
 30
-240
+295
 202
-273
+328
 parcels-size
 parcels-size
 0
 100
-50.0
+59.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-30
-285
-127
-330
+650
+60
+747
+105
 %-mil
 (total-mil-area / (count patches * patch-area)) * 100
 1
@@ -344,10 +418,10 @@ MONITOR
 11
 
 MONITOR
-35
-340
-180
-385
+650
+115
+795
+160
 %-under-tree
 (total-under-tree-area / (count patches * patch-area)) * 100
 2
@@ -366,9 +440,9 @@ TEXTBOX
 
 SLIDER
 30
-180
+215
 202
-213
+248
 nombre-villages
 nombre-villages
 1
@@ -380,15 +454,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-645
-100
-817
-133
+30
+255
+202
+288
 nombre-bergers
 nombre-bergers
 0
 100
-10.0
+11.0
 1
 1
 NIL
@@ -410,6 +484,44 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+660
+200
+785
+245
+Date 
+(word day-of-year \" \" year)
+0
+1
+11
+
+BUTTON
+120
+70
+207
+103
+go once
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+CHOOSER
+35
+375
+195
+420
+surveillance
+surveillance
+"populaire" "agents de quartier" "agents des eaux et forets"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
