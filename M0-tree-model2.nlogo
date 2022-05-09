@@ -4,6 +4,7 @@ globals [
   patch-area; 10m * 10m = 100m2
 
   conso-tête
+  gros-troupeau
 
   ; Mes variables globale dans les moniteur ou graph
   total-mil-area        ; m2
@@ -42,6 +43,7 @@ bergers-own [
   nb-têtes ; à calibrer (mais va être difficile
   nb-ha ; à calibrer
   stock-fourrage
+  transhumance
 ]
 breed [villages village]
 
@@ -69,7 +71,8 @@ to setup
   ; globals
   set gtree-influence 2
   set patch-area 10
-  set conso-tête 0.5
+  set conso-tête 1.0
+  set gros-troupeau 25
 
 
 
@@ -225,6 +228,7 @@ to bergers-generator
     set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE]
     set nb-têtes (random 30) + 15
     set nb-ha (random 3) + 2
+    set transhumance FALSE
   ]
 end
 
@@ -233,10 +237,12 @@ to update-variables
 
   ; A l'issue des rotations les surfaces de chaque culture changent - monitorer ces variations fines.
   ; Le stock de fourrage perso des bergers est aussi à suivi chaque go/jour
+
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
   set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
   set stock-fourrage-moyen mean [stock-fourrage] of bergers
+
 end
 
 to go
@@ -247,17 +253,16 @@ to go
   set day-of-year day-of-year + 1
 
   if day-of-year = 1 [
-    récolte
+    récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     rotation-cultures
-;   récolte
+    retour-bergers
     ]
 
   if day-of-year < 92 ; HIVERNAGE
   []
   if day-of-year >= 92 []; SAISON SECHE
   if day-of-year > 218 [
-    nourrir-troupeau
-    berger-coupe] ; peut-être porter la condition plutôt sur les stocks
+    nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
   modeDeSurveillance
 
@@ -267,6 +272,7 @@ to go
 
 
   tick
+
 end
 
 
@@ -336,39 +342,60 @@ to récolte
    set rendement-mil-g rendement-mil-g * 0.8
    set rendement-mil-p rendement-mil-p * 0.8]
 
-  set stock-mil-g (sum [rendement-mil-g] of patches)* (paille-laissée / 100) ; calibrer le pourcentage de paille laissée aux champs
+  set stock-mil-g (sum [rendement-mil-g] of patches) * (1 - (paille-laissée / 100)) ; calibrer le pourcentage de paille laissée aux champs
   set stock-mil-p sum [rendement-mil-p] of patches
   set stock-groundnuts-g sum [rendement-groundnuts-g] of patches
   set stock-groundnuts-p sum [rendement-groundnuts-p] of patches
 
-  ask bergers [set stock-fourrage ((stock-mil-p / 100) * nb-ha) / (paille-laissée / 100)] ; les bergers laissent-ils moins de paille que les autres?
-
-
-
-
-
-
-
+  ask bergers [set stock-fourrage ((stock-mil-p / 100) * nb-ha) * (1 - (paille-laissée / 100))] ; les bergers laissent-ils moins de paille que les autres?
 
 end
 
-to nourrir-troupeau
+to retour-bergers
+  ask bergers [
+    set transhumance FALSE
+  ]
+
+end
+
+to nourrir-paille
 
   ; Quand l'herbe vient à manquer (estimé en février), le berger commence à nourir son troupeau avec son stock de paille de mil
   ; la consommation quotidienne dépend du nombre de vache (tête) mais est-ce vraiment le cas? et combien consomme une vache/ un troupeau?
 
-  if day-of-year > 218 [
   ask bergers [
-     ifelse stock-fourrage - 1.2 * nb-têtes > 0 [ ;
+     ifelse stock-fourrage - conso-tête * nb-têtes > 0 [ ;
      set stock-fourrage stock-fourrage - conso-tête * nb-têtes
         set stock-mil-p stock-mil-p - conso-tête * nb-têtes
       ][
         set stock-fourrage 0
        ]
     ]
-  ]
+
 
 end
+
+to nourrir-troupeau
+
+  ; le troupeau est nourri avec les stocks de paille, une fois écoulé: soit départ en transhumance si gros troupeau (globale a calibrer), soit coupe d'arbre
+  ; problème: les bergers avec petits troupeaux coupent des arbres avant que les stocks soient entiérement finis.
+
+    nourrir-paille
+    ask bergers [
+      if stock-fourrage < 500 [
+        ifelse nb-têtes > gros-troupeau
+        [
+         move-to one-of villages
+         set transhumance TRUE
+        ][
+          berger-coupe
+        ]
+      ]
+    ]
+
+end
+
+
 
 ;to transhumance
 ;  ask bergers [
@@ -384,8 +411,8 @@ to berger-coupe
   ; Seulement un critère influence leur choix: la proximité au village, peut-être affiner les critères de choix (entretien avec Diouf)
   ; ici une grosse hypothèse a été faite: l'étêtage d'un arbre met un terme à son effet fertilisant (sûrement faux)
 
-  ask bergers [
-    if stock-fourrage < 1000 [ ; mesure un peu arbitraire, calibration plus fine?
+
+     ; mesure un peu arbitraire, calibration plus fine?
     move-to one-of trees with [proche-village = FALSE]
     ask trees-here [
       set size 1
@@ -393,9 +420,9 @@ to berger-coupe
           set under-tree FALSE]
       ask patches with [culture = "groundnuts"] in-radius 1 [
           set under-tree FALSE]
-    ]
-    ]
   ]
+
+
 
 end
 
@@ -748,11 +775,22 @@ paille-laissée
 paille-laissée
 0
 100
-50.0
+48.0
 1
 1
 %
 HORIZONTAL
+
+MONITOR
+840
+90
+917
+135
+bergers-là
+count bergers with [transhumance = FALSE]
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
