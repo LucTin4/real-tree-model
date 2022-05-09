@@ -3,6 +3,8 @@ globals [
   gfield-influence
   patch-area; 10m * 10m = 100m2
 
+  conso-tête
+
   ; Mes variables globale dans les moniteur ou graph
   total-mil-area        ; m2
   total-groundnuts-area ; m2
@@ -16,7 +18,6 @@ globals [
   stock-groundnuts-p
   stock-fourrage-moyen
 
-  conso-tête
 ]
 patches-own [
 
@@ -27,26 +28,25 @@ patches-own [
   rendement-mil-p
   rendement-groundnuts-g
   rendement-groundnuts-p
-  id-parcelle
-  pas-rotation
-  rotation
+  id-parcelle ; permet de conservé la structure des parcelles lors de la rotation
+  pas-rotation ; permet de suivre les parcelles qui n'ont pas rotatées ( système de +1)
+  rotation ; TRUE/FALSE qui exclue de la procédure les parcelles ayant déjà rotatées
 
 ]
 
 
 breed [bergers berger]
 bergers-own [
-  troupeau-nourri
+  troupeau-nourri ; pour l'instant TRUE/FALSE mais à détailler
   arbre-choisi
-  nb-têtes
-  nb-ha
+  nb-têtes ; à calibrer (mais va être difficile
+  nb-ha ; à calibrer
   stock-fourrage
 ]
 breed [villages village]
 
 breed [trees tree]
 trees-own [
-  crops-1 crops-2
   proche-village
 ]
 
@@ -56,10 +56,12 @@ fields-own [
   field-area
 ]
 
+
 to setup
   ca
   set year 0
   set day-of-year 0
+
   set-default-shape trees "tree"
   set-default-shape villages "house"
   set-default-shape bergers "person"
@@ -91,9 +93,11 @@ to setup
 
 end
 
-
-
   to trees-generator
+
+  ; génération des arbres en faisant attention qu'ils soient espacés d'une distance minimum.
+
+
   let n 1
   while [n <= number-trees] [
     create-trees 1[
@@ -120,11 +124,13 @@ end
 
 end
 
-
-
 to parcels-generator
 
-   while [count patches with [pcolor = black] != 0][ ; ici il faudrait changer la condition avec un stop "créer des fields jusqu'à ce que tous les patches est une couleur"
+  ; génération des parcelles à partir d'un agent (field) qui une fois créé détermine une zone d'influence autour de lui.
+  ; Les patches de cette zone gardent l'identité du field (id-parcelle) et sont donc liés.
+  ; problème de recouvrement des parcelles déjà générées, qui rend impossible le contrôle des surfaces de parcelles
+
+   while [count patches with [pcolor = black] != 0][
     create-fields 1 [
       setxy random-xcor random-ycor
       set size 1
@@ -152,14 +158,16 @@ to parcels-generator
 
     ] ; peut se générer directement car patch n'appartient pas encore à une parcelle
 
-  ]] ; problème de recouvrement des parcelles déjà générées, qui rend impossible le contrôle des surfaces de parcelles
+  ]]
 
 end
 
-
 to crops-assignment
-  ; trouver un meilleur moyen d'assigner les cultures aux parcelles
-  ; 60% des surfaces en mil
+
+  ; Ici à chaque parcelle créée est assigné une culture, encore une fois par l'intermédiaire des agents "fields". Permet de contrôler la part de chaque culture
+  ; problème mineur lié à l'assignation 1 à 1: la valeur du slider =/= valeur finale (monitorée)
+  ; il sera nécessaire par la suite d'inclure la jachère et de mieux renseigner la part de chaque culture (% mil, arachide, jachère)
+
 ;  foreach [1.1 2.2 2.6] [ x -> show (word x " -> " round x) ]
   let fields-id [who] of fields
   foreach fields-id [ x ->
@@ -181,6 +189,9 @@ to crops-assignment
 end
 
 to crop-tree-influence
+
+  ;Génération de la zone d'infleunce (de fertilisation) des arbres sur les cultures. Calibration Roupsard et son doctorant.
+
   ask trees [
     ask patches with [culture = "mil"] in-radius 2 [
       set under-tree TRUE
@@ -202,7 +213,11 @@ to villages-generator
 end
 
 to bergers-generator
-  create-bergers nombre-bergers ; essayer de faire varier le nombre de bergers dans le temps (selon départ en transhumance)
+
+ ; génération des bergers du village. Ils sont liés à un troupeau dont le nombre de tête est variable et déterminé de façon aléatoire (calibrage à affiner?)
+ ; et pocèdent un nombre d'ha entre 2 et 5 la aussi défini aléatoirement (calibrage à affiner?)
+
+  create-bergers nombre-bergers
   [
     set size 3
     move-to one-of villages
@@ -215,6 +230,9 @@ end
 
 
 to update-variables
+
+  ; A l'issue des rotations les surfaces de chaque culture changent - monitorer ces variations fines.
+  ; Le stock de fourrage perso des bergers est aussi à suivi chaque go/jour
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
   set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
@@ -223,6 +241,7 @@ end
 
 to go
 
+; 1 go = 1 jour, les procédures sont définies temporairement selon découpage annuel
 ; calendrier: juillet 1, aout 32, sept 60, oct 92, nov 123, déc 155, jan 186, fév 218, mars 249, avril 279, mai 310, juin 339 (5j de trop)
 
   set day-of-year day-of-year + 1
@@ -251,7 +270,9 @@ to go
 end
 
 
-to rotation-cultures ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière
+to rotation-cultures
+
+  ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
@@ -284,7 +305,11 @@ to rotation-cultures ; il reste à implémenter la priorité faite aux champs qu
 
 end
 
-to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide = 31% Vayssière et al)
+to récolte
+
+  ; au premier jour de la saison sèche - récolte = constitution des stocks de mil et d'arachide. Stocks globaux sauf pour ceux des bergers
+  ; qui ont été individualisé pour la paille de mil.
+  ; prendre en compte le volume d'arachide laissé par terre? (mil = 60%, arachide = 31% Vayssière et al) les valeurs ont sûrement bcp évolué.
 
   ask patches [ ;reset rendement
     set rendement-mil-g 0
@@ -311,12 +336,12 @@ to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide
    set rendement-mil-g rendement-mil-g * 0.8
    set rendement-mil-p rendement-mil-p * 0.8]
 
-  set stock-mil-g sum [rendement-mil-g] of patches
+  set stock-mil-g (sum [rendement-mil-g] of patches)* (paille-laissée / 100) ; calibrer le pourcentage de paille laissée aux champs
   set stock-mil-p sum [rendement-mil-p] of patches
   set stock-groundnuts-g sum [rendement-groundnuts-g] of patches
   set stock-groundnuts-p sum [rendement-groundnuts-p] of patches
 
-  ask bergers [set stock-fourrage (stock-mil-p / 100) * nb-ha]
+  ask bergers [set stock-fourrage ((stock-mil-p / 100) * nb-ha) / (paille-laissée / 100)] ; les bergers laissent-ils moins de paille que les autres?
 
 
 
@@ -328,18 +353,20 @@ to récolte ; prendre en compte le volume laissé par terre (mil = 60%, arachide
 end
 
 to nourrir-troupeau
-  if day-of-year > 218 [; herbe vient à manquer en fév
+
+  ; Quand l'herbe vient à manquer (estimé en février), le berger commence à nourir son troupeau avec son stock de paille de mil
+  ; la consommation quotidienne dépend du nombre de vache (tête) mais est-ce vraiment le cas? et combien consomme une vache/ un troupeau?
+
+  if day-of-year > 218 [
   ask bergers [
-     ifelse stock-fourrage - 1.2 * nb-têtes > 0 [
-     set stock-fourrage stock-fourrage - conso-tête * nb-têtes ;dépend nb têtes?
+     ifelse stock-fourrage - 1.2 * nb-têtes > 0 [ ;
+     set stock-fourrage stock-fourrage - conso-tête * nb-têtes
         set stock-mil-p stock-mil-p - conso-tête * nb-têtes
       ][
         set stock-fourrage 0
        ]
     ]
   ]
-
-  ; set troupeau-nourri TRUE
 
 end
 
@@ -351,9 +378,14 @@ end
 ;  ] end
 
 
-to berger-coupe ; à améliorer en la liant au stock de paille d'arachide.
+to berger-coupe
+
+  ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement) e qui affecte les cultures aux alentours
+  ; Seulement un critère influence leur choix: la proximité au village, peut-être affiner les critères de choix (entretien avec Diouf)
+  ; ici une grosse hypothèse a été faite: l'étêtage d'un arbre met un terme à son effet fertilisant (sûrement faux)
+
   ask bergers [
-    if stock-fourrage < 1000 [
+    if stock-fourrage < 1000 [ ; mesure un peu arbitraire, calibration plus fine?
     move-to one-of trees with [proche-village = FALSE]
     ask trees-here [
       set size 1
@@ -364,7 +396,7 @@ to berger-coupe ; à améliorer en la liant au stock de paille d'arachide.
     ]
     ]
   ]
-  ; potentiellement utiliser home pour les faire revenir au village
+
 end
 
 
@@ -374,6 +406,9 @@ end
 
 
 to update-time
+
+  ; permet de suivre le calendrier: quel jour on est!
+
   if day-of-year > 364 [
     set day-of-year 0
     set year year + 1]
@@ -381,11 +416,10 @@ to update-time
 end
 
 to update-graph
+
   if day-of-year = 1 [
     set-current-plot "Volume de mil"
   set-current-plot-pen "pen-0"
-;  set-plot-x-range 0 17
-;  set-plot-y-range 0 25
   plotxy year stock-mil-p
   ]
 
@@ -704,6 +738,21 @@ false
 "" ""
 PENS
 "default" 1.0 2 -16777216 true "" ""
+
+SLIDER
+845
+30
+1017
+63
+paille-laissée
+paille-laissée
+0
+100
+50.0
+1
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
