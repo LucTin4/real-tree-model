@@ -5,6 +5,7 @@ globals [
 
   conso-tête
   gros-troupeau
+  tps-repousse
 
   ; Mes variables globale dans les moniteur ou graph
   total-mil-area        ; m2
@@ -50,6 +51,14 @@ breed [villages village]
 breed [trees tree]
 trees-own [
   proche-village
+  nb-coupes
+  nb-jour-coupe
+  age
+]
+
+breed [pousses pousse]
+pousses-own [
+  disséminée
 ]
 
 breed [fields field]
@@ -67,12 +76,14 @@ to setup
   set-default-shape trees "tree"
   set-default-shape villages "house"
   set-default-shape bergers "person"
+  set-default-shape pousses "plant"
 
   ; globals
   set gtree-influence 2
   set patch-area 10
   set conso-tête 1.0
   set gros-troupeau 25
+  set tps-repousse 700
 
 
 
@@ -82,6 +93,10 @@ to setup
    set pas-rotation 0
    set rotation FALSE
 
+  ]
+
+  ask pousses [
+    set disséminée FALSE
   ]
 
   parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
@@ -107,6 +122,8 @@ end
       setxy random-xcor random-ycor ; avec une condition d'éloignement minimum entre les arbres (random mais avec une certaine régularité)
       set color green
       set size 3
+      set nb-coupes 0
+      set age 0
       set proche-village FALSE
       if [tree-influence] of patch-here = TRUE  [
         let pWithouT one-of patches with[ tree-influence = FALSE]
@@ -252,6 +269,7 @@ to go
 
   set day-of-year day-of-year + 1
 
+
   if day-of-year = 1 [
     récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     rotation-cultures
@@ -260,11 +278,14 @@ to go
 
   if day-of-year < 92 ; HIVERNAGE
   []
+  if day-of-year = 90
+  [rejets]
   if day-of-year >= 92 []; SAISON SECHE
   if day-of-year > 218 [
     nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
   modeDeSurveillance
+  croissance-arbre
 
   update-time
   update-variables
@@ -397,14 +418,6 @@ end
 
 
 
-;to transhumance
-;  ask bergers [
-;    if (stock-fourrage <= 0) and (nb-têtes > 25)[
-;      ht
-;
-;  ] end
-
-
 to berger-coupe
 
   ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement) e qui affecte les cultures aux alentours
@@ -413,14 +426,21 @@ to berger-coupe
 
 
      ; mesure un peu arbitraire, calibration plus fine?
-    move-to one-of trees with [proche-village = FALSE]
+  let _arbres-restant count trees with [proche-village = FALSE and size != 1]
+  ifelse _arbres-restant != 0 [
+  move-to one-of trees with [proche-village = FALSE and size != 1]
     ask trees-here [
       set size 1
+      set nb-coupes nb-coupes + 1
       ask patches with [culture = "mil"] in-radius 2 [
           set under-tree FALSE]
       ask patches with [culture = "groundnuts"] in-radius 1 [
           set under-tree FALSE]
+    ]
   ]
+    []
+
+
 
 
 
@@ -431,6 +451,33 @@ to modeDeSurveillance
   if surveillance = "agents de quartier"[]
 end
 
+to croissance-arbre
+
+  ; les arbres retrouvent leurs branches et leurs feuilles à partir d'un certain jour - tps-repousse (à déterminer et peut-être définir plusieurs palliers
+  ; ou voir autres pour éviter les effets de seuil) A faire varier selon d'autres facteurs surement - nb coupes antérieures (nb-coupes déjà en variable), âge (age)
+
+  ask trees with [size = 1][
+    ifelse nb-jour-coupe < tps-repousse [
+      set nb-jour-coupe nb-jour-coupe + 1
+    ][
+      set size 3
+      ask patches with [culture = "mil"] in-radius 2 [
+        set under-tree TRUE]
+      ask patches with [culture = "groundnuts"] in-radius 1 [ ; on aurait pu aussi copier juste le nom de la procédure mais problème car ask tous les trees
+        set under-tree TRUE]
+      set nb-jour-coupe 0]
+  ]
+end
+
+to rejets
+  ask trees with [size != 1][
+    hatch-pousses 3 [
+      set size 0.7
+      rt random 360
+      forward 10]
+  ]
+
+end
 
 to update-time
 
@@ -455,6 +502,7 @@ to update-graph
     set-plot-pen-color color
     plotxy ticks stock-fourrage
   ]
+
 
 end
 @#$#@#$#@
@@ -614,7 +662,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-10.0
+12.0
 1
 1
 NIL
@@ -791,6 +839,34 @@ count bergers with [transhumance = FALSE]
 17
 1
 11
+
+CHOOSER
+35
+425
+347
+470
+régénération
+régénération
+"Régénération naturelle assistée" "Régénération naturelle non-assistée" "plantation"
+0
+
+PLOT
+1100
+190
+1300
+340
+nombre d'arbres 
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count trees with [size != 1]"
 
 @#$#@#$#@
 ## WHAT IS IT?
