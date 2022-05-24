@@ -3,9 +3,14 @@ globals [
   gfield-influence
   patch-area; 10m * 10m = 100m2
 
+  nombre-villages
   conso-tête
   gros-troupeau
   tps-repousse
+  nb-rejets ; nb de rejets/ arbre. A potentiellement mettre en attribu arbre si le nb dépend de la période de coupe, de l'âge etc.
+  devient-kadd ; nb jours pour pousse devienne un kadd - a qualibrer
+  nb-coupe-fatal
+
 
   ; Mes variables globale dans les moniteur ou graph
   total-mil-area        ; m2
@@ -50,15 +55,16 @@ breed [villages village]
 
 breed [trees tree]
 trees-own [
-  proche-village
+  proche-village ; VARIABLE SUREMENT INUTILE (arbres des villages également élagués)
   nb-coupes
   nb-jour-coupe
-  age
+  age-tree
 ]
 
 breed [pousses pousse]
 pousses-own [
-  disséminée
+  disséminée ; inutile pour l'instant
+  age ; age en jour (possibilité de le changer en année)
 ]
 
 breed [fields field]
@@ -79,11 +85,16 @@ to setup
   set-default-shape pousses "plant"
 
   ; globals
-  set gtree-influence 2
+  set gtree-influence 2 ; problème car valeur =/= pour l'arachide
   set patch-area 10
-  set conso-tête 1.0
-  set gros-troupeau 25
-  set tps-repousse 700
+  set nombre-villages 1
+
+  set conso-tête 1.0 ; à calibrer
+  set gros-troupeau 25 ; demander à partir de combien de bêtes les troupeaux partent en transhumance
+  set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier.
+  set nb-rejets 2
+  set devient-kadd 1095 ; = 3ans nb d'année avant que la pousse devienne un kadd
+  set nb-coupe-fatal 4
 
 
 
@@ -97,6 +108,7 @@ to setup
 
   ask pousses [
     set disséminée FALSE
+    set age 0
   ]
 
   parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
@@ -123,7 +135,7 @@ end
       set color green
       set size 3
       set nb-coupes 0
-      set age 0
+      set age-tree random 20 ; ici on ne prend pas en compte que les arbres ne se sont pas régénérés depuis longtemps et ont donc tous le même âge - a déterminer
       set proche-village FALSE
       if [tree-influence] of patch-here = TRUE  [
         let pWithouT one-of patches with[ tree-influence = FALSE]
@@ -284,8 +296,11 @@ to go
   if day-of-year > 218 [
     nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
+
   modeDeSurveillance
+  croissance-pousse
   croissance-arbre
+  mort-arbre
 
   update-time
   update-variables
@@ -426,9 +441,10 @@ to berger-coupe
 
 
      ; mesure un peu arbitraire, calibration plus fine?
-  let _arbres-restant count trees with [proche-village = FALSE and size != 1]
+
+  let _arbres-restant count trees ; with [proche-village = FALSE and size != 1]
   ifelse _arbres-restant != 0 [
-  move-to one-of trees with [proche-village = FALSE and size != 1]
+  move-to one-of trees ; with [proche-village = FALSE and size != 1]
     ask trees-here [
       set size 1
       set nb-coupes nb-coupes + 1
@@ -438,7 +454,9 @@ to berger-coupe
           set under-tree FALSE]
     ]
   ]
-    []
+  []
+  ;]
+
 
 
 
@@ -456,6 +474,7 @@ to croissance-arbre
   ; les arbres retrouvent leurs branches et leurs feuilles à partir d'un certain jour - tps-repousse (à déterminer et peut-être définir plusieurs palliers
   ; ou voir autres pour éviter les effets de seuil) A faire varier selon d'autres facteurs surement - nb coupes antérieures (nb-coupes déjà en variable), âge (age)
 
+  ; croissance après coupe
   ask trees with [size = 1][
     ifelse nb-jour-coupe < tps-repousse [
       set nb-jour-coupe nb-jour-coupe + 1
@@ -467,16 +486,59 @@ to croissance-arbre
         set under-tree TRUE]
       set nb-jour-coupe 0]
   ]
+
+end
+
+to mort-arbre ; bizarre car la procédure à l'air de fonctionner mais le show ne marche pas.
+
+  if day-of-year = 350 [
+    ask trees [set age-tree age-tree + 1]]
+
+  ask trees [
+    ifelse nb-coupes >= nb-coupe-fatal [
+      if age-tree > 10 [die]
+
+    ][
+      if age-tree > 20 [die]
+
+    ]
+  ]
+
+end
+
+ to croissance-pousse
+  ; les pousses deviennent arbres à partir d'un certain nb de jour (devient-kadd)
+
+  ask pousses [
+     set age age + 1
+     if age > devient-kadd [
+      set breed trees
+      set size 3
+      set nb-coupes 0
+      set age-tree 0
+      ask patches with [culture = "mil"] in-radius 2 [
+      set under-tree TRUE
+    ]
+      ask patches with [culture = "groundnuts"] in-radius 1 [
+      set under-tree TRUE
+      ]
+      ifelse any? villages in-radius 20 [
+        set proche-village TRUE]
+      [set proche-village FALSE]
+    ]
+  ]
+
 end
 
 to rejets
+
+; les arbres font des rejets: quelles période? cb? ou?
   ask trees with [size != 1][
-    hatch-pousses 3 [
+   hatch-pousses nb-rejets [
       set size 0.7
       rt random 360
       forward 10]
   ]
-
 end
 
 to update-time
@@ -559,7 +621,7 @@ number-trees
 number-trees
 0
 4000
-662.0
+892.0
 1
 1
 NIL
@@ -592,36 +654,36 @@ count trees / 100
 9
 
 SLIDER
-30
-295
-202
-328
+25
+335
+197
+368
 parcels-size
 parcels-size
 0
 100
-20.0
+13.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-650
-60
-747
-105
+125
+210
+210
+247
 %-mil
 (total-mil-area / (count patches * patch-area)) * 100
 1
 1
-11
+9
 
 MONITOR
-650
-115
-795
-160
+640
+110
+765
+155
 %-under-tree
 (total-under-tree-area / (count patches * patch-area)) * 100
 2
@@ -639,30 +701,15 @@ TEXTBOX
 1
 
 SLIDER
-30
-215
-202
-248
-nombre-villages
-nombre-villages
-1
-3
-1.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-30
-255
-202
-288
+35
+250
+207
+283
 nombre-bergers
 nombre-bergers
 0
 100
-12.0
+13.0
 1
 1
 NIL
@@ -686,10 +733,10 @@ NIL
 1
 
 MONITOR
-660
-200
-785
-245
+640
+50
+765
+95
 Date 
 (word day-of-year \" \" year)
 0
@@ -698,9 +745,9 @@ Date
 
 BUTTON
 120
-70
+55
 207
-103
+88
 go once
 go
 NIL
@@ -715,19 +762,19 @@ NIL
 
 CHOOSER
 35
-375
+380
 195
-420
+425
 surveillance
 surveillance
 "populaire" "agents de quartier" "agents des eaux et forets"
 0
 
 PLOT
-670
-265
-870
-415
+635
+170
+835
+320
 Volume de mil
 year
 Vol-mil
@@ -742,54 +789,10 @@ PENS
 "pen-0" 1.0 0 -5298144 true "" ""
 
 MONITOR
-940
-175
-1022
-220
-NIL
-stock-mil-g
-0
-1
-11
-
-MONITOR
-940
-230
-1077
-275
-NIL
-stock-groundnuts-g
-0
-1
-11
-
-MONITOR
-945
-285
-1027
-330
-NIL
-stock-mil-p
-0
-1
-11
-
-MONITOR
-950
-120
-1047
-165
-NIL
-total-mil-area
-17
-1
-11
-
-MONITOR
-950
-345
-1107
-390
+895
+320
+1052
+365
 NIL
 stock-fourrage-moyen
 1
@@ -797,10 +800,10 @@ stock-fourrage-moyen
 11
 
 PLOT
-1070
-20
-1270
+855
 170
+1055
+320
 paille-berger
 NIL
 NIL
@@ -815,10 +818,10 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 SLIDER
-845
-30
-1017
-63
+880
+135
+1052
+168
 paille-laissée
 paille-laissée
 0
@@ -830,31 +833,31 @@ paille-laissée
 HORIZONTAL
 
 MONITOR
-840
-90
-917
-135
+130
+285
+207
+322
 bergers-là
 count bergers with [transhumance = FALSE]
 17
 1
-11
+9
 
 CHOOSER
 35
-425
+430
 347
-470
+475
 régénération
 régénération
 "Régénération naturelle assistée" "Régénération naturelle non-assistée" "plantation"
 0
 
 PLOT
-1100
-190
-1300
-340
+1080
+170
+1280
+320
 nombre d'arbres 
 NIL
 NIL
@@ -867,6 +870,17 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot count trees with [size != 1]"
+
+MONITOR
+690
+395
+797
+440
+NIL
+count pousses
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
