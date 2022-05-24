@@ -65,6 +65,7 @@ breed [pousses pousse]
 pousses-own [
   disséminée ; inutile pour l'instant
   age ; age en jour (possibilité de le changer en année)
+  signalé
 ]
 
 breed [fields field]
@@ -104,11 +105,6 @@ to setup
    set pas-rotation 0
    set rotation FALSE
 
-  ]
-
-  ask pousses [
-    set disséminée FALSE
-    set age 0
   ]
 
   parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
@@ -282,15 +278,16 @@ to go
   set day-of-year day-of-year + 1
 
 
-  if day-of-year = 1 [
+  if day-of-year = 80 [
     récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     rotation-cultures
     retour-bergers
+    récolte-machine
     ]
 
   if day-of-year < 92 ; HIVERNAGE
   []
-  if day-of-year = 90
+  if day-of-year = 339
   [rejets]
   if day-of-year >= 92 []; SAISON SECHE
   if day-of-year > 218 [
@@ -392,6 +389,12 @@ to retour-bergers
     set transhumance FALSE
   ]
 
+end
+
+to récolte-machine
+  ask pousses [
+    if signalé = FALSE [die]
+  ]
 end
 
 to nourrir-paille
@@ -537,8 +540,13 @@ to rejets
    hatch-pousses nb-rejets [
       set size 0.7
       rt random 360
-      forward 10]
+      forward 10
+      set disséminée FALSE
+      set age 0
+      set signalé FALSE
+    ]
   ]
+
 end
 
 to update-time
@@ -557,6 +565,11 @@ to update-graph
     set-current-plot "Volume de mil"
   set-current-plot-pen "pen-0"
   plotxy year stock-mil-p
+    set-current-plot "Âge moyen du parc"
+    ask trees [
+    set-current-plot-pen "pen-0"
+      plotxy year mean [age-tree] of trees
+    ]
   ]
 
   set-current-plot "paille-berger"
@@ -881,6 +894,24 @@ count pousses
 17
 1
 11
+
+PLOT
+1075
+10
+1275
+160
+Âge moyen du parc
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"pen-0" 1.0 0 -7500403 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
