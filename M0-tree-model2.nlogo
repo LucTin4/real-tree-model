@@ -3,6 +3,7 @@ globals [
   gfield-influence
   patch-area; 10m * 10m = 100m2
 
+  parcels-size
   nombre-villages
   conso-tête
   gros-troupeau
@@ -96,7 +97,7 @@ to setup
   set nb-rejets 2
   set devient-kadd 1095 ; = 3ans nb d'année avant que la pousse devienne un kadd
   set nb-coupe-fatal 4
-
+  set parcels-size 13
 
 
   ask patches [
@@ -294,7 +295,7 @@ to go
     nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
 
-  modeDeSurveillance
+
   croissance-pousse
   croissance-arbre
   mort-arbre
@@ -468,10 +469,6 @@ to berger-coupe
 end
 
 
-to modeDeSurveillance
-  if surveillance = "agents de quartier"[]
-end
-
 to croissance-arbre
 
   ; les arbres retrouvent leurs branches et leurs feuilles à partir d'un certain jour - tps-repousse (à déterminer et peut-être définir plusieurs palliers
@@ -634,7 +631,7 @@ number-trees
 number-trees
 0
 4000
-892.0
+535.0
 1
 1
 NIL
@@ -665,21 +662,6 @@ count trees / 100
 17
 1
 9
-
-SLIDER
-25
-335
-197
-368
-parcels-size
-parcels-size
-0
-100
-13.0
-1
-1
-NIL
-HORIZONTAL
 
 MONITOR
 125
@@ -773,16 +755,6 @@ NIL
 NIL
 1
 
-CHOOSER
-35
-380
-195
-425
-surveillance
-surveillance
-"populaire" "agents de quartier" "agents des eaux et forets"
-0
-
 PLOT
 635
 170
@@ -855,16 +827,6 @@ count bergers with [transhumance = FALSE]
 17
 1
 9
-
-CHOOSER
-35
-430
-347
-475
-régénération
-régénération
-"Régénération naturelle assistée" "Régénération naturelle non-assistée" "plantation"
-0
 
 PLOT
 1080
