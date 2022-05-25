@@ -11,12 +11,14 @@ globals [
   nb-rejets ; nb de rejets/ arbre. A potentiellement mettre en attribu arbre si le nb dépend de la période de coupe, de l'âge etc.
   devient-kadd ; nb jours pour pousse devienne un kadd - a qualibrer
   nb-coupe-fatal
+  surface-jachère ;
 
 
   ; Mes variables globale dans les moniteur ou graph
   total-mil-area        ; m2
   total-groundnuts-area ; m2
   total-under-tree-area ; m2
+  total-jachère-area
   day-of-year ; de 1 à 365 jours
   year
 
@@ -32,6 +34,7 @@ patches-own [
   tree-influence
   under-tree ; TRUE/FALSE
   culture ; can be mil or groundnut
+  en-culture
   rendement-mil-g ; rendement de patch (à calibrer plus tard)
   rendement-mil-p
   rendement-groundnuts-g
@@ -98,6 +101,7 @@ to setup
   set devient-kadd 1095 ; = 3ans nb d'année avant que la pousse devienne un kadd
   set nb-coupe-fatal 4
   set parcels-size 13
+  set surface-jachère 30
 
 
   ask patches [
@@ -105,6 +109,7 @@ to setup
    set under-tree FALSE
    set pas-rotation 0
    set rotation FALSE
+   set en-culture FALSE
 
   ]
 
@@ -198,19 +203,56 @@ to crops-assignment
   ; il sera nécessaire par la suite d'inclure la jachère et de mieux renseigner la part de chaque culture (% mil, arachide, jachère)
 
 ;  foreach [1.1 2.2 2.6] [ x -> show (word x " -> " round x) ]
+
   let fields-id [who] of fields
+
+;  ask one-of fields [
+;    ask my-patches [
+;      set culture "jachère"
+;      set pcolor 9
+;      set en-culture TRUE]
+;  ]
+;
+;  ask fields with [any? patches with [culture = "jachère"] in-radius 30][
+;      let _total-jachère-area (count patches with[culture = "jachère"] / count patches) * 100
+;      while [_total-jachère-area < surface-jachère] [
+;        ask my-patches [
+;          set culture "jachère"
+;          set pcolor 9
+;          set en-culture TRUE
+;        ]
+;      ]
+;    ]
+
+
   foreach fields-id [ x ->
-    let total-mil-aera count patches with[culture = "mil"] / count patches * 100
-    if total-mil-aera < mil-porcent  [
+    let _total-jachère-area (count patches with[culture = "jachère"] / count patches) * 100
+    if _total-jachère-area < surface-jachère  [
      ask field x [
-       ask my-patches [
-          set culture "mil"
-          set pcolor yellow
+        ask my-patches with [en-culture = FALSE][
+          set culture "jachère"
+          set pcolor 9
+          set en-culture TRUE
         ]
       ]
     ]
   ]
-  ask patches with [culture != "mil"][
+
+
+
+  foreach fields-id [ x ->
+    let total-mil-aera (count patches with[culture = "mil"] / count patches with [culture != "jachère"])* 100
+    if total-mil-aera < mil-porcent  [
+     ask field x [
+        ask my-patches with [en-culture = FALSE][
+          set culture "mil"
+          set pcolor yellow
+          set en-culture TRUE
+        ]
+      ]
+    ]
+  ]
+  ask patches with [en-culture = FALSE][
     set pcolor 36
     set culture "groundnuts"
   ]
@@ -266,6 +308,7 @@ to update-variables
 
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
+  set total-jachère-area count patches with [culture = "jachère"] * patch-area
   set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
   set stock-fourrage-moyen mean [stock-fourrage] of bergers
 
@@ -316,6 +359,7 @@ to rotation-cultures
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
+
   foreach _myIdParcelle [ x ->
     ask patches with [id-parcelle = x][
       if culture = "groundnuts" [
@@ -326,8 +370,9 @@ to rotation-cultures
     ]
   ]
 
+
   foreach _myIdParcelle [ x ->
-    let _total-groundnuts-area (count patches with [culture = "groundnuts"] / count patches) * 100
+    let _total-groundnuts-area (count patches with [culture = "groundnuts"] / count patches with [culture != "jachère"]) * 100
     if _total-groundnuts-area < (100 - mil-porcent) [
     ask patches with [id-parcelle = x and rotation = FALSE][
         set culture "groundnuts"
@@ -337,6 +382,20 @@ to rotation-cultures
       ]
     ]
   ]
+
+
+    foreach _myIdParcelle [ x ->
+    let _total-jachère-area (count patches with [culture = "jachère"] / count patches) * 100
+    if _total-jachère-area < surface-jachère [
+    ask patches with [id-parcelle = x and rotation = FALSE][
+        set culture "jachère"
+        set pcolor 9
+        set rotation TRUE
+      ]
+    ]
+  ]
+
+
   ask patches with [rotation = FALSE][
     set pas-rotation pas-rotation + 1
   ]
@@ -579,9 +638,9 @@ to update-graph
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+275
 10
-618
+683
 419
 -1
 -1
@@ -669,7 +728,7 @@ MONITOR
 210
 247
 %-mil
-(total-mil-area / (count patches * patch-area)) * 100
+(total-mil-area / (count patches with [culture != \"jachère\"] * patch-area)) * 100
 1
 1
 9
@@ -874,6 +933,17 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
+
+MONITOR
+50
+340
+205
+385
+%-jachère 
+(total-jachère-area / (count patches * patch-area)) * 100
+1
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
