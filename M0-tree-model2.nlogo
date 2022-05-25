@@ -5,13 +5,14 @@ globals [
 
   parcels-size
   nombre-villages
-  conso-tête
-  gros-troupeau
-  tps-repousse
+  conso-tête ; consommation de mil par vache
+  gros-troupeau ; nb-bêtes à partir duquel les troupeaux partent en transhumance
+  tps-repousse ; nb de jours entre 2 étêtages
   nb-rejets ; nb de rejets/ arbre. A potentiellement mettre en attribu arbre si le nb dépend de la période de coupe, de l'âge etc.
   devient-kadd ; nb jours pour pousse devienne un kadd - a qualibrer
-  nb-coupe-fatal
-  surface-jachère ;
+  nb-coupe-fatal ; nombre de coupe à partir de laquelle l'arbre meurt plus rapidement
+  surface-jachère ; pourcentage de surface mise en jachère
+  pousse-sauvée ; nb jours à partir duquel la pousse ne peut plus être détruit par une machine
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -102,6 +103,7 @@ to setup
   set nb-coupe-fatal 4
   set parcels-size 13
   set surface-jachère 30
+  set pousse-sauvée 200
 
 
   ask patches [
@@ -167,7 +169,7 @@ to parcels-generator
    while [count patches with [pcolor = black] != 0][
     create-fields 1 [
       setxy random-xcor random-ycor
-      set size 1
+      set size 0.1
       ifelse [pcolor] of patch-here != black [
 
           let _pblack one-of patches with [pcolor = black]
@@ -200,7 +202,8 @@ to crops-assignment
 
   ; Ici à chaque parcelle créée est assigné une culture, encore une fois par l'intermédiaire des agents "fields". Permet de contrôler la part de chaque culture
   ; problème mineur lié à l'assignation 1 à 1: la valeur du slider =/= valeur finale (monitorée)
-  ; il sera nécessaire par la suite d'inclure la jachère et de mieux renseigner la part de chaque culture (% mil, arachide, jachère)
+  ; mieux renseigner la part de chaque culture (% mil, arachide, jachère)
+  ; rendre la jachère contiguë
 
 ;  foreach [1.1 2.2 2.6] [ x -> show (word x " -> " round x) ]
 
@@ -276,7 +279,7 @@ end
 to villages-generator
   create-villages nombre-villages
     [
-     set size 7
+     set size 5
      set color red
      setxy random-xcor random-ycor
      ask trees in-radius 20 [set proche-village TRUE]
@@ -334,7 +337,7 @@ to go
   if day-of-year = 339
   [rejets]
   if day-of-year >= 92 []; SAISON SECHE
-  if day-of-year > 218 [
+  if day-of-year > 300 or day-of-year < 20 [
     nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
 
@@ -356,13 +359,15 @@ end
 to rotation-cultures
 
   ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière
+  ; jachère doit être contiguë
+  ; le problème est que les surfaces en mil se réduisent - pq?
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
 
   foreach _myIdParcelle [ x ->
     ask patches with [id-parcelle = x][
-      if culture = "groundnuts" [
+      if culture != "mil" [
         set culture "mil"
         set pcolor yellow
         set rotation TRUE
@@ -382,7 +387,6 @@ to rotation-cultures
       ]
     ]
   ]
-
 
     foreach _myIdParcelle [ x ->
     let _total-jachère-area (count patches with [culture = "jachère"] / count patches) * 100
@@ -452,8 +456,22 @@ to retour-bergers
 end
 
 to récolte-machine
-  ask pousses [
-    if signalé = FALSE [die]
+
+  ; les pousses sont détruites par les machines si elles ne sont pas signalées (signalé FALSE). Elles sont protégées par la jachère (2/10)
+  ; et sont sauvées à partir d'un certain âge (pousse-sauvée)
+  ; calibrer les chances de survie - selon les machines et les animaux
+
+  ask pousses with [age < pousse-sauvée] [
+    if signalé = FALSE [
+    ifelse [culture] of patch-here = "jachère" [
+        let _chance-survie random 10
+        if _chance-survie > 2 [
+          die
+        ]
+      ][
+        die
+      ]
+    ]
   ]
 end
 
@@ -505,11 +523,11 @@ to berger-coupe
 
      ; mesure un peu arbitraire, calibration plus fine?
 
-  let _arbres-restant count trees ; with [proche-village = FALSE and size != 1]
+  let _arbres-restant count trees with [size != 0.1]; with [proche-village = FALSE and size != 0.1]
   ifelse _arbres-restant != 0 [
-  move-to one-of trees ; with [proche-village = FALSE and size != 1]
+    move-to one-of trees with [size != 0.1] ; with [proche-village = FALSE and size != 0.1]
     ask trees-here [
-      set size 1
+      set size 0.1
       set nb-coupes nb-coupes + 1
       ask patches with [culture = "mil"] in-radius 2 [
           set under-tree FALSE]
@@ -534,7 +552,7 @@ to croissance-arbre
   ; ou voir autres pour éviter les effets de seuil) A faire varier selon d'autres facteurs surement - nb coupes antérieures (nb-coupes déjà en variable), âge (age)
 
   ; croissance après coupe
-  ask trees with [size = 1][
+  ask trees with [size = 0.1][
     ifelse nb-jour-coupe < tps-repousse [
       set nb-jour-coupe nb-jour-coupe + 1
     ][
@@ -555,10 +573,10 @@ to mort-arbre ; bizarre car la procédure à l'air de fonctionner mais le show n
 
   ask trees [
     ifelse nb-coupes >= nb-coupe-fatal [
-      if age-tree > 10 [die]
+      if age-tree > 20 [die]
 
     ][
-      if age-tree > 20 [die]
+      if age-tree > 40 [die]
 
     ]
   ]
@@ -592,7 +610,9 @@ end
 to rejets
 
 ; les arbres font des rejets: quelles période? cb? ou?
-  ask trees with [size != 1][
+; les arbres étêtés n'en font pas
+
+  ask trees with [size != 0.1][
    hatch-pousses nb-rejets [
       set size 0.7
       rt random 360
@@ -638,9 +658,9 @@ to update-graph
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-275
+220
 10
-683
+628
 419
 -1
 -1
@@ -690,7 +710,7 @@ number-trees
 number-trees
 0
 4000
-535.0
+815.0
 1
 1
 NIL
@@ -705,7 +725,7 @@ mil-porcent
 mil-porcent
 0
 100
-69.0
+85.0
 1
 1
 %
@@ -763,7 +783,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-13.0
+20.0
 1
 1
 NIL
@@ -941,6 +961,17 @@ MONITOR
 385
 %-jachère 
 (total-jachère-area / (count patches * patch-area)) * 100
+1
+1
+11
+
+MONITOR
+800
+395
+867
+440
+nb-trees
+count trees with [size != 1]
 1
 1
 11
