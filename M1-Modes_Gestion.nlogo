@@ -6,18 +6,17 @@ globals [
   parcels-size
   nombre-villages
   conso-tête ; consommation de mil par vache
-  gros-troupeau ; nb-bêtes à partir duquel les troupeaux partent en transhumance
   tps-repousse ; nb de jours entre 2 étêtages
   nb-rejets ; nb de rejets/ arbre. A potentiellement mettre en attribu arbre si le nb dépend de la période de coupe, de l'âge etc.
-  devient-kadd ; nb jours pour pousse devienne un kadd - a qualibrer
+  devient-kadd ; nb jours pour pousse devienne un kadd - a qualibrer et a faire varier avec la RNA
   nb-coupe-fatal ; nombre de coupe à partir de laquelle l'arbre meurt plus rapidement
   surface-jachère ; pourcentage de surface mise en jachère
   pousse-sauvée ; nb jours à partir duquel la pousse ne peut plus être détruit par une machine
 
 
   ; Mes variables globale dans les moniteur ou graph
-  total-mil-area        ; m2
-  total-groundnuts-area ; m2
+  total-mil-area        ; m2 (53% de la SAU, Vayssière)
+  total-groundnuts-area ; m2 (7% SAU, Vayssière
   total-under-tree-area ; m2
   total-jachère-area
   day-of-year ; de 1 à 365 jours
@@ -52,7 +51,7 @@ bergers-own [
   troupeau-nourri ; pour l'instant TRUE/FALSE mais à détailler
   arbre-choisi
   nb-têtes ; à calibrer (mais va être difficile
-  nb-ha ; à calibrer
+  nb-ha ; entre 3,8 (nouveaux installés 11%) et ~ 5,5 (89% de la pop)
   stock-fourrage
   transhumance
 ]
@@ -80,6 +79,10 @@ fields-own [
 ]
 
 
+;___________________________________________________________________________
+
+
+
 to setup
   ca
   set year 0
@@ -96,13 +99,12 @@ to setup
   set nombre-villages 1
 
   set conso-tête 1.0 ; à calibrer
-  set gros-troupeau 25 ; demander à partir de combien de bêtes les troupeaux partent en transhumance
   set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier.
   set nb-rejets 2
   set devient-kadd 1095 ; = 3ans nb d'année avant que la pousse devienne un kadd
   set nb-coupe-fatal 4
-  set parcels-size 13
-  set surface-jachère 30
+  set parcels-size 9
+  set surface-jachère 20
   set pousse-sauvée 200
 
 
@@ -304,18 +306,8 @@ to bergers-generator
 end
 
 
-to update-variables
+;______________________________________________________________________________________________
 
-  ; A l'issue des rotations les surfaces de chaque culture changent - monitorer ces variations fines.
-  ; Le stock de fourrage perso des bergers est aussi à suivi chaque go/jour
-
-  set total-mil-area count patches with [culture = "mil"] * patch-area
-  set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
-  set total-jachère-area count patches with [culture = "jachère"] * patch-area
-  set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
-  set stock-fourrage-moyen mean [stock-fourrage] of bergers
-
-end
 
 to go
 
@@ -337,7 +329,9 @@ to go
 
   if day-of-year = 339
   [rejets]
-  if day-of-year > 300 or day-of-year < 20
+  if day-of-year > 339
+  [RNNA]
+  if day-of-year > 300 or day-of-year < 20 ; a changer février
   [nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
 
@@ -356,7 +350,9 @@ to go
 end
 
 
-to rotation-cultures
+
+
+to rotation-cultures ; problème les surfaces en mil sont trop faibles
 
   ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière
   ; jachère doit être contiguë
@@ -625,6 +621,43 @@ to rejets
 
 end
 
+to RNNA
+  ; protction des jeunes pousses
+  ; pas d'accélération de croissance
+  ; pas protection contre les humains et les animaux
+
+  ask fields [
+    if any? pousses in-radius 5 [
+    ask pousses in-radius 5
+      [
+        set color red
+        set signalé TRUE
+      ]
+    ]
+  ]
+
+end
+to RNA
+  ; protection des jeunes pousses
+  ; accélération de la croissance grâce à la coupe
+
+
+end
+
+
+to update-variables
+
+  ; A l'issue des rotations les surfaces de chaque culture changent - monitorer ces variations fines.
+  ; Le stock de fourrage perso des bergers est aussi à suivi chaque go/jour
+
+  set total-mil-area count patches with [culture = "mil"] * patch-area
+  set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
+  set total-jachère-area count patches with [culture = "jachère"] * patch-area
+  set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
+  set stock-fourrage-moyen mean [stock-fourrage] of bergers
+
+end
+
 to update-time
 
   ; permet de suivre le calendrier: quel jour on est!
@@ -653,7 +686,6 @@ to update-graph
     set-plot-pen-color color
     plotxy ticks stock-fourrage
   ]
-
 
 end
 @#$#@#$#@
@@ -710,7 +742,7 @@ number-trees
 number-trees
 0
 4000
-815.0
+484.0
 1
 1
 NIL
@@ -725,7 +757,7 @@ mil-porcent
 mil-porcent
 0
 100
-85.0
+80.0
 1
 1
 %
@@ -743,12 +775,12 @@ count trees / 100
 9
 
 MONITOR
-125
+160
 210
 210
 247
 %-mil
-(total-mil-area / (count patches with [culture != \"jachère\"] * patch-area)) * 100
+(total-mil-area / (count patches * patch-area)) * 100
 1
 1
 9
@@ -783,7 +815,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-20.0
+23.0
 1
 1
 NIL
@@ -890,7 +922,7 @@ paille-laissée
 paille-laissée
 0
 100
-59.0
+0.0
 1
 1
 %
@@ -898,9 +930,9 @@ HORIZONTAL
 
 MONITOR
 130
-285
+320
 207
-322
+357
 bergers-là
 count bergers with [transhumance = FALSE]
 17
@@ -923,18 +955,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count trees with [size != 1]"
-
-MONITOR
-690
-395
-797
-440
-NIL
-count pousses
-17
-1
-11
+"default" 1.0 0 -16777216 true "" "plot count trees with [size != 0.1]"
+"pen-1" 1.0 0 -7500403 true "" "plot count trees "
 
 PLOT
 1075
@@ -953,28 +975,75 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
+"pen-1" 1.0 0 -2674135 true "" ""
 
 MONITOR
-50
-340
-205
-385
+95
+210
+160
+247
 %-jachère 
 (total-jachère-area / (count patches * patch-area)) * 100
 1
 1
-11
+9
+
+CHOOSER
+825
+390
+1032
+435
+Mode_de_surveillance
+Mode_de_surveillance
+"Aucun" "Surveillance populaire" "Comité de surveillance" "Agent E&F"
+1
+
+CHOOSER
+825
+445
+1172
+490
+Mode_Régénération
+Mode_Régénération
+"Aucun" "RNA" "RNA avec droit d'usage" "RNNA" "Reboisement - plantation"
+3
+
+SLIDER
+35
+285
+207
+318
+gros-troupeau
+gros-troupeau
+10
+50
+20.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+25
+360
+207
+393
+troupeaux-gardés
+troupeaux-gardés
+1
+1
+-1000
 
 MONITOR
-800
-395
-867
-440
-nb-trees
-count trees with [size != 1]
+25
+210
+95
+247
+%arachide
+(total-groundnuts-area / (count patches * patch-area)) * 100
 1
 1
-11
+9
 
 @#$#@#$#@
 ## WHAT IS IT?
