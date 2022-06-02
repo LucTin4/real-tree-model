@@ -5,6 +5,8 @@ globals [
 
   parcels-size
   nombre-villages
+
+  ; Mes variables à qualibrer
   conso-tête ; consommation de mil par vache
   tps-repousse ; nb de jours entre 2 étêtages
   nb-rejets ; nb de rejets/ arbre. A potentiellement mettre en attribu arbre si le nb dépend de la période de coupe, de l'âge etc.
@@ -13,6 +15,7 @@ globals [
   surface-jachère ; pourcentage de surface mise en jachère
   pousse-sauvée ; nb jours à partir duquel la pousse ne peut plus être détruit par une machine
   distance-champ-brousse ; jusqu'où s'étendent les champs intermédiaires nb * patch-area
+  nombre-coupeurs ; a combien estimer le nombre de coupeur
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -86,6 +89,8 @@ breed [fields field]
 fields-own [
   my-patches
   field-area
+  parcelle-brousse
+  visité
 ]
 
 
@@ -111,12 +116,14 @@ to setup
   set conso-tête 1.0 ; à calibrer
   set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier.
   set nb-rejets 3 ; difficile de savoir combien de rejets
-  set devient-kadd 3000 ; = 3ans nb d'année avant que la pousse devienne un kadd
+  set devient-kadd 3000 ; = 8ans nb d'année avant que la pousse devienne un kadd
   set nb-coupe-fatal 4
   set parcels-size 9
   set surface-jachère 20
   set pousse-sauvée 1825 ; plus de 6 ans
   set distance-champ-brousse 40 ; les champs de brousse commencent à 400m du village (c'est surement plus)
+  set nombre-coupeurs 10
+
 
 
   ask patches [
@@ -135,6 +142,8 @@ to setup
   crop-tree-influence
   bergers-generator
   update-variables
+  coupeurs-generator
+  agriculteurs-generator
 
   reset-ticks
 
@@ -183,6 +192,8 @@ to parcels-generator
     create-fields 1 [
       setxy random-xcor random-ycor
       set size 0.1
+      set parcelle-brousse TRUE
+      set visité FALSE
       ifelse [pcolor] of patch-here != black [
 
           let _pblack one-of patches with [pcolor = black]
@@ -299,6 +310,7 @@ to villages-generator
      setxy random-xcor random-ycor
      ask trees in-radius 20 [set proche-village TRUE]
     ask patches in-radius distance-champ-brousse [set champ-brousse FALSE]
+    ask fields in-radius distance-champ-brousse [set parcelle-brousse FALSE]
     ]
 end
 
@@ -319,6 +331,22 @@ to bergers-generator
   ]
 end
 
+to coupeurs-generator
+
+  create-coupeurs nombre-coupeurs
+  [
+
+  ]
+end
+
+to agriculteurs-generator
+
+  let _nb-fields count fields
+  create-agriculteurs _nb-fields
+
+
+end
+
 
 ;______________________________________________________________________________________________
 
@@ -330,16 +358,18 @@ to go
 
   set day-of-year day-of-year + 1
 
+  présence-champs
 
-  if day-of-year = 80 [
+  if day-of-year = 92 [
     récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     récolte-machine
     rotation-cultures
     retour-bergers
     ]
 
-  if day-of-year < 92 [] ; HIVERNAGE
-  if day-of-year >= 92 []; SAISON SECHE
+  if day-of-year < 130 [] ; HIVERNAGE
+  if day-of-year >= 130 [
+  coupe-pousse]; SAISON SECHE
 
   if day-of-year = 339
   [rejets]
@@ -553,6 +583,24 @@ to berger-coupe
 
 end
 
+to présence-champs
+  let fields-id [who] of fields
+  let agriculteurs-id [who] of agriculteurs
+
+  foreach agriculteurs-id [ x ->
+  ask agriculteur x [
+      let proba random 10
+      ifelse proba > 5 [
+      if any? fields with [visité = FALSE][
+        move-to one-of fields
+        ask fields in-radius 1 [set visité TRUE]
+        ]
+        ][
+        move-to village 0]
+      ]
+    ]
+  ask fields [set visité FALSE]
+end
 
 to croissance-arbre
 
@@ -639,6 +687,21 @@ to rejets
     ]
   ]
 
+end
+
+to coupe-pousse
+
+  ; Les coupeurs se baladent et coupent une pousse (arbustre de minimum 3 ans) par jour si il n'y a pas de présence à proximité
+  ; Quelle importance des coupes dans la non régénération? Comment estimer leur impact?
+
+  ask coupeurs [
+    move-to one-of fields
+    if not any? agriculteurs in-radius 10 [
+      if any? pousses with [signalé = TRUE and age > 1000] in-radius 10 [ ; potentiellement variable locale ici
+        ask one-of pousses with [signalé = TRUE and age > 1000] in-radius 10 [die]
+      ]
+    ]
+    ]
 end
 
 to RNNA
@@ -953,7 +1016,7 @@ paille-laissée
 paille-laissée
 0
 100
-0.0
+50.0
 1
 1
 %
@@ -1038,7 +1101,7 @@ gros-troupeau
 gros-troupeau
 10
 50
-20.0
+25.0
 1
 1
 NIL
