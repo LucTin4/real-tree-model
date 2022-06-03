@@ -4,7 +4,7 @@ globals [
   patch-area; 10m * 10m = 100m2
 
   parcels-size
-  nombre-villages
+
 
   ; Mes variables à qualibrer
   conso-tête ; consommation de mil par vache
@@ -16,7 +16,7 @@ globals [
   pousse-sauvée ; nb jours à partir duquel la pousse ne peut plus être détruit par une machine
   distance-champ-brousse ; jusqu'où s'étendent les champs intermédiaires nb * patch-area
   nombre-coupeurs ; a combien estimer le nombre de coupeur
-  paille-laissée ; avant slider - mais aucune paille laissée désormais
+  paille-laissée ; avant slider - mais aucune paille laissée désormaise
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -26,6 +26,7 @@ globals [
   total-jachère-area
   day-of-year ; de 1 à 365 jours
   year
+  année-rotation
 
   stock-mil-g
   stock-mil-p
@@ -106,17 +107,19 @@ to setup
   ca
   set year 0
   set day-of-year 0
+  set année-rotation 0
 
   set-default-shape trees "tree"
   set-default-shape villages "house"
-  set-default-shape bergers "person"
+  set-default-shape bergers "cow"
   set-default-shape pousses "plant"
+  set-default-shape agriculteurs "person"
 
   ; globals
   set gtree-influence 2 ; problème car valeur =/= pour l'arachide
   set patch-area 10
 
-  set conso-tête 1.0 ; à calibrer
+  set conso-tête 2 ; à calibrer
   set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier.
   set nb-rejets 3 ; difficile de savoir combien de rejets
   set devient-kadd 3000 ; = 8ans nb d'année avant que la pousse devienne un kadd
@@ -125,6 +128,7 @@ to setup
   set surface-jachère 20
   set pousse-sauvée 1825 ; plus de 6 ans
   set distance-champ-brousse 40 ; les champs de brousse commencent à 400m du village (c'est surement plus)
+  set q-présence-brousse 0.02 ; les gens sont 5 fois moins présent en brousse que dans les champs de case et intermédiaire (a calibrer)
 
 
 
@@ -142,8 +146,8 @@ to setup
   villages-generator
   parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
   trees-generator
-  crops-assignment ; chaque parcelle se voit assigner un type de culture, pour l'instant pris seulement entre mil et arachide
   jachère-generator
+  crops-assignment ; chaque parcelle se voit assigner un type de culture, pour l'instant pris seulement entre mil et arachide
   crop-tree-influence
   bergers-generator
   update-variables
@@ -239,18 +243,18 @@ to parcels-generator
 
 end
 
-to jachère-generator
+to jachère-generator ;bof cette procédure - un peu inutile
 
   let _myIdParcelleJA [id-parcelle] of patches with [champ-brousse = TRUE];on récupère toute les identifiant de tout les patches
   set _myIdParcelleJA remove-duplicates _myIdParcelleJA ;on supprime les doublons
 
-  foreach _myIdParcelleJA [ x ->
-    ask patches with [id-parcelle = x][
-      if pycor > 45 [set zone 1]
-      if pxcor > 45 [set zone 2]
-      if pxcor < 45 and pycor < 45 [set zone 3]
+    ask patches [
+    if pycor > 45 [set zone 0]
+    if pxcor < 46 and pycor < 46 [set zone 1]
+    if pxcor > 45 [set zone 2]
+
     ]
-  ]
+
 
 end
 
@@ -288,6 +292,7 @@ to crops-assignment
     let _total-jachère-area (count patches with[culture = "jachère"] / count patches) * 100
     if _total-jachère-area < surface-jachère  [
      ask field x [
+      ifelse [zone] of patch-here = 2 [
         ask my-patches with [en-culture = FALSE][
         if champ-brousse = TRUE [
           set culture "jachère"
@@ -295,7 +300,8 @@ to crops-assignment
           set en-culture TRUE
         ]
       ]
-    ]
+      ][]
+  ]
   ]
   ]
 
@@ -349,6 +355,7 @@ to bergers-generator
     set nb-têtes (random 30) + 15
     set nb-ha (random 3) + 2
     set transhumance FALSE
+    set color brown
   ]
 end
 
@@ -368,6 +375,7 @@ to agriculteurs-generator
    foreach _myIdParcelle [ x ->
     create-agriculteurs 1
       [set id-agri x
+      set size 1
        set engagé FALSE]
     ]
 
@@ -390,19 +398,25 @@ to go
 
   présence-champs
 
-  if day-of-year = 92 [
+  if day-of-year = 123 [
+     retour-bergers
+  ]
+  if day-of-year = 140 [
+
     récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     récolte-machine
     rotation-cultures
-    retour-bergers
-    ]
 
-  if day-of-year < 130 [] ; HIVERNAGE
-  if day-of-year >= 130 []; SAISON SECHE
+  ]
+
+  if day-of-year < 140 [
+  berger-jachère
+  ] ; HIVERNAGE
+  if day-of-year >= 140 []; SAISON SECHE
 
   if day-of-year = 339
   [rejets]
-  if day-of-year < 20
+  if day-of-year > 339
   [Régénération-NA]
 
   if day-of-year > 300 or day-of-year < 20 ; a changer février
@@ -432,11 +446,88 @@ to rotation-cultures ; problème les surfaces en mil sont trop faibles
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
 
+  foreach _myIdParcelle [ x ->
+      ask patches with [id-parcelle = x and rotation = FALSE][
+        if culture != "mil" [
+          set culture "mil"
+          set pcolor yellow
+        ]
+      ]
+    ]
+
+
+;  foreach _myIdParcelle [ x ->
+;    let _total-jachère-area (count patches with [culture = "jachère"] / count patches) * 100
+;    if _total-jachère-area < surface-jachère [
+;      if année-rotation = 0 [ ask patches with [id-parcelle = x and zone = 0][
+;        set culture "jachère"
+;        set pcolor 9
+;        set rotation TRUE
+;        ]
+;      ]
+;        if année-rotation = 1 [ ask patches with [id-parcelle = x and zone = 1][
+;        set culture "jachère"
+;        set pcolor 9
+;        set rotation TRUE
+;        ]
+;      ]
+;      if année-rotation = 2 [ask patches with [id-parcelle = x and zone = 2][
+;        set culture "jachère"
+;        set pcolor 9
+;        set rotation TRUE
+;        ]
+;      ]
+;    ]
+;  ]
+
+let fields-id [who] of fields
+
+ foreach fields-id [ y ->
+    let _total-jachère-area (count patches with[culture = "jachère"] / count patches) * 100
+    if _total-jachère-area < surface-jachère  [
+      ask field y [
+        if année-rotation = 0 [
+          ifelse [zone] of patch-here = 0 [
+            ask my-patches with [rotation = FALSE][
+              if champ-brousse = TRUE [
+                set culture "jachère"
+                set pcolor 9
+                set rotation TRUE
+              ]
+            ]
+          ][]
+        ]
+        if année-rotation = 1 [
+          ifelse [zone] of patch-here = 1 [
+            ask my-patches with [rotation = FALSE][
+              if champ-brousse = TRUE [
+                set culture "jachère"
+                set pcolor 9
+                set rotation TRUE
+              ]
+            ]
+          ][]
+        ]
+        if année-rotation = 2 [
+          ifelse [zone] of patch-here = 2 [
+            ask my-patches with [rotation = FALSE][
+              if champ-brousse = TRUE [
+                set culture "jachère"
+                set pcolor 9
+                set rotation TRUE
+              ]
+            ]
+          ][]
+        ]
+      ]
+    ]
+  ]
+
 
   foreach _myIdParcelle [ x ->
     let _total-groundnuts-area (count patches with [culture = "groundnuts"] / count patches with [culture != "jachère"]) * 100
     if _total-groundnuts-area < (100 - mil-porcent) [
-    ask patches with [id-parcelle = x and culture = "jachère"][
+    ask patches with [id-parcelle = x and rotation = FALSE][
         set culture "groundnuts"
         set pcolor brown
         set rotation TRUE
@@ -445,33 +536,17 @@ to rotation-cultures ; problème les surfaces en mil sont trop faibles
     ]
   ]
 
-    foreach _myIdParcelle [ x ->
-    ask patches with [id-parcelle = x and rotation = FALSE][
-      if culture != "mil" [
-        set culture "mil"
-        set pcolor yellow
-        set rotation TRUE
-      ]
-    ]
-  ]
-
-  foreach _myIdParcelle [ x ->
-    let _total-jachère-area (count patches with [culture = "jachère"] / count patches) * 100
-    if _total-jachère-area < surface-jachère [
-    ask patches with [id-parcelle = x and rotation = FALSE and champ-brousse = TRUE][
-        set culture "jachère"
-        set pcolor 9
-        set rotation TRUE
-      ]
-    ]
-  ]
-
-
-  ask patches with [rotation = FALSE][
-    set pas-rotation pas-rotation + 1
-  ]
-
   ask patches [set rotation FALSE]
+
+  ifelse année-rotation = 0 [
+    set année-rotation année-rotation + 1
+  ][
+    ifelse année-rotation = 1 [
+      set année-rotation année-rotation + 1
+    ][
+      set année-rotation année-rotation - 2
+    ]
+  ]
 
 end
 
@@ -526,20 +601,16 @@ to récolte-machine
 
   ; les pousses sont détruites par les machines si elles ne sont pas signalées (signalé FALSE). Elles sont protégées par la jachère (2/10)
   ; et sont sauvées à partir d'un certain âge (pousse-sauvée)
-  ; calibrer les chances de survie - selon les machines et les animaux
+  ;
 
   ask pousses with [age < pousse-sauvée] [
     if signalé = FALSE [
-    ifelse [culture] of patch-here = "jachère" [
-        let _chance-survie random 10
-        if _chance-survie > 2 [
-          die
-        ]
-      ][
-        die
+    ifelse [culture] of patch-here != "jachère"
+        [die]
+        []
       ]
     ]
-  ]
+
 end
 
 to nourrir-paille
@@ -606,6 +677,16 @@ to berger-coupe
 
 end
 
+to berger-jachère
+  ask bergers with [nb-têtes < gros-troupeau] [
+    move-to one-of patches with [culture ="jachère"]
+    if any? pousses in-radius 3 [
+      ask pousses in-radius 3 [die]
+    ]
+  ]
+
+end
+
 to présence-champs
 
   ; problème est que les agriculteurs n'ont pas de champ assigné, vont dans l'un et dans l'autre.
@@ -615,13 +696,13 @@ to présence-champs
     move-to one-of patches with [id-parcelle = [id-agri] of myself]
     ifelse [champ-brousse] of patch-here = TRUE [
       if [culture] of patch-here = "jachère" [move-to one-of villages]
-      ifelse day-of-year > 150 [
-        if random 100 > tps-au-champ [move-to village 0]
+      ifelse day-of-year > 140 [
+        if random 100 > (tps-au-champ * q-présence-brousse) [move-to village 0]
       ]
         []
     ][
-      ifelse day-of-year > 150 [
-      if random 100 > tps-au-champ [move-to village 0]
+      ifelse day-of-year > 140 [
+      if random 100 > (tps-au-champ) [move-to village 0]
         ][]
     ]
   ]
@@ -947,7 +1028,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-50.0
+15.0
 1
 1
 NIL
@@ -1145,7 +1226,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-10.0
+25.0
 1
 1
 NIL
@@ -1180,6 +1261,21 @@ nb-coupeurs
 100
 50.0
 1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+645
+320
+825
+353
+q-présence-brousse
+q-présence-brousse
+0
+1
+0.02
+0.01
 1
 NIL
 HORIZONTAL
