@@ -65,7 +65,8 @@ breed [coupeurs coupeur]
 coupeurs-own []
 
 breed [agriculteurs agriculteur]
-agriculteurs-own []
+agriculteurs-own [
+id-agri]
 
 breed [villages village]
 
@@ -79,7 +80,6 @@ trees-own [
 
 breed [pousses pousse]
 pousses-own [
-  disséminée ; inutile pour l'instant
   age ; age en jour (possibilité de le changer en année)
   signalé
   rna-coupe
@@ -89,7 +89,6 @@ breed [fields field]
 fields-own [
   my-patches
   field-area
-  parcelle-brousse
   visité
 ]
 
@@ -192,7 +191,6 @@ to parcels-generator
     create-fields 1 [
       setxy random-xcor random-ycor
       set size 0.1
-      set parcelle-brousse TRUE
       set visité FALSE
       ifelse [pcolor] of patch-here != black [
 
@@ -310,7 +308,6 @@ to villages-generator
      setxy random-xcor random-ycor
      ask trees in-radius 20 [set proche-village TRUE]
     ask patches in-radius distance-champ-brousse [set champ-brousse FALSE]
-    ask fields in-radius distance-champ-brousse [set parcelle-brousse FALSE]
     ]
 end
 
@@ -341,9 +338,13 @@ end
 
 to agriculteurs-generator
 
-  let _nb-fields count fields
-  create-agriculteurs _nb-fields
+  let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
+  set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
 
+   foreach _myIdParcelle [ x ->
+    create-agriculteurs 1
+      [set id-agri x]
+    ]
 
 end
 
@@ -374,7 +375,7 @@ to go
   if day-of-year = 339
   [rejets]
   if day-of-year = 1
-  [RNA]
+  [Régénération-NA]
 
   if day-of-year > 300 or day-of-year < 20 ; a changer février
   [nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
@@ -396,9 +397,9 @@ end
 
 to rotation-cultures ; problème les surfaces en mil sont trop faibles
 
-  ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière
+  ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière (hypo)
   ; jachère doit être contiguë
-  ; le problème est que les surfaces en mil se réduisent - pq?
+  ; problème des parcelles d'arachide - trop variable d'une année à l'autre
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
@@ -459,14 +460,14 @@ to récolte
     set rendement-groundnuts-p 0
   ]
 
-  ask patches [ifelse culture = "mil"[
+  ask patches with [culture != "jachère"] [ifelse culture = "mil"[
     set rendement-mil-g 6.26
     set rendement-mil-p 18.23][
     set rendement-groundnuts-g 3.71
     set rendement-groundnuts-p 11.71]
   ]
 
-  ask patches with [under-tree = TRUE][ifelse culture = "mil"[
+  ask patches with [under-tree = TRUE and culture != "jachère"][ifelse culture = "mil"[
     set rendement-mil-g rendement-mil-g * 1.36
     set rendement-mil-p rendement-mil-p * 1.4][; la valeur est arbitraire ici (à calibrer)
     set rendement-groundnuts-g rendement-groundnuts-g * 1 ; inutile car effet du F.A pas prouvé
@@ -554,9 +555,12 @@ end
 
 to berger-coupe
 
-  ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement) e qui affecte les cultures aux alentours
+  ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement)
   ; Seulement un critère influence leur choix: la proximité au village, peut-être affiner les critères de choix (entretien avec Diouf)
-  ; ici une grosse hypothèse a été faite: l'étêtage d'un arbre met un terme à son effet fertilisant (sûrement faux)
+  ; ici une grosse hypothèse a été faite: l'étêtage d'un arbre met un terme à son effet fertilisant (sûrement faux) hypothèse levée car même
+  ; des années après la disparition de l'arbre, le sol est toujours plus fertile.
+
+  ; A FAIRE définir un stock de Neem au village + Intégrer un indice de peur / réduction des coupes.
 
 
      ; mesure un peu arbitraire, calibration plus fine?
@@ -567,39 +571,48 @@ to berger-coupe
     ask trees-here [
       set size 0.1
       set nb-coupes nb-coupes + 1
-      ask patches with [culture = "mil"] in-radius 2 [
-          set under-tree FALSE]
-      ask patches with [culture = "groundnuts"] in-radius 1 [
-          set under-tree FALSE]
+;      ask patches with [culture = "mil"] in-radius 2 [
+;          set under-tree FALSE]
+;      ask patches with [culture = "groundnuts"] in-radius 1 [
+;          set under-tree FALSE]
     ]
   ]
   []
-  ;]
-
-
-
-
 
 
 end
 
 to présence-champs
-  let fields-id [who] of fields
-  let agriculteurs-id [who] of agriculteurs
 
-  foreach agriculteurs-id [ x ->
-  ask agriculteur x [
-      let proba random 10
-      ifelse proba > 5 [
-      if any? fields with [visité = FALSE][
-        move-to one-of fields
-        ask fields in-radius 1 [set visité TRUE]
-        ]
-        ][
-        move-to village 0]
-      ]
+  ; problème est que les agriculteurs n'ont pas de champ assigné, vont dans l'un et dans l'autre.
+
+;  let agriculteurs-id [who] of agriculteurs
+
+;  foreach agriculteurs-id [ x ->
+;  ask agriculteur x [
+;      let proba random 10
+;      ifelse proba > 5 [
+;      if any? fields with [visité = FALSE][
+;        move-to one-of fields
+;        ask fields in-radius 1 [set visité TRUE]
+;        ]
+;        ][
+;        move-to village 0]
+;      ]
+;    ]
+;  ask fields [set visité FALSE]
+
+  ask agriculteurs
+  [
+    let _proba random 10
+    move-to one-of patches with [id-parcelle = [id-agri] of myself]
+    ifelse [champ-brousse] of patch-here = TRUE [
+      if [culture] of patch-here = "jachère" [move-to one-of villages]
+      if _proba < 8 [move-to one-of villages]
+    ][
+      if _proba > 8 [move-to one-of villages]
     ]
-  ask fields [set visité FALSE]
+  ]
 end
 
 to croissance-arbre
@@ -642,7 +655,7 @@ end
 
  to croissance-pousse
   ; les pousses deviennent arbres à partir d'un certain nb de jour (devient-kadd)
-  ; la croissance est accéléré de 300% par la RNA
+  ; la croissance est accéléré de 300% par la RNA - besoin de calibrer + tous les protecteurs semblent tailler les arbres
 
   ask pousses [
      set age age + 1
@@ -680,7 +693,6 @@ to rejets
       set size 0.7
       rt random 360
       forward 10
-      set disséminée FALSE
       set age 0
       set signalé FALSE
       set rna-coupe FALSE
@@ -721,10 +733,10 @@ to RNNA
 
 end
 
-to RNA
+to Régénération-NA
   ; protection des jeunes pousses
   ; accélération de la croissance grâce à la coupe
-
+if RNA [
   ask fields [
     if any? pousses in-radius 5 [
     ask pousses in-radius 5
@@ -734,6 +746,7 @@ to RNA
         set rna-coupe TRUE
       ]
     ]
+  ]
   ]
 
 end
@@ -961,10 +974,10 @@ NIL
 1
 
 PLOT
-635
-170
-835
-320
+815
+10
+975
+130
 Volume de mil
 year
 Vol-mil
@@ -979,10 +992,10 @@ PENS
 "pen-0" 1.0 0 -5298144 true "" ""
 
 MONITOR
-895
-320
-1052
-365
+975
+165
+1132
+210
 NIL
 stock-fourrage-moyen
 1
@@ -990,10 +1003,10 @@ stock-fourrage-moyen
 11
 
 PLOT
-855
-170
-1055
-320
+975
+45
+1135
+165
 paille-berger
 NIL
 NIL
@@ -1008,15 +1021,15 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 SLIDER
-880
-135
-1052
-168
+977
+10
+1137
+43
 paille-laissée
 paille-laissée
 0
 100
-50.0
+49.0
 1
 1
 %
@@ -1034,10 +1047,10 @@ count bergers with [transhumance = FALSE]
 9
 
 PLOT
-1080
-170
-1280
-320
+1135
+125
+1295
+245
 nombre d'arbres 
 NIL
 NIL
@@ -1053,10 +1066,10 @@ PENS
 "pen-1" 1.0 0 -7500403 true "" "plot count trees "
 
 PLOT
-1075
+1135
 10
-1275
-160
+1295
+130
 Âge moyen du parc
 NIL
 NIL
@@ -1083,10 +1096,10 @@ MONITOR
 9
 
 CHOOSER
-825
-390
-1032
-435
+1080
+375
+1287
+420
 Mode_de_surveillance
 Mode_de_surveillance
 "Aucun" "Surveillance populaire" "Comité de surveillance" "Agent E&F"
@@ -1129,15 +1142,31 @@ MONITOR
 1
 9
 
-CHOOSER
-825
-445
-992
-490
-Mode_Rénégération
-Mode_Rénégération
-"RNA" "RNNA"
+SWITCH
+645
+180
+748
+213
+RNA
+RNA
 0
+1
+-1000
+
+SLIDER
+645
+215
+817
+248
+engagés-initial
+engagés-initial
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
