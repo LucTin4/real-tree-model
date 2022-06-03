@@ -16,6 +16,7 @@ globals [
   pousse-sauvée ; nb jours à partir duquel la pousse ne peut plus être détruit par une machine
   distance-champ-brousse ; jusqu'où s'étendent les champs intermédiaires nb * patch-area
   nombre-coupeurs ; a combien estimer le nombre de coupeur
+  paille-laissée ; avant slider - mais aucune paille laissée désormais
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -33,6 +34,7 @@ globals [
   stock-fourrage-moyen
 
 ]
+
 patches-own [
 
   tree-influence
@@ -47,6 +49,8 @@ patches-own [
   pas-rotation ; permet de suivre les parcelles qui n'ont pas rotatées ( système de +1)
   rotation ; TRUE/FALSE qui exclue de la procédure les parcelles ayant déjà rotatées
   champ-brousse;
+  zoné; TRUE/FALSE utilisé pour définition des zones de jachère
+  zone
 
 ]
 
@@ -66,7 +70,8 @@ coupeurs-own []
 
 breed [agriculteurs agriculteur]
 agriculteurs-own [
-id-agri]
+  id-agri
+  engagé]
 
 breed [villages village]
 
@@ -110,7 +115,6 @@ to setup
   ; globals
   set gtree-influence 2 ; problème car valeur =/= pour l'arachide
   set patch-area 10
-  set nombre-villages 1
 
   set conso-tête 1.0 ; à calibrer
   set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier.
@@ -121,7 +125,6 @@ to setup
   set surface-jachère 20
   set pousse-sauvée 1825 ; plus de 6 ans
   set distance-champ-brousse 40 ; les champs de brousse commencent à 400m du village (c'est surement plus)
-  set nombre-coupeurs 10
 
 
 
@@ -132,17 +135,21 @@ to setup
    set rotation FALSE
    set en-culture FALSE
    set champ-brousse TRUE
+   set zoné FALSE
 
   ]
+
   villages-generator
   parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
   trees-generator
   crops-assignment ; chaque parcelle se voit assigner un type de culture, pour l'instant pris seulement entre mil et arachide
+  jachère-generator
   crop-tree-influence
   bergers-generator
   update-variables
   coupeurs-generator
   agriculteurs-generator
+
 
   reset-ticks
 
@@ -181,6 +188,18 @@ end
 
 end
 
+to villages-generator
+  create-villages 1
+  [
+    set size 5
+    set color red
+    setxy 75 75
+    ask trees in-radius 20 [set proche-village TRUE]
+    ask patches in-radius distance-champ-brousse [set champ-brousse FALSE]
+
+    ]
+end
+
 to parcels-generator
 
   ; génération des parcelles à partir d'un agent (field) qui une fois créé détermine une zone d'influence autour de lui.
@@ -217,6 +236,21 @@ to parcels-generator
     ] ; peut se générer directement car patch n'appartient pas encore à une parcelle
 
   ]]
+
+end
+
+to jachère-generator
+
+  let _myIdParcelleJA [id-parcelle] of patches with [champ-brousse = TRUE];on récupère toute les identifiant de tout les patches
+  set _myIdParcelleJA remove-duplicates _myIdParcelleJA ;on supprime les doublons
+
+  foreach _myIdParcelleJA [ x ->
+    ask patches with [id-parcelle = x][
+      if pycor > 45 [set zone 1]
+      if pxcor > 45 [set zone 2]
+      if pxcor < 45 and pycor < 45 [set zone 3]
+    ]
+  ]
 
 end
 
@@ -300,16 +334,6 @@ to crop-tree-influence
   ]
 end
 
-to villages-generator
-  create-villages nombre-villages
-    [
-     set size 5
-     set color red
-     setxy random-xcor random-ycor
-     ask trees in-radius 20 [set proche-village TRUE]
-    ask patches in-radius distance-champ-brousse [set champ-brousse FALSE]
-    ]
-end
 
 to bergers-generator
 
@@ -330,7 +354,7 @@ end
 
 to coupeurs-generator
 
-  create-coupeurs nombre-coupeurs
+  create-coupeurs nb-coupeurs
   [
 
   ]
@@ -343,8 +367,13 @@ to agriculteurs-generator
 
    foreach _myIdParcelle [ x ->
     create-agriculteurs 1
-      [set id-agri x]
+      [set id-agri x
+       set engagé FALSE]
     ]
+
+  ask n-of engagés-initiaux agriculteurs [
+    set engagé TRUE
+  ]
 
 end
 
@@ -369,18 +398,17 @@ to go
     ]
 
   if day-of-year < 130 [] ; HIVERNAGE
-  if day-of-year >= 130 [
-  coupe-pousse]; SAISON SECHE
+  if day-of-year >= 130 []; SAISON SECHE
 
   if day-of-year = 339
   [rejets]
-  if day-of-year = 1
+  if day-of-year < 20
   [Régénération-NA]
 
   if day-of-year > 300 or day-of-year < 20 ; a changer février
   [nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
-
+  coupe-pousse
   croissance-pousse
   croissance-arbre
   mort-arbre
@@ -538,7 +566,7 @@ to nourrir-troupeau
 
     nourrir-paille
     ask bergers [
-      if stock-fourrage < 500 [
+      if stock-fourrage < 1000 [
         ifelse nb-têtes > gros-troupeau
         [
          move-to one-of villages
@@ -571,10 +599,6 @@ to berger-coupe
     ask trees-here [
       set size 0.1
       set nb-coupes nb-coupes + 1
-;      ask patches with [culture = "mil"] in-radius 2 [
-;          set under-tree FALSE]
-;      ask patches with [culture = "groundnuts"] in-radius 1 [
-;          set under-tree FALSE]
     ]
   ]
   []
@@ -586,33 +610,22 @@ to présence-champs
 
   ; problème est que les agriculteurs n'ont pas de champ assigné, vont dans l'un et dans l'autre.
 
-;  let agriculteurs-id [who] of agriculteurs
-
-;  foreach agriculteurs-id [ x ->
-;  ask agriculteur x [
-;      let proba random 10
-;      ifelse proba > 5 [
-;      if any? fields with [visité = FALSE][
-;        move-to one-of fields
-;        ask fields in-radius 1 [set visité TRUE]
-;        ]
-;        ][
-;        move-to village 0]
-;      ]
-;    ]
-;  ask fields [set visité FALSE]
-
   ask agriculteurs
   [
-    let _proba random 10
     move-to one-of patches with [id-parcelle = [id-agri] of myself]
     ifelse [champ-brousse] of patch-here = TRUE [
       if [culture] of patch-here = "jachère" [move-to one-of villages]
-      if _proba < 8 [move-to one-of villages]
+      ifelse day-of-year > 150 [
+        if random 100 > tps-au-champ [move-to village 0]
+      ]
+        []
     ][
-      if _proba > 8 [move-to one-of villages]
+      ifelse day-of-year > 150 [
+      if random 100 > tps-au-champ [move-to village 0]
+        ][]
     ]
   ]
+
 end
 
 to croissance-arbre
@@ -663,6 +676,7 @@ end
       set age age + 2
     ]
      if age > devient-kadd [
+      show "hiiii"
       set breed trees
       set size 3
       set nb-coupes 0
@@ -733,21 +747,32 @@ to RNNA
 
 end
 
-to Régénération-NA
-  ; protection des jeunes pousses
-  ; accélération de la croissance grâce à la coupe
+to Régénération-NA ; ATTENTION DIFFICILE DE VOIR SI ELLE MARCHE COMME JE VEUX
+
+  ; protection des jeunes pousses de SA parcelle. Les protège quand il est présent. la protection dépend donc de la présence.
+
+  ; A partir d'un certains nombres de pousses protégées, il ne protège plus les nouvelles (nb potentiellement a faire varier)
+  ; accélération de la croissance a faire dans une autres procédure.
+
 if RNA [
-  ask fields [
-    if any? pousses in-radius 5 [
-    ask pousses in-radius 5
-      [
+    ask agriculteurs with [engagé = TRUE][
+      if [id-agri] of self = [id-parcelle] of patch-here [ ; si il est dans sa parcelle
+      if any? pousses with [[id-parcelle] of patch-here = [id-agri] of myself][ ; si il y a des pousses dans sa parcelle
+          let _nb-pousses-protégées count pousses with [[id-parcelle] of patch-here = [id-agri] of myself and signalé = TRUE]
+          ifelse _nb-pousses-protégées < nb-protG-max [ ; si il n'y a pas plus de 10 pousses protégées dans sa parcelle
+
+        ask pousses with [[id-parcelle] of patch-here = [id-agri] of myself and signalé = FALSE][
         set color red
         set signalé TRUE
-        set rna-coupe TRUE
+            ]
+          ]
+          []
+        ]
       ]
     ]
   ]
-  ]
+
+
 
 end
 
@@ -778,9 +803,9 @@ end
 to update-graph
 
   if day-of-year = 1 [
-    set-current-plot "Volume de mil"
-  set-current-plot-pen "pen-0"
-  plotxy year stock-mil-p
+;    set-current-plot "Volume de mil"
+;  set-current-plot-pen "pen-0"
+;  plotxy year stock-mil-p
     set-current-plot "Âge moyen du parc"
     ask trees [
     set-current-plot-pen "pen-0"
@@ -788,11 +813,11 @@ to update-graph
     ]
   ]
 
-  set-current-plot "paille-berger"
-  ask bergers [
-    set-plot-pen-color color
-    plotxy ticks stock-fourrage
-  ]
+;  set-current-plot "paille-berger"
+;  ask bergers [
+;    set-plot-pen-color color
+;    plotxy ticks stock-fourrage
+;  ]
 
 end
 @#$#@#$#@
@@ -849,7 +874,7 @@ number-trees
 number-trees
 0
 4000
-484.0
+535.0
 1
 1
 NIL
@@ -922,7 +947,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-23.0
+50.0
 1
 1
 NIL
@@ -973,68 +998,6 @@ NIL
 NIL
 1
 
-PLOT
-815
-10
-975
-130
-Volume de mil
-year
-Vol-mil
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"pen-0" 1.0 0 -5298144 true "" ""
-
-MONITOR
-975
-165
-1132
-210
-NIL
-stock-fourrage-moyen
-1
-1
-11
-
-PLOT
-975
-45
-1135
-165
-paille-berger
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 2 -16777216 true "" ""
-
-SLIDER
-977
-10
-1137
-43
-paille-laissée
-paille-laissée
-0
-100
-49.0
-1
-1
-%
-HORIZONTAL
-
 MONITOR
 130
 320
@@ -1047,10 +1010,10 @@ count bergers with [transhumance = FALSE]
 9
 
 PLOT
-1135
-125
-1295
-245
+960
+15
+1160
+180
 nombre d'arbres 
 NIL
 NIL
@@ -1066,10 +1029,10 @@ PENS
 "pen-1" 1.0 0 -7500403 true "" "plot count trees "
 
 PLOT
-1135
+800
 10
-1295
-130
+960
+180
 Âge moyen du parc
 NIL
 NIL
@@ -1094,16 +1057,6 @@ MONITOR
 1
 1
 9
-
-CHOOSER
-1080
-375
-1287
-420
-Mode_de_surveillance
-Mode_de_surveillance
-"Aucun" "Surveillance populaire" "Comité de surveillance" "Agent E&F"
-1
 
 SLIDER
 35
@@ -1156,10 +1109,73 @@ RNA
 SLIDER
 645
 215
-817
+837
 248
-engagés-initial
-engagés-initial
+engagés-initiaux
+engagés-initiaux
+0
+count agriculteurs
+78.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+645
+250
+760
+283
+nb-proTG-max
+nb-proTG-max
+0
+50
+20.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+645
+285
+817
+318
+tps-au-champ
+tps-au-champ
+0
+100
+10.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+845
+270
+1045
+420
+pousses-protégées
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count pousses with [signalé = TRUE]"
+
+SLIDER
+1060
+205
+1232
+238
+nb-coupeurs
+nb-coupeurs
 0
 100
 50.0
