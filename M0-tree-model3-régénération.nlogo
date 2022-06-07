@@ -16,7 +16,7 @@ globals [
   pousse-sauvée ; nb jours à partir duquel la pousse ne peut plus être détruit par une machine
   distance-champ-brousse ; jusqu'où s'étendent les champs intermédiaires nb * patch-area
   nombre-coupeurs ; a combien estimer le nombre de coupeur
-  paille-laissée ; avant slider - mais aucune paille laissée désormaise
+  paille-laissée ; avant slider - mais aucune paille laissée désormais variable a-t-elle encore un sens?
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -51,7 +51,7 @@ patches-own [
   rotation ; TRUE/FALSE qui exclue de la procédure les parcelles ayant déjà rotatées
   champ-brousse;
   zoné; TRUE/FALSE utilisé pour définition des zones de jachère
-  zone
+  zone; 3 zones pour la rotation de la jachère
 
 ]
 
@@ -71,8 +71,9 @@ coupeurs-own []
 
 breed [agriculteurs agriculteur]
 agriculteurs-own [
-  id-agri
-  engagé]
+  id-agri ; ce qui le lie à son unique parcelle
+  engagé ; TRUE/FALSE engagement dans la RNA
+]
 
 breed [villages village]
 
@@ -146,7 +147,6 @@ to setup
   villages-generator
   parcels-generator ; génération des parcelles - trouver une astuce pour que les parcelles soient moins circulaires
   trees-generator
-  jachère-generator
   crops-assignment ; chaque parcelle se voit assigner un type de culture, pour l'instant pris seulement entre mil et arachide
   crop-tree-influence
   bergers-generator
@@ -193,6 +193,9 @@ end
 end
 
 to villages-generator
+
+  ; le village apparait toujours au même endroit. sont déterminés les chanps de case et champs de brousse (distance-champ-brousse)
+
   create-villages 1
   [
     set size 5
@@ -243,49 +246,24 @@ to parcels-generator
 
 end
 
-to jachère-generator ;bof cette procédure - un peu inutile
-
-  let _myIdParcelleJA [id-parcelle] of patches with [champ-brousse = TRUE];on récupère toute les identifiant de tout les patches
-  set _myIdParcelleJA remove-duplicates _myIdParcelleJA ;on supprime les doublons
-
-    ask patches [
-    if pycor > 45 [set zone 0]
-    if pxcor < 46 and pycor < 46 [set zone 1]
-    if pxcor > 45 [set zone 2]
-
-    ]
-
-
-end
 
 to crops-assignment
 
   ; Ici à chaque parcelle créée est assigné une culture, encore une fois par l'intermédiaire des agents "fields". Permet de contrôler la part de chaque culture
   ; problème mineur lié à l'assignation 1 à 1: la valeur du slider =/= valeur finale (monitorée)
   ; mieux renseigner la part de chaque culture (% mil, arachide, jachère)
-  ; rendre la jachère contiguë
+  ; 3 zones ont été définie - elles permettent la rotation de la jachère sur 3 ans.
+  ; problème - les champs de brousse sont éloignés d'environ 1km (hors de la surface de simulation)
 
 ;  foreach [1.1 2.2 2.6] [ x -> show (word x " -> " round x) ]
+   ask patches [
+    if pycor > 45 [set zone 0]
+    if pxcor < 46 and pycor < 46 [set zone 1]
+    if pxcor > 45 [set zone 2]
+
+    ]
 
   let fields-id [who] of fields
-
-;  ask one-of fields [
-;    ask my-patches [
-;      set culture "jachère"
-;      set pcolor 9
-;      set en-culture TRUE]
-;  ]
-;
-;  ask fields with [any? patches with [culture = "jachère"] in-radius 30][
-;      let _total-jachère-area (count patches with[culture = "jachère"] / count patches) * 100
-;      while [_total-jachère-area < surface-jachère] [
-;        ask my-patches [
-;          set culture "jachère"
-;          set pcolor 9
-;          set en-culture TRUE
-;        ]
-;      ]
-;    ]
 
 
   foreach fields-id [ x ->
@@ -329,6 +307,7 @@ end
 to crop-tree-influence
 
   ;Génération de la zone d'infleunce (de fertilisation) des arbres sur les cultures. Calibration Roupsard et son doctorant.
+  ; Est-ce que cettte procédure est encore utile? Oui si on considère les stocks de mil et d'arachide comme Output intéressant.
 
   ask trees [
     ask patches with [culture = "mil"] in-radius 2 [
@@ -345,6 +324,7 @@ to bergers-generator
 
  ; génération des bergers du village. Ils sont liés à un troupeau dont le nombre de tête est variable et déterminé de façon aléatoire (calibrage à affiner?)
  ; et pocèdent un nombre d'ha entre 2 et 5 la aussi défini aléatoirement (calibrage à affiner?)
+ ; est-il nécessaire de créer une variable "troupeau gardé"? Ne semble pas être un frein majeur à la régénération du parc.
 
   create-bergers nombre-bergers
   [
@@ -361,6 +341,9 @@ end
 
 to coupeurs-generator
 
+  ; un nombre de coupeur (variable) est défini
+  ; Peut-être qu'il serait pertinent de faire varier ce nombre selon les besoins en bois / la sensibilisation des jeunes bergers?
+
   create-coupeurs nb-coupeurs
   [
 
@@ -368,6 +351,11 @@ to coupeurs-generator
 end
 
 to agriculteurs-generator
+
+  ; Pour chaque champ, un agriculteur est créé. Ils sont liés entre eux.
+  ; certains d'agriculteurs sont engagés dans la RNA (engagés-initiaux - variable qui reste à faire varier)
+  ; Il serait mieux d'assigner plusieurs champs à un même agriculteurs - si (hypo) l'agriculteur est plus suceptible de protéger les pousses
+  ; dans les champs proches.
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
@@ -437,11 +425,12 @@ to go
 end
 
 
-to rotation-cultures ; problème les surfaces en mil sont trop faibles
+to rotation-cultures
 
-  ; il reste à implémenter la priorité faite aux champs qui n'ont pas tourné l'année dernière (hypo)
-  ; jachère doit être contiguë
-  ; problème des parcelles d'arachide - trop variable d'une année à l'autre
+  ; Les parcelles tournent. Elles passent toutes en mil, puis la jachère apparait, et enfin les champs d'arachide (le reste)
+  ; On pourrait affiner la rotation: les champs de case tj en mil, les champs intermédiaires mil/arachide, après la jachère arachide
+  ; sauf si Puf Ndao (parcelles fumées en jachère)
+
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
@@ -454,31 +443,6 @@ to rotation-cultures ; problème les surfaces en mil sont trop faibles
         ]
       ]
     ]
-
-
-;  foreach _myIdParcelle [ x ->
-;    let _total-jachère-area (count patches with [culture = "jachère"] / count patches) * 100
-;    if _total-jachère-area < surface-jachère [
-;      if année-rotation = 0 [ ask patches with [id-parcelle = x and zone = 0][
-;        set culture "jachère"
-;        set pcolor 9
-;        set rotation TRUE
-;        ]
-;      ]
-;        if année-rotation = 1 [ ask patches with [id-parcelle = x and zone = 1][
-;        set culture "jachère"
-;        set pcolor 9
-;        set rotation TRUE
-;        ]
-;      ]
-;      if année-rotation = 2 [ask patches with [id-parcelle = x and zone = 2][
-;        set culture "jachère"
-;        set pcolor 9
-;        set rotation TRUE
-;        ]
-;      ]
-;    ]
-;  ]
 
 let fields-id [who] of fields
 
@@ -554,7 +518,7 @@ to récolte
 
   ; au premier jour de la saison sèche - récolte = constitution des stocks de mil et d'arachide. Stocks globaux sauf pour ceux des bergers
   ; qui ont été individualisé pour la paille de mil.
-  ; prendre en compte le volume d'arachide laissé par terre? (mil = 60%, arachide = 31% Vayssière et al) les valeurs ont sûrement bcp évolué.
+  ; prendre en compte le volume d'arachide laissé par terre? (mil = 60%, arachide = 31% Vayssière et al) mais plus rien n'est laissé dans les champs ajd
 
   ask patches [ ;reset rendement
     set rendement-mil-g 0
@@ -591,6 +555,10 @@ to récolte
 end
 
 to retour-bergers
+
+  ; le retour des bergers se fait entre fin octobre et décembre (à implémenter)
+  ; Y-a-t'il un intérêt a simuler les bergers transhumants? Ils coupent des Neem avant de partir mais semblent pas s'attaquer aux Faidherbias.
+
   ask bergers [
     set transhumance FALSE
   ]
@@ -599,9 +567,8 @@ end
 
 to récolte-machine
 
-  ; les pousses sont détruites par les machines si elles ne sont pas signalées (signalé FALSE). Elles sont protégées par la jachère (2/10)
-  ; et sont sauvées à partir d'un certain âge (pousse-sauvée)
-  ;
+  ; les pousses sont détruites par les machines si elles ne sont pas signalées (signalé FALSE). Elles sont protégées par la jachère
+  ; et sont sauvées à partir d'un certain âge (pousse-sauvée ~ 2 ans)
 
   ask pousses with [age < pousse-sauvée] [
     if signalé = FALSE [
@@ -617,6 +584,7 @@ to nourrir-paille
 
   ; Quand l'herbe vient à manquer (estimé en février), le berger commence à nourir son troupeau avec son stock de paille de mil
   ; la consommation quotidienne dépend du nombre de vache (tête) mais est-ce vraiment le cas? et combien consomme une vache/ un troupeau?
+
 
   ask bergers [
      ifelse stock-fourrage - conso-tête * nb-têtes > 0 [ ;
@@ -634,6 +602,9 @@ to nourrir-troupeau
 
   ; le troupeau est nourri avec les stocks de paille, une fois écoulé: soit départ en transhumance si gros troupeau (globale a calibrer), soit coupe d'arbre
   ; problème: les bergers avec petits troupeaux coupent des arbres avant que les stocks soient entiérement finis.
+
+  ; Réflechir de nouveau a cette procédure - les arbres sont coupés dès la disparition de l'herbe pour amortir la diminution des stocks
+  ; + faut-il inclure les Neems aussi? Puisque que la coupe des F dépend de la disponibilité des Neems
 
     nourrir-paille
     ask bergers [
@@ -654,15 +625,10 @@ end
 
 to berger-coupe
 
-  ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement)
-  ; Seulement un critère influence leur choix: la proximité au village, peut-être affiner les critères de choix (entretien avec Diouf)
-  ; ici une grosse hypothèse a été faite: l'étêtage d'un arbre met un terme à son effet fertilisant (sûrement faux) hypothèse levée car même
-  ; des années après la disparition de l'arbre, le sol est toujours plus fertile.
+  ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement + plus de prise en compte de la distance au village
 
   ; A FAIRE définir un stock de Neem au village + Intégrer un indice de peur / réduction des coupes.
-
-
-     ; mesure un peu arbitraire, calibration plus fine?
+  ; + utilisation de la variable de présence dans les champs à implémenter désormais.
 
   let _arbres-restant count trees with [size != 0.1]; with [proche-village = FALSE and size != 0.1]
   ifelse _arbres-restant != 0 [
@@ -678,6 +644,9 @@ to berger-coupe
 end
 
 to berger-jachère
+
+ ; les bergers restant vont dans la jachère (à partir du semi des arachides - a définir). Ils y coupent les jeunes pousses.
+
   ask bergers with [nb-têtes < gros-troupeau] [
     move-to one-of patches with [culture ="jachère"]
     if any? pousses in-radius 3 [
@@ -689,7 +658,8 @@ end
 
 to présence-champs
 
-  ; problème est que les agriculteurs n'ont pas de champ assigné, vont dans l'un et dans l'autre.
+  ; Les agriculteurs vont dans leur champ. Ils sont plus présents dans les champs de case que dans les champs de brousse (facteur q-présence-brousse)
+
 
   ask agriculteurs
   [
@@ -731,6 +701,7 @@ end
 
 to mort-arbre
   ; hypothèse forte que les coupes successive influence la durée de vie de l'arbre
+  ; les arbres meurt vers 100 ans.
 
   if day-of-year = 350 [
     ask trees [set age-tree age-tree + 1]]
@@ -757,7 +728,6 @@ end
       set age age + 2
     ]
      if age > devient-kadd [
-      show "hiiii"
       set breed trees
       set size 3
       set nb-coupes 0
@@ -780,7 +750,7 @@ end
 
 to rejets
 
-; les arbres font des rejets: quelles période? cb? ou?
+; les arbres font des rejets (nb-rejets): quelles période? cb? ou?
 ; les arbres étêtés n'en font pas
 
   ask trees with [size != 0.1][
@@ -811,22 +781,6 @@ to coupe-pousse
     ]
 end
 
-to RNNA
-  ; protction des jeunes pousses
-  ; pas d'accélération de croissance
-  ; pas protection contre les humains et les animaux
-
-  ask fields [
-    if any? pousses in-radius 5 [
-    ask pousses in-radius 5
-      [
-        set color red
-        set signalé TRUE
-      ]
-    ]
-  ]
-
-end
 
 to Régénération-NA ; ATTENTION DIFFICILE DE VOIR SI ELLE MARCHE COMME JE VEUX
 
@@ -1154,17 +1108,6 @@ gros-troupeau
 NIL
 HORIZONTAL
 
-SWITCH
-25
-360
-207
-393
-troupeaux-gardés
-troupeaux-gardés
-1
-1
--1000
-
 MONITOR
 25
 210
@@ -1183,7 +1126,7 @@ SWITCH
 213
 RNA
 RNA
-0
+1
 1
 -1000
 
@@ -1283,14 +1226,16 @@ HORIZONTAL
 @#$#@#$#@
 ## WHAT IS IT?
 
-Ce modèle montre les effets des arbres d'un parc arboré sur les rendements de cultures (mil et arachide) 
+Ce modèle simule l'évolution de l'état du parc arboré dans le temps, compte tenu des pressions, usages, et modee de gestion gravitant autour de l'arbre. 
 
 ## HOW IT WORKS
 
+L'espace représenté est de 100ha. Dans cette espace un village et des faidherbias, dont la densité locale a été déterminée grâce à des travaux de télédétection (Leroux et al), des champs, de case (proche du village) et de brousse, dont la culture change d'une année à l'autre. Les différentes procédures sont temporellement définies et s'activent en fonction du calendrier.
 
 
 ## HOW TO USE IT
 
+Le modèle 
 (how to use the model, including a description of each of the items in the Interface tab)
 
 ## THINGS TO NOTICE
