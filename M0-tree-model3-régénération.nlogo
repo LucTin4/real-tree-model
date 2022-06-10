@@ -4,6 +4,7 @@ globals [
   patch-area; 10m * 10m = 100m2
   nb-arbres
 
+
   parcels-size
 
 
@@ -40,6 +41,7 @@ globals [
 
   ; indicateurs
   %-under-tree
+  coupeurs-attrapes
 
 ]
 
@@ -74,7 +76,12 @@ bergers-own [
 ]
 
 breed [coupeurs coupeur]
-coupeurs-own []
+coupeurs-own [
+  attrape
+  nb-attrape
+  jours-peur
+  en-coupe
+]
 
 breed [agriculteurs agriculteur]
 agriculteurs-own [
@@ -105,6 +112,7 @@ fields-own [
   field-area
   visité
   coupé
+  plus-arbres
 ]
 
 
@@ -128,6 +136,7 @@ to setup
   set gtree-influence 2 ; problème car valeur =/= pour l'arachide
   set patch-area 10
   set nb-arbres 535
+  set coupeurs-attrapes 0
 
   set conso-tête 2 ; à calibrer
   set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier.
@@ -231,6 +240,7 @@ to parcels-generator
       setxy random-xcor random-ycor
       set size 0.1
       set coupé 0
+      set plus-arbres 0
       set visité FALSE
       ifelse [pcolor] of patch-here != black [
 
@@ -359,7 +369,10 @@ to coupeurs-generator
 
   create-coupeurs nb-coupeurs
   [
-
+    set attrape FALSE
+    set nb-attrape 0
+    set jours-peur 0
+    set en-coupe FALSE
   ]
 end
 
@@ -423,6 +436,7 @@ to go
 
   Régénération-NA
   coupe-pousse
+  surveillance-champ
   croissance-pousse
   croissance-arbre
   mort-arbre
@@ -442,7 +456,6 @@ to rotation-cultures
   ; Les parcelles tournent. Elles passent toutes en mil, puis la jachère apparait, et enfin les champs d'arachide (le reste)
   ; On pourrait affiner la rotation: les champs de case tj en mil, les champs intermédiaires mil/arachide, après la jachère arachide
   ; sauf si Puf Ndao (parcelles fumées en jachère)
-
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
@@ -675,6 +688,38 @@ to présence-champs
 
 end
 
+to surveillance-champ
+
+  ask agriculteurs with [engagé = TRUE][
+    if [id-parcelle] of patch-here = [id-agri] of self [ ; si l'agriculteur est dans son champ
+      let _my-field fields with [who = [id-agri] of myself]
+      let _nb-coupe first [coupé] of _my-field
+      ifelse _nb-coupe > 8 [                             ; si il a déjà eu de nbreuses coupes dans son champ
+        ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+          set attrape TRUE
+          set nb-attrape nb-attrape + 1
+          set coupeurs-attrapes coupeurs-attrapes + 1
+          ask patch-here [set pcolor blue] ; juste pour test
+          show "haha"
+        ]
+      ][
+        let _proba random 10
+        if _proba > 4 [
+          ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+            set attrape TRUE
+            set nb-attrape nb-attrape + 1
+            set coupeurs-attrapes coupeurs-attrapes + 1
+            show "hihi"
+            ask patch-here [set pcolor blue] ; juste pour test
+          ]
+        ]
+      ]
+    ]
+  ]
+
+  ask coupeurs [set en-coupe FALSE]
+
+end
 to croissance-arbre
 
   ; les arbres retrouvent leurs branches et leurs feuilles à partir d'un certain jour - tps-repousse (à déterminer et peut-être définir plusieurs palliers
@@ -720,9 +765,6 @@ end
 
   ask pousses [
      set age age + 1
-     if rna-coupe = TRUE [
-      set age age + 2
-    ]
      if age > devient-kadd [
       set breed trees
       set size 3
@@ -738,6 +780,9 @@ end
       ifelse any? villages in-radius 20 [
         set proche-village TRUE]
       [set proche-village FALSE]
+
+      let _quel-champ [id-parcelle] of patch-here
+      ask fields with [who = _quel-champ][set plus-arbres plus-arbres + 1]
     ]
   ]
 
@@ -756,7 +801,6 @@ to rejets
       forward 10
       set age 0
       set signalé FALSE
-      set rna-coupe FALSE
     ]
   ]
 
@@ -767,16 +811,33 @@ to coupe-pousse
   ; Les coupeurs se baladent et coupent une pousse (arbustre de minimum 3 ans) par jour si il n'y a pas de présence à proximité
   ; Quelle importance des coupes dans la non régénération? Comment estimer leur impact?
 
-  ask coupeurs [
+  ask coupeurs with [attrape = FALSE][
     let _quel-champ [id-parcelle] of patch-here
-    move-to one-of fields
-    if not any? agriculteurs in-radius 10 [
-      if any? pousses with [signalé = TRUE and age > age-p-interm] in-radius 10 [ ; potentiellement variable locale ici
-        ask one-of pousses with [signalé = TRUE and age > age-p-interm] in-radius 10 [die]
-        ask fields with [who = _quel-champ][set coupé coupé + 1]
+    move-to one-of patches
+    if any? pousses with [signalé = TRUE and age > age-p-interm] in-radius 10 [ ; potentiellement variable locale ici
+      ask one-of pousses with [signalé = TRUE and age > age-p-interm] in-radius 10 [die]
+      ask fields with [who = _quel-champ][set coupé coupé + 1]
+      set en-coupe TRUE
+    ]
+  ]
+
+
+  ask coupeurs with [attrape = TRUE][
+    set jours-peur jours-peur + 1
+    ifelse nb-attrape > 3 [ ; nb arbitraire
+      if jours-peur > 200 [ ; attend 1 an
+        set attrape FALSE
+        set jours-peur 0
+      ]
+    ][
+      if jours-peur > 30 [ ; attend 1 mois
+        set attrape FALSE
+        set jours-peur 0
       ]
     ]
-    ]
+  ]
+
+
 end
 
 
@@ -787,7 +848,7 @@ to Régénération-NA
     [protection-RNA ]
 
     nv-engagés-RNA
-;    désengagement-RNA
+    désengagement-RNA
   ]
 end
 
@@ -824,33 +885,56 @@ to nv-engagés-RNA
 
   ; procédure d'accroissement du nombres d'engagés - selon des réunions, selon la réussite de certains protecteurs, selon des contre-parties à la protection?
 
+  ; Réunion
 
   ifelse jour-réu != 0 [
     set jour-réu jour-réu - 1
   ][
-    if any? agriculteurs with [engagé = FALSE][
+    let _reste-parti count agriculteurs with [engagé = FALSE]
+    ifelse _reste-parti >= participants [
     ask n-of participants agriculteurs with [engagé = FALSE][
       set engagé TRUE
       ]
     ]
+    []
     set jour-réu 364 / fréquence-réu
   ]
+  ; diffusion par succès - oservation du champ
 
+  ask agriculteurs with [engagé = FALSE]
+  [ if [id-parcelle] of patch-here = [id-agri] of self [
+    if any? fields in-radius 10 with [plus-arbres > 2][
+      set engagé TRUE
+    ]
+    ]
+  ]
 
+  ; diffusion par discussions - en parler avec les voisins
+
+  ask agriculteurs with [engagé = FALSE]
+  [ if [id-parcelle] of patch-here = [id-agri] of self [
+    ;    if any? agriculteurs with [engagé  = TRUE] in-radius 15 [
+    ;      set disc-RNA disc-RNA + 1]
+    let _voisin-RNA count agriculteurs with [engagé = TRUE] in-radius 15
+    if _voisin-RNA > 5 [
+      set engagé TRUE
+    ]
+    ]
+  ]
 
 end
 
-;to désengagement-RNA
-;
-;  ; procédure de réduction du nombres d'engagés - selon de potentiels échecs de la protection liés à la non croissance des pousses ou aux coupes successives
-;  ; est-ce que la procédure est utile?
-;
-;  ask agriculteurs [
-;    let _my-field fields with [who = [id-agri] of myself]
-;    let _échec [coupé] of _my-field
-;    if _échec > 20 [set engagé FALSE] ; seuil a faire varier? a mieux déterminer
-;  ]
-;end
+to désengagement-RNA
+
+  ; procédure de réduction du nombres d'engagés - selon de potentiels échecs de la protection liés à la non croissance des pousses ou aux coupes successives
+  ; est-ce que la procédure est utile?
+
+  ask agriculteurs with [engagé = TRUE][
+    let _my-field fields with [who = [id-agri] of myself]
+    let _echec first [coupé] of _my-field
+    if _echec > 20 [set engagé FALSE] ; seuil a faire varier? a mieux déterminer
+  ]
+end
 
 
 to update-variables
@@ -890,12 +974,6 @@ to update-graph
     ]
 
   ]
-
-;  set-current-plot "paille-berger"
-;  ask bergers [
-;    set-plot-pen-color color
-;    plotxy ticks stock-fourrage
-;  ]
 
 end
 @#$#@#$#@
@@ -1141,7 +1219,7 @@ engagés-initiaux
 engagés-initiaux
 0
 count agriculteurs
-10.0
+20.0
 1
 1
 NIL
@@ -1228,7 +1306,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count agriculteurs with [engagé = TRUE]"
+"pen-0" 1.0 0 -7500403 true "" "plot count agriculteurs with [engagé = TRUE]"
 
 SLIDER
 20
@@ -1239,7 +1317,7 @@ nb-coupeurs
 nb-coupeurs
 0
 100
-21.0
+40.0
 1
 1
 NIL
@@ -1305,11 +1383,52 @@ participants
 participants
 0
 100
-10.0
+5.0
 1
 1
 NIL
 HORIZONTAL
+
+MONITOR
+580
+455
+630
+492
+nb-agri
+count agriculteurs
+0
+1
+9
+
+MONITOR
+540
+420
+630
+457
+agri-engagés
+count agriculteurs with [engagé = TRUE]
+17
+1
+9
+
+PLOT
+1030
+190
+1230
+340
+coupeurs-attrapes 
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot coupeurs-attrapes"
+"pen-1" 1.0 0 -7500403 true "" "plot count coupeurs with [attrape = TRUE]"
 
 @#$#@#$#@
 ## WHAT IS IT?
