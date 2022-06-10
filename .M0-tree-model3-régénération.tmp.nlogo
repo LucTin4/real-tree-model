@@ -1290,7 +1290,7 @@ fréquence-réu
 fréquence-réu
 1
 10
-1.0
+0.0
 1
 1
 NIL
