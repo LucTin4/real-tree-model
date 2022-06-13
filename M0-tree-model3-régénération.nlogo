@@ -464,18 +464,16 @@ end
 to go
 
 ; 1 go = 1 jour, les procédures sont définies temporairement selon découpage annuel
-; calendrier: juillet 1, aout 32, sept 60, oct 92, nov 123, déc 155, jan 186, fév 218, mars 249, avril 279, mai 310, juin 339 (5j de trop)
+  ; calendrier: juillet 1, aout 32, sept 60, oct 92, nov 123, déc 155, jan 186, fév 218, mars 249, avril 279, mai 310, juin 339 (5j de trop)
+  ;if day-of-year < 140 HIVERNAGE
+  ;if day-of-year >= 140 SAISON SECHE
 
   set day-of-year day-of-year + 1
 
-
-
   if day-of-year = 140 [
-
     récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     récolte-machine
     rotation-cultures
-
   ]
 
   if day-of-year < 140 [
@@ -485,17 +483,17 @@ to go
 
   if day-of-year = 310
   [rejets]
-  if day-of-year > 339
-  []
 
   if day-of-year > 300 or day-of-year < 20 ; a changer février
   [nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
   présence-champs
   Régénération-NA
-  reperage-pousse
+  if day-of-year >= 140 [
+    reperage-pousse]
   surveillance-champ
-  coupe-pousse
+  if day-of-year >= 140 [
+    coupe-pousse]
   croissance-pousse
   croissance-arbre
   mort-arbre
@@ -720,11 +718,12 @@ to berger-jachère
 
   ask bergers [
     move-to one-of patches with [culture ="jachère"]
-    if any? pousses in-radius 3 [
-      ask pousses in-radius 3 [die]
+      if not any? agriculteurs with [engagé = TRUE] in-radius 10 [
+        if any? pousses in-radius 3 [
+          ask pousses in-radius 3 [die]
+      ]
     ]
   ]
-
 end
 
 to présence-champs
@@ -737,7 +736,7 @@ to présence-champs
     move-to one-of patches with [id-parcelle = [id-agri] of myself]
      if day-of-year > 140 [
       ifelse [champ-brousse] of patch-here = TRUE [
-        if [culture] of patch-here = "jachère" [move-to one-of villages]
+;        if [culture] of patch-here = "jachère" [move-to one-of villages]  A réintégrer quand plus de temps
         if random 100 > (tps-au-champ * q-présence-brousse) [move-to village 0]
       ][
         if random 100 > (tps-au-champ) [move-to village 0]
@@ -1014,6 +1013,7 @@ to nv-engagés-RNA
 
 end
 
+
 to désengagement-RNA
 
   ; procédure de réduction du nombres d'engagés - selon de potentiels échecs de la protection liés à la non croissance des pousses ou aux coupes successives
@@ -1080,11 +1080,12 @@ to update-time
 
   if day-of-year > 364 [
     set day-of-year 0
-    set year year + 1]
-
-  ask agriculteurs [
+    set year year + 1
+   ask agriculteurs [
     set jour-champ 0
+    ]
   ]
+
 
 end
 
@@ -1313,7 +1314,7 @@ engagés-initiaux
 engagés-initiaux
 0
 count agriculteurs
-10.0
+30.0
 1
 1
 NIL
@@ -1343,7 +1344,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-45.0
+83.0
 1
 1
 NIL
@@ -1462,7 +1463,7 @@ fréquence-réu
 fréquence-réu
 1
 10
-1.0
+3.0
 1
 1
 NIL
@@ -1524,6 +1525,7 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot coupeurs-attrapes"
 "pen-1" 1.0 0 -7500403 true "" "plot count coupeurs with [attrape = TRUE]"
 "pen-2" 1.0 0 -2674135 true "" "plot nb-coupe"
+"pen-3" 1.0 0 -13840069 true "" "plot mean [jour-champ] of agriculteurs "
 
 TEXTBOX
 215
@@ -1577,24 +1579,6 @@ proba-discu
 1
 NIL
 HORIZONTAL
-
-PLOT
-1165
-20
-1365
-170
-tps-au-champs
-year
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"pen-1" 1.0 0 -7500403 true "" "plot mean [jour-champ] of agriculteurs "
 
 SLIDER
 395
