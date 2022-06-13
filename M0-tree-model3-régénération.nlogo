@@ -721,9 +721,10 @@ to berger-jachère
       if not any? agriculteurs with [engagé = TRUE] in-radius 10 [
         if any? pousses in-radius 3 [
           ask pousses in-radius 3 [die]
+        ]
       ]
     ]
-  ]
+
 end
 
 to présence-champs
@@ -768,7 +769,7 @@ to surveillance-champ
         ]
       ][
         let _proba random 100
-        if _proba > proba-denonce [
+        if _proba < proba-denonce [
           ask coupeurs in-radius 10 with [en-coupe = TRUE] [
             set attrape TRUE
             set nb-attrape nb-attrape + 1
@@ -998,7 +999,7 @@ to nv-engagés-RNA
     if [id-parcelle] of patch-here = [id-agri] of self [
         if any? agriculteurs with [engagé  = TRUE and id-agri != [id-agri] of myself] in-radius 10 [
         let _proba random 100
-        if _proba > proba-discu [
+        if _proba < proba-discu [
       set interet-RNA interet-RNA + effet-discussion
         ]
       ]
@@ -1200,7 +1201,7 @@ nombre-bergers
 nombre-bergers
 0
 100
-8.0
+10.0
 1
 1
 NIL
@@ -1314,7 +1315,7 @@ engagés-initiaux
 engagés-initiaux
 0
 count agriculteurs
-30.0
+9.0
 1
 1
 NIL
@@ -1344,7 +1345,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-83.0
+60.0
 1
 1
 NIL
@@ -1412,7 +1413,7 @@ nb-coupeurs
 nb-coupeurs
 0
 100
-16.0
+15.0
 1
 1
 NIL
@@ -1463,7 +1464,7 @@ fréquence-réu
 fréquence-réu
 1
 10
-3.0
+1.0
 1
 1
 NIL
@@ -1478,7 +1479,7 @@ participants
 participants
 0
 100
-7.0
+1.0
 1
 1
 NIL
@@ -1524,8 +1525,6 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot coupeurs-attrapes"
 "pen-1" 1.0 0 -7500403 true "" "plot count coupeurs with [attrape = TRUE]"
-"pen-2" 1.0 0 -2674135 true "" "plot nb-coupe"
-"pen-3" 1.0 0 -13840069 true "" "plot mean [jour-champ] of agriculteurs "
 
 TEXTBOX
 215
@@ -1574,7 +1573,7 @@ proba-discu
 proba-discu
 0
 100
-80.0
+90.0
 1
 1
 NIL
@@ -1589,11 +1588,29 @@ proba-denonce
 proba-denonce
 0
 100
-50.0
+52.0
 1
 1
 NIL
 HORIZONTAL
+
+PLOT
+1175
+25
+1375
+175
+nb-coupes
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -5825686 true "" "plot nb-coupe"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1944,9 +1961,10 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="Essai 1" repetitions="30" runMetricsEveryStep="true">
+  <experiment name="Essai-réaliste" repetitions="30" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
+    <timeLimit steps="10192"/>
     <metric>%-under-tree</metric>
     <metric>coupeurs-attrapes</metric>
     <metric>age-moy-arb</metric>
@@ -1957,27 +1975,52 @@ NetLogo 6.2.2
     <metric>MoyN-interet-RNA</metric>
     <metric>nb-engages</metric>
     <metric>stock-mil-g</metric>
-    <steppedValueSet variable="engagés-initiaux" first="5" step="5" last="80"/>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="nombre-bergers">
       <value value="10"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proba-denonce">
-      <value value="30"/>
+      <value value="10"/>
+      <value value="50"/>
+      <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="proba-discu" first="0" step="10" last="100"/>
-    <steppedValueSet variable="fréquence-réu" first="1" step="1" last="8"/>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="10"/>
+      <value value="40"/>
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="1"/>
+      <value value="3"/>
+      <value value="6"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="q-présence-brousse">
-      <value value="0.2"/>
+      <value value="0.1"/>
+      <value value="0.3"/>
+      <value value="0.8"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="nb-proTG-max">
-      <value value="20"/>
+      <value value="25"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="nb-coupeurs" first="0" step="10" last="50"/>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="15"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="RNA">
       <value value="true"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="participants" first="0" step="5" last="20"/>
-    <steppedValueSet variable="tps-au-champ" first="0" step="10" last="100"/>
+    <enumeratedValueSet variable="participants">
+      <value value="5"/>
+      <value value="10"/>
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tps-au-champ">
+      <value value="10"/>
+      <value value="30"/>
+      <value value="60"/>
+      <value value="99"/>
+    </enumeratedValueSet>
   </experiment>
 </experiments>
 @#$#@#$#@
