@@ -2,7 +2,6 @@ globals [
   gtree-influence ; le radius de non recouvrement des arbres
   gfield-influence
   patch-area; 10m * 10m = 100m2
-  nb-arbres
   mil-porcent
 
 
@@ -57,6 +56,13 @@ globals [
   ; indicateurs
   %-under-tree
   coupeurs-attrapes
+  age-moy-arb
+  nb-arbres
+  pouss
+  pouss-prot
+  pouss-inter-prot
+  MoyN-interet-RNA
+  nb-engages
 
 ]
 
@@ -153,7 +159,6 @@ to setup
   set gtree-influence 2 ; problème car valeur =/= pour l'arachide
   set patch-area 10
   set nb-arbres 535
-  set coupeurs-attrapes 0
   set mil-porcent 80
 
 
@@ -183,12 +188,6 @@ to setup
   set arb-reussite 2; nb de jeunes pousses devenues arbres à partir duquel agri voisins vont vouloir s'engager dans RNA
   set proba-FA 70 ; nb de 0 à 99 fréquence où les agri vont couper FA si plus assez de fourrage
   set jour-réu 364 / fréquence-réu
-  set nb-coupe 0
-
-
-
-  set %-under-tree (total-under-tree-area / (count patches * patch-area)) * 100
-  set nb-coupe 0
 
 
 
@@ -209,9 +208,28 @@ to setup
   crops-assignment ; chaque parcelle se voit assigner un type de culture, pour l'instant pris seulement entre mil et arachide
   crop-tree-influence
   bergers-generator
-  update-variables
   coupeurs-generator
   agriculteurs-generator
+
+  set total-mil-area count patches with [culture = "mil"] * patch-area
+  set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
+  set total-jachère-area count patches with [culture = "jachère"] * patch-area
+  set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
+  set stock-fourrage-moyen mean [stock-fourrage] of bergers
+  set %-under-tree (total-under-tree-area / (count patches * patch-area)) * 100
+  set %-under-tree (total-under-tree-area / (count patches * patch-area)) * 100
+
+
+  set nb-coupe 0
+  set nb-arbres count trees
+  set coupeurs-attrapes 0
+  set age-moy-arb mean [age-tree] of trees
+  set pouss count pousses
+  set pouss-prot count pousses with [signalé = TRUE]
+  set pouss-inter-prot count pousses with [age > age-p-interm]
+  set MoyN-interet-RNA mean [interet-RNA] of agriculteurs
+  set nb-engages count agriculteurs with [engagé = TRUE]
+
 
 
   reset-ticks
@@ -1041,6 +1059,18 @@ to update-variables
   set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
   set stock-fourrage-moyen mean [stock-fourrage] of bergers
   set %-under-tree (total-under-tree-area / (count patches * patch-area)) * 100
+
+  ; indicateurs
+  set %-under-tree (total-under-tree-area / (count patches * patch-area)) * 100
+  set nb-arbres count trees
+  set age-moy-arb mean [age-tree] of trees
+  set pouss count pousses
+  set pouss-prot count pousses with [signalé = TRUE]
+  set pouss-inter-prot count pousses with [age > age-p-interm]
+  set MoyN-interet-RNA mean [interet-RNA] of agriculteurs
+  set nb-engages count agriculteurs with [engagé = TRUE]
+  ; coupeur-attrape
+  ; nb-coupe
 
 end
 
@@ -1929,6 +1959,43 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Essai 1" repetitions="30" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>age-moy-arb</metric>
+    <metric>nb-arbres</metric>
+    <metric>pouss</metric>
+    <metric>pouss-prot</metric>
+    <metric>pouss-inter-prot</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>stock-mil-g</metric>
+    <steppedValueSet variable="engagés-initiaux" first="5" step="5" last="80"/>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proba-discu" first="0" step="10" last="100"/>
+    <steppedValueSet variable="fréquence-réu" first="1" step="1" last="8"/>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="nb-coupeurs" first="0" step="10" last="50"/>
+    <enumeratedValueSet variable="RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="participants" first="0" step="5" last="20"/>
+    <steppedValueSet variable="tps-au-champ" first="0" step="10" last="100"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
