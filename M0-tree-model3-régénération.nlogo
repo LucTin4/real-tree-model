@@ -929,12 +929,20 @@ end
 to Régénération-NA
 
   if RNA [
+    if ticks <= 1092 [
+    if day-of-year > 310
+    [protection-RNA ]
+    ]
+
+    if ticks > 1092 [
     if day-of-year > 310
     [protection-RNA ]
 
     nv-engagés-RNA
     désengagement-RNA
+    ]
   ]
+
 end
 
 to protection-RNA ; ATTENTION DIFFICILE DE VOIR SI ELLE MARCHE COMME JE VEUX
@@ -971,6 +979,7 @@ to nv-engagés-RNA
 
   ; Réunion / projet etc.
 
+
   ifelse (jour-réu > -1 and jour-réu < 1) [
      let _reste-parti count agriculteurs with [engagé = FALSE]
     if _reste-parti >= participants [
@@ -981,7 +990,8 @@ to nv-engagés-RNA
     set jour-réu 364 / fréquence-réu
   ][
      set jour-réu jour-réu - 1
-  ]
+    ]
+
   ; diffusion par succès - oservation du champ
 
   ask agriculteurs with [engagé = FALSE][
@@ -989,7 +999,7 @@ to nv-engagés-RNA
     if any? fields in-radius 20 with [plus-arbres > arb-reussite][
       set interet-RNA interet-RNA + effet-reussite
       show "reussite"
-    ]
+      ]
     ]
   ]
 
@@ -1025,7 +1035,7 @@ to désengagement-RNA
       let _presence count agriculteurs with [engagé  = TRUE and id-agri != [id-agri] of myself] in-radius 10
         if _presence = 0 [
         let _proba random 100
-        if _proba > 60 [
+        if _proba > 50 [
           set interet-RNA interet-RNA - effet-discussion
         ]
           if interet-RNA <= 0 [
@@ -1345,7 +1355,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-60.0
+87.0
 1
 1
 NIL
@@ -1479,7 +1489,7 @@ participants
 participants
 0
 100
-1.0
+5.0
 1
 1
 NIL
@@ -1573,7 +1583,7 @@ proba-discu
 proba-discu
 0
 100
-90.0
+81.0
 1
 1
 NIL
@@ -1588,7 +1598,7 @@ proba-denonce
 proba-denonce
 0
 100
-52.0
+35.0
 1
 1
 NIL
