@@ -334,7 +334,6 @@ to crops-assignment
   ; 3 zones ont été définie - elles permettent la rotation de la jachère sur 3 ans.
   ; problème - les champs de brousse sont éloignés d'environ 1km (hors de la surface de simulation)
 
-;  foreach [1.1 2.2 2.6] [ x -> show (word x " -> " round x) ]
    ask patches [
     if pycor > 45 [set zone 0]
     if pxcor < 46 and pycor < 46 [set zone 1]
@@ -998,7 +997,6 @@ to nv-engagés-RNA
     if [id-parcelle] of patch-here = [id-agri] of self [
     if any? fields in-radius 20 with [plus-arbres > arb-reussite][
       set interet-RNA interet-RNA + effet-reussite
-      show "reussite"
       ]
     ]
   ]
@@ -1390,7 +1388,7 @@ q-présence-brousse
 q-présence-brousse
 0
 1
-0.02
+0.2
 0.01
 1
 NIL
@@ -1971,7 +1969,7 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="Essai-réaliste" repetitions="30" runMetricsEveryStep="true">
+  <experiment name="Essai-réaliste" repetitions="30" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="10192"/>
@@ -2030,6 +2028,54 @@ NetLogo 6.2.2
       <value value="30"/>
       <value value="60"/>
       <value value="99"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="eval_replication" repetitions="1000" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="10192"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>age-moy-arb</metric>
+    <metric>nb-arbres</metric>
+    <metric>pouss</metric>
+    <metric>pouss-prot</metric>
+    <metric>pouss-inter-prot</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>stock-mil-g</metric>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="35"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="81"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.02"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="26"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tps-au-champ">
+      <value value="87"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="participants">
+      <value value="5"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
