@@ -2247,7 +2247,7 @@ NetLogo 6.2.2
   <experiment name="Essai-15/06" repetitions="20" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="6552"/>
+    <timeLimit steps="8280"/>
     <metric>%-under-tree</metric>
     <metric>coupeurs-attrapes</metric>
     <metric>age-moy-arb</metric>
