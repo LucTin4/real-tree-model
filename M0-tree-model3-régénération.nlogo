@@ -34,6 +34,8 @@ globals [
   proba-FA
   nb-attrape-crit
   nb-coupe
+  nb-arb-brousse
+  nb-arb-case
 
 
 
@@ -136,8 +138,12 @@ fields-own [
   visité
   coupé
   plus-arbres
+  en-RNA
 ]
 
+breed [surveillants surveillant]
+surveillants-own [
+]
 
 ;___________________________________________________________________________
 
@@ -210,6 +216,7 @@ to setup
   bergers-generator
   coupeurs-generator
   agriculteurs-generator
+  surveillants-generator
 
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
@@ -229,6 +236,8 @@ to setup
   set pouss-inter-prot count pousses with [age > age-p-interm]
   set MoyN-interet-RNA mean [interet-RNA] of agriculteurs
   set nb-engages count agriculteurs with [engagé = TRUE]
+  set nb-arb-brousse count trees with [[champ-brousse] of patch-here = TRUE]
+  set nb-arb-case count trees with [[champ-brousse] of patch-here = FALSE]
 
 
 
@@ -452,10 +461,17 @@ to agriculteurs-generator
   ask n-of engagés-initiaux agriculteurs [
     set engagé TRUE
     set interet-RNA 100
+    let _my-field fields with [who = [id-agri] of myself]
+    ask _my-field [ set en-RNA TRUE]
   ]
 
 end
 
+to surveillants-generator
+
+  create-surveillants nb-surveillants
+
+end
 
 ;______________________________________________________________________________________________
 
@@ -491,6 +507,7 @@ to go
   if day-of-year >= 140 [
     reperage-pousse]
   surveillance-champ
+  surveillance-representant
   if day-of-year >= 140 [
     coupe-pousse]
   croissance-pousse
@@ -782,6 +799,46 @@ to surveillance-champ
     ]
   ]
 
+
+end
+
+to surveillance-representant
+
+  ; Les surveillants vont de champs en champs. Ils commencent par les champs en RNA
+
+  let n 1
+  ask surveillants [
+  while [n <= nb-champs-visités][
+      let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
+      ifelse _chp-RNA > 0 [
+      move-to one-of fields with [en-RNA = TRUE]
+      ask fields-here [set visité TRUE]
+      if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
+        let _proba1 random 100
+        if _proba1 < 100 / nb-champs-visités [
+          set attrape TRUE
+          set nb-attrape nb-attrape + 1
+          set coupeurs-attrapes coupeurs-attrapes + 1
+          set en-coupe FALSE
+          ]
+        ]
+      ][
+        move-to one-of fields with [visité = FALSE]
+        ask fields-here [set visité TRUE]
+        if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
+          let _proba1 random 100
+          if _proba1 < 100 / nb-champs-visités [
+            set attrape TRUE
+            set nb-attrape nb-attrape + 1
+            set coupeurs-attrapes coupeurs-attrapes + 1
+            set en-coupe FALSE
+          ]
+          ]
+        set n n + 1
+      ]
+    ]
+    ask fields [set visité FALSE]
+  ]
 
 end
 to croissance-arbre
@@ -1078,6 +1135,8 @@ to update-variables
   set pouss-inter-prot count pousses with [age > age-p-interm]
   set MoyN-interet-RNA mean [interet-RNA] of agriculteurs
   set nb-engages count agriculteurs with [engagé = TRUE]
+  set nb-arb-brousse count trees with [[champ-brousse] of patch-here = TRUE]
+  set nb-arb-case count trees with [[champ-brousse] of patch-here = FALSE]
   ; coupeur-attrape
   ; nb-coupe
 
@@ -1261,6 +1320,8 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot count trees with [size != 0.1]"
 "pen-1" 1.0 0 -7500403 true "" "plot count trees "
+"pen-2" 1.0 0 -2674135 true "" "plot nb-arb-brousse"
+"pen-3" 1.0 0 -5825686 true "" "plot nb-arb-case"
 
 PLOT
 800
@@ -1345,10 +1406,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-15
-440
-187
-473
+645
+365
+825
+398
 tps-au-champ
 tps-au-champ
 0
@@ -1360,10 +1421,10 @@ NIL
 HORIZONTAL
 
 PLOT
-635
-190
-835
-340
+855
+195
+1055
+345
 pousses-protégées
 NIL
 NIL
@@ -1380,25 +1441,25 @@ PENS
 "pen-2" 1.0 0 -2674135 true "" "plot count pousses"
 
 SLIDER
-15
-475
-195
-508
+645
+400
+825
+433
 q-présence-brousse
 q-présence-brousse
 0
 1
-0.2
+0.02
 0.01
 1
 NIL
 HORIZONTAL
 
 PLOT
-635
-345
-835
-495
+855
+350
+1055
+500
 Engagés RNA 
 NIL
 NIL
@@ -1428,10 +1489,10 @@ NIL
 HORIZONTAL
 
 PLOT
-830
-190
-1030
-340
+1050
+195
+1250
+345
 stock-mil
 year
 NIL
@@ -1446,10 +1507,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot stock-mil-g"
 
 PLOT
-1030
-340
-1230
-490
+1250
+345
+1450
+495
 surface-sous-arbre
 NIL
 NIL
@@ -1516,10 +1577,10 @@ count agriculteurs with [engagé = TRUE]
 9
 
 PLOT
-1030
-190
-1230
-340
+1250
+195
+1450
+345
 coupeurs-attrapes 
 NIL
 NIL
@@ -1545,20 +1606,20 @@ Reunion RNA \n
 1
 
 TEXTBOX
-15
-425
-165
-443
+645
+350
+795
+368
 Présence champ en SS 
 12
 0.0
 1
 
 PLOT
-830
-340
-1030
-490
+1050
+345
+1250
+495
 interet-moyen-RNA 
 NIL
 NIL
@@ -1573,9 +1634,9 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [interet-RNA] of agriculteurs"
 
 SLIDER
-395
+645
 440
-515
+790
 473
 proba-discu
 proba-discu
@@ -1588,15 +1649,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-395
+645
 475
-540
+790
 508
 proba-denonce
 proba-denonce
 0
 100
-35.0
+70.0
 1
 1
 NIL
@@ -1619,6 +1680,58 @@ false
 "" ""
 PENS
 "default" 1.0 0 -5825686 true "" "plot nb-coupe"
+
+SLIDER
+640
+275
+812
+308
+nb-surveillants
+nb-surveillants
+0
+20
+10.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+640
+310
+817
+343
+nb-champs-visités
+nb-champs-visités
+0
+80
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+635
+200
+740
+233
+S-repreZ
+S-repreZ
+1
+1
+-1000
+
+SWITCH
+745
+200
+847
+233
+S-pop
+S-pop
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
