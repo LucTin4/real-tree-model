@@ -37,7 +37,7 @@ globals [
   nb-arb-brousse
   nb-arb-case
   Moy-tps-chp
-
+  Max-tps-chp
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -195,7 +195,7 @@ to setup
   set arb-reussite 2; nb de jeunes pousses devenues arbres à partir duquel agri voisins vont vouloir s'engager dans RNA
   set proba-FA 70 ; nb de 0 à 99 fréquence où les agri vont couper FA si plus assez de fourrage
   set jour-réu 364 / fréquence-réu
-
+  set Max-tps-chp 0
 
 
   ask patches [
@@ -1161,6 +1161,10 @@ to update-variables
   set nb-arb-brousse count trees with [[champ-brousse] of patch-here = TRUE]
   set nb-arb-case count trees with [[champ-brousse] of patch-here = FALSE]
   set Moy-tps-chp mean [jour-champ] of agriculteurs
+  if Max-tps-chp < Moy-tps-chp [
+    set Max-tps-chp Moy-tps-chp
+  ]
+
   ; coupeur-attrape
   ; nb-coupe
 
@@ -1473,7 +1477,7 @@ q-présence-brousse
 q-présence-brousse
 0
 1
-0.63
+0.02
 0.01
 1
 NIL
@@ -1784,7 +1788,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot Moy-tps-chp"
+"default" 1.0 0 -16777216 true "" "plot Max-tps-chp"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2261,6 +2265,7 @@ NetLogo 6.2.2
     <metric>nb-engages</metric>
     <metric>stock-mil-g</metric>
     <metric>Moy-tps-chp</metric>
+    <metric>Max-tps-chp</metric>
     <enumeratedValueSet variable="engagés-initiaux">
       <value value="9"/>
     </enumeratedValueSet>
