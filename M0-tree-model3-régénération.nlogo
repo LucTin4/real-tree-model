@@ -36,6 +36,7 @@ globals [
   nb-coupe
   nb-arb-brousse
   nb-arb-case
+  Moy-tps-chp
 
 
 
@@ -483,6 +484,7 @@ to go
   ;if day-of-year < 140 HIVERNAGE
   ;if day-of-year >= 140 SAISON SECHE
 
+
   set day-of-year day-of-year + 1
 
   if day-of-year = 140 [
@@ -768,6 +770,8 @@ end
 
 to surveillance-champ
 
+  if S-pop [
+
   ask agriculteurs with [engagé = TRUE][
     if [id-parcelle] of patch-here = [id-agri] of self [ ; si l'agriculteur est dans son champ
       let _my-field fields with [who = [id-agri] of myself]
@@ -798,13 +802,19 @@ to surveillance-champ
       ]
     ]
   ]
+  ]
 
 
 end
 
 to surveillance-representant
 
-  ; Les surveillants vont de champs en champs. Ils commencent par les champs en RNA
+  ; Les surveillants vont de champs en champs. Ils commencent par les champs en RNA (hypo assez forte) puis visite un nb champs variables (nb-chp-visités)
+  ; ils arrêtent systématiquement le coupeur (ici aussi discutable) mais la proba qu'ils le voient depend du tps qu'ils restent dans le champs // nb chps visités
+  ; Le sanction est inchangée mais devrait peut-être l'être.
+  ;
+
+  if S-repreZ [
 
   let n 1
   ask surveillants [
@@ -816,31 +826,44 @@ to surveillance-representant
       if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
         let _proba1 random 100
         if _proba1 < 100 / nb-champs-visités [
-          set attrape TRUE
-          set nb-attrape nb-attrape + 1
-          set coupeurs-attrapes coupeurs-attrapes + 1
-          set en-coupe FALSE
+              ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+                set attrape TRUE
+                set nb-attrape nb-attrape + 1
+                set coupeurs-attrapes coupeurs-attrapes + 1
+                set en-coupe FALSE
+              ]
+            ]
           ]
-        ]
       ][
         move-to one-of fields with [visité = FALSE]
         ask fields-here [set visité TRUE]
         if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
           let _proba1 random 100
           if _proba1 < 100 / nb-champs-visités [
-            set attrape TRUE
-            set nb-attrape nb-attrape + 1
-            set coupeurs-attrapes coupeurs-attrapes + 1
-            set en-coupe FALSE
-          ]
+              ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+                set attrape TRUE
+                set nb-attrape nb-attrape + 1
+                set coupeurs-attrapes coupeurs-attrapes + 1
+                set en-coupe FALSE
+              ]
+            ]
           ]
         set n n + 1
       ]
     ]
-    ask fields [set visité FALSE]
+ ifelse coordination [
+    ][
+      ask fields [set visité FALSE]
+    ]
+  ]
+
+  if coordination [
+      ask fields [set visité FALSE]
+    ]
   ]
 
 end
+
 to croissance-arbre
 
   ; les arbres retrouvent leurs branches et leurs feuilles à partir d'un certain jour - tps-repousse (à déterminer et peut-être définir plusieurs palliers
@@ -1094,7 +1117,7 @@ to désengagement-RNA
           set interet-RNA interet-RNA - effet-discussion
         ]
           if interet-RNA <= 0 [
-            set interet-RNA 0
+          set interet-RNA 0
           set engagé FALSE
           ]
         ]
@@ -1137,6 +1160,7 @@ to update-variables
   set nb-engages count agriculteurs with [engagé = TRUE]
   set nb-arb-brousse count trees with [[champ-brousse] of patch-here = TRUE]
   set nb-arb-case count trees with [[champ-brousse] of patch-here = FALSE]
+  set Moy-tps-chp mean [jour-champ] of agriculteurs
   ; coupeur-attrape
   ; nb-coupe
 
@@ -1399,7 +1423,7 @@ nb-proTG-max
 nb-proTG-max
 0
 50
-26.0
+25.0
 1
 1
 NIL
@@ -1449,7 +1473,7 @@ q-présence-brousse
 q-présence-brousse
 0
 1
-0.02
+0.63
 0.01
 1
 NIL
@@ -1533,7 +1557,7 @@ fréquence-réu
 fréquence-réu
 1
 10
-1.0
+3.0
 1
 1
 NIL
@@ -1548,7 +1572,7 @@ participants
 participants
 0
 100
-5.0
+15.0
 1
 1
 NIL
@@ -1642,7 +1666,7 @@ proba-discu
 proba-discu
 0
 100
-81.0
+20.0
 1
 1
 NIL
@@ -1657,7 +1681,7 @@ proba-denonce
 proba-denonce
 0
 100
-70.0
+77.0
 1
 1
 NIL
@@ -1682,30 +1706,30 @@ PENS
 "default" 1.0 0 -5825686 true "" "plot nb-coupe"
 
 SLIDER
-640
-275
-812
-308
+635
+240
+807
+273
 nb-surveillants
 nb-surveillants
 0
 20
-10.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-640
-310
-817
-343
+635
+275
+812
+308
 nb-champs-visités
 nb-champs-visités
 0
 80
-50.0
+0.0
 1
 1
 NIL
@@ -1713,9 +1737,9 @@ HORIZONTAL
 
 SWITCH
 635
-200
+185
 740
-233
+218
 S-repreZ
 S-repreZ
 1
@@ -1723,15 +1747,44 @@ S-repreZ
 -1000
 
 SWITCH
-745
-200
+747
+185
 847
-233
+218
 S-pop
 S-pop
+0
+1
+-1000
+
+SWITCH
+635
+310
+782
+343
+coordination
+coordination
 1
 1
 -1000
+
+PLOT
+890
+185
+1090
+335
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot Moy-tps-chp"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2189,6 +2242,70 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="participants">
       <value value="5"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Essai-15/06" repetitions="20" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="6552"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>age-moy-arb</metric>
+    <metric>nb-arbres</metric>
+    <metric>nb-arb-brousse</metric>
+    <metric>nb-arb-case</metric>
+    <metric>pouss</metric>
+    <metric>pouss-prot</metric>
+    <metric>pouss-inter-prot</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>stock-mil-g</metric>
+    <metric>Moy-tps-chp</metric>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="20"/>
+      <value value="50"/>
+      <value value="85"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-pop">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="20"/>
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="1"/>
+      <value value="3"/>
+      <value value="6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.02"/>
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tps-au-champ">
+      <value value="20"/>
+      <value value="50"/>
+      <value value="85"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="participants">
+      <value value="5"/>
+      <value value="10"/>
+      <value value="15"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
