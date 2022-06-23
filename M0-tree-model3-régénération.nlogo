@@ -484,7 +484,7 @@ to go
   ;if day-of-year < 140 HIVERNAGE
   ;if day-of-year >= 140 SAISON SECHE
 
-  if nb-arbres <= 0 [
+  if nb-arbres <= 0 OR ticks > 8395[ ;; si plus d'arbre ou 23 ans de simu stop
    stop
   ]
   set day-of-year day-of-year + 1
@@ -1407,7 +1407,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-81.0
+60.0
 1
 1
 NIL
@@ -1442,7 +1442,7 @@ q-présence-brousse
 q-présence-brousse
 0
 1
-0.47
+0.6
 0.01
 1
 NIL
@@ -1476,13 +1476,13 @@ year
 NIL
 0.0
 10.0
-0.0
+40000.0
 10.0
 true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot stock-mil-g"
+"default" 1.0 0 -16777216 true "" "if ticks > 170 [plot stock-mil-g]"
 
 PLOT
 1250
@@ -1682,24 +1682,6 @@ coordination
 1
 -1000
 
-PLOT
-1320
-15
-1525
-180
-Max des moyenne tps champs
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot Max-tps-chp"
-
 INPUTBOX
 25
 115
@@ -1739,7 +1721,7 @@ INPUTBOX
 110
 490
 proba-discu
-52.0
+60.0
 1
 0
 Number
@@ -1750,7 +1732,7 @@ INPUTBOX
 215
 490
 proba-denonce
-20.0
+60.0
 1
 0
 Number
@@ -1764,6 +1746,19 @@ Ce modèle simule l'évolution de l'état du parc arboré dans le temps, compte 
 
 L'espace représenté est de 100ha. Dans cette espace un village et des faidherbias, dont la densité locale a été déterminée grâce à des travaux de télédétection (Leroux et al), des champs, de case (proche du village) et de brousse, dont la culture change d'une année à l'autre. Les différentes procédures sont temporellement définies et s'activent en fonction du calendrier.
 
+**Avec les push du 23 juin**
+- Quand on pousse proba denonce de 20 à 60 sur 20 ans on augmente un peut le nombre d'arbre.
+- Quand on pousse la proba discute de 20 40 a 60, au augmente le nombre d'engager en RNA et donc la prtection des arbres. A 20 c'est très ocillant.A 80 c'est radical, le nombre d'arbre a largement augmenter et le territoire est dans une dynamique positive
+- temps au champ  de 20 40 et 60 ne semble pas avoir beaucoup d'influence sur le nombre d'arbre ... peut être quelque chose a voir sur la sociabilité et donc le recrutement d'engagé dans la RNA ? 
+- q-presence brouse de 0.20 0.40 et 0.60 à l'aire d'avance dans le meme sens que le temps au champs. Plus al valeur est haute plus le nombre d'arbre est important 
+
+Il y a vraiment quelque chose a faire avec un indice de fragmenation spatiale . La config temps en brouse 40, proba discu et proba denonce à 60 produit des formes spatiale qui ressemble bien a des parcelles. 
+
+Comme les arbres sont des point il peut y avoir des arbres assez proches dans l'esapce ce qui augmente le nombre d'arbre a l'hectard sans accroitre la surface sous arbre. 
+
+## TODO
+
+Il y a peut être une procédure a faire ou on empeche l'avoir trop d'arbre par patches. C'est peut êtres dans la procédure de protection. Les agri selectionne les arbres qu'ils veulent garder . Dans la dernière simu que j'ai fait il y a souvent plus de trois arbres/pousse par patches
 
 ## HOW TO USE IT
 
