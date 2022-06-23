@@ -170,25 +170,25 @@ to setup
 
 
   set conso-tête 1.5 ; à calibrer
-  set stock-limite 1000 ; stock à partir duquel les bergers coupent des arbres pour amortir
-  set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier.
+  set stock-limite 1000 ; stock à partir duquel les bergers coupent des arbres pour amortir #TODO
+  set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier. #TODO
   set nb-rejets 3 ; difficile de savoir combien de rejets
   set devient-kadd 3000 ; = 8ans nb d'année avant que la pousse devienne un kadd
   set nb-coupe-fatal 4
   set parcels-size 9
   set surface-jachère 20
-  set pousse-sauvée 1825 ; plus de 6 ans
+  set pousse-sauvée 1092; plus de 6 ans
   set distance-champ-brousse 40 ; les champs de brousse commencent à 400m du village (c'est surement plus)
-  set q-présence-brousse 0.02 ; les gens sont 5 fois moins présent en brousse que dans les champs de case et intermédiaire (a calibrer)*
-  set age-p-interm 1000 ; environ 3 ans.
+  ;; q-présence-brousse 0.02 ; les gens sont 5 fois moins présent en brousse que dans les champs de case et intermédiaire (a calibrer)*
+  set age-p-interm 1092 ; environ 3 ans.
   set jour-réu 364 / fréquence-réu
   set effet-reunion 50
   set effet-reussite 75
   set effet-discussion 1
-  set effet-coupe 10 ; montant du score (0 à 100) qui baisse par effet de coupe
+  set effet-coupe 5 ; montant du score (0 à 100) qui baisse par effet de coupe
   set nb-coupes-vigilance 8 ; à partir duquel les agriculteurs stoppent systématiquement les coupeurs
   set age-max-arbre 100 ; arbre moyen de mort des arbres
-  set reduc-age 20 ; nb d'année de vie à soustraire si coupes successive (nb-coupe-fatal)
+  set reduc-age 20 ; nb d'année de vie à soustraire si coupes successive (nb-coupe-fatal) (a enlever)
   set nb-attrape-crit 3; a partir duquel coupeur s'arretent de couper plus longtemps
   set duree-peur-crit 200 ; nb jour où les coupeurs recidiviste s'arretent de couper après etre surpris
   set duree-peur 30 ; nb jours où les coupeurs s'arretent de couper apres etre surpris
@@ -484,7 +484,9 @@ to go
   ;if day-of-year < 140 HIVERNAGE
   ;if day-of-year >= 140 SAISON SECHE
 
-
+  if nb-arbres <= 0 [
+   stop
+  ]
   set day-of-year day-of-year + 1
 
   if day-of-year = 140 [
@@ -761,7 +763,7 @@ to présence-champs
         if random 100 > (tps-au-champ) [move-to village 0]
       ]
     ]
-    if [id-parcelle] of patch-here = [id-agri] of self [
+    if [id-parcelle] of patch-here = id-agri [
       set jour-champ jour-champ + 1
     ]
   ]
@@ -773,7 +775,7 @@ to surveillance-champ
   if S-pop [
 
   ask agriculteurs with [engagé = TRUE][
-    if [id-parcelle] of patch-here = [id-agri] of self [ ; si l'agriculteur est dans son champ
+    if [id-parcelle] of patch-here = id-agri [ ; si l'agriculteur est dans son champ
       let _my-field fields with [who = [id-agri] of myself]
       let _nb-coupe first [coupé] of _my-field
       ifelse _nb-coupe > nb-coupes-vigilance [   ; si il a déjà eu de nbreuses coupes dans son champ
@@ -1018,7 +1020,6 @@ to Régénération-NA
     [protection-RNA ]
 
     nv-engagés-RNA
-    désengagement-RNA
     ]
   ]
 
@@ -1033,7 +1034,7 @@ to protection-RNA ; ATTENTION DIFFICILE DE VOIR SI ELLE MARCHE COMME JE VEUX
 
 if RNA [
     ask agriculteurs with [engagé = TRUE][
-      if [id-agri] of self = [id-parcelle] of patch-here [ ; si il est dans sa parcelle
+      if id-agri = [id-parcelle] of patch-here [ ; si il est dans sa parcelle
       if any? pousses with [[id-parcelle] of patch-here = [id-agri] of myself][ ; si il y a des pousses dans sa parcelle
           let _nb-pousses-protégées count pousses with [[id-parcelle] of patch-here = [id-agri] of myself and signalé = TRUE]
           if _nb-pousses-protégées < nb-protG-max [ ; si il n'y a pas plus de 10 pousses protégées dans sa parcelle
@@ -1074,7 +1075,7 @@ to nv-engagés-RNA
   ; diffusion par succès - oservation du champ
 
   ask agriculteurs with [engagé = FALSE][
-    if [id-parcelle] of patch-here = [id-agri] of self [
+    if [id-parcelle] of patch-here = id-agri [
     if any? fields in-radius 20 with [plus-arbres > arb-reussite][
       set interet-RNA interet-RNA + effet-reussite
       ]
@@ -1084,47 +1085,41 @@ to nv-engagés-RNA
   ; diffusion par discussions - en parler avec les voisins
 
   ask agriculteurs [
-    if [id-parcelle] of patch-here = [id-agri] of self [
-        if any? agriculteurs with [engagé  = TRUE and id-agri != [id-agri] of myself] in-radius 10 [
-        let _proba random 100
-        if _proba < proba-discu [
-      set interet-RNA interet-RNA + effet-discussion
+    if [id-parcelle] of patch-here = id-agri [
+      ;;;
+      let _proba random 100
+      ifelse any? agriculteurs with [engagé  = TRUE and id-agri != [id-agri] of myself] in-radius 10 [
+        ;;Si il y a des agriculteur engagé autour ET qui ne sont pas eux meme
+        ifelse _proba < proba-discu [ ;; si la proba tiré au hasard est  inferieur a la valeur de gui
+          ;; alors on augmenter
+          set interet-RNA interet-RNA + effet-discussion
+        ][
+          ;; sinon on baisse
+          set interet-RNA interet-RNA - effet-discussion + 0.5
         ]
+      ][
+        ;;; Si je n'ai pas de voisin engagé je ne peut pas discuter alors ça baisse
+        set interet-RNA interet-RNA - effet-discussion + 0.5
       ]
     ]
   ]
 
-  ask agriculteurs with [engagé = FALSE][
-    if interet-RNA >= 100 [
+  ask agriculteurs [
+    if interet-RNA >= 20 [
       set engagé TRUE
     ]
+    if interet-RNA <= 0 [
+      set engagé FALSE
+    ]
+
+    if interet-RNA < 0 [
+      set interet-RNA 0
+    ]
   ]
 
 end
 
 
-to désengagement-RNA
-
-  ; procédure de réduction du nombres d'engagés - selon de potentiels échecs de la protection liés à la non croissance des pousses ou aux coupes successives
-  ; est-ce que la procédure est utile?
-
-  ask agriculteurs with [engagé = TRUE][
-    if [id-parcelle] of patch-here = [id-agri] of self [
-      let _presence count agriculteurs with [engagé  = TRUE and id-agri != [id-agri] of myself] in-radius 10
-        if _presence = 0 [
-        let _proba random 100
-        if _proba > 50 [
-          set interet-RNA interet-RNA - effet-discussion
-        ]
-          if interet-RNA <= 0 [
-          set interet-RNA 0
-          set engagé FALSE
-          ]
-        ]
-      ]
-    ]
-
-end
 
 to desengagement-coupes
 
@@ -1287,21 +1282,6 @@ TEXTBOX
 0.0
 1
 
-SLIDER
-20
-180
-192
-213
-nombre-bergers
-nombre-bergers
-0
-100
-10.0
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
 120
 20
@@ -1343,12 +1323,12 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count trees with [size != 0.1]"
-"pen-1" 1.0 0 -7500403 true "" "plot count trees "
-"pen-2" 1.0 0 -2674135 true "" "plot nb-arb-brousse"
+"pou" 1.0 0 -16777216 true "" "plot count trees with [size != 0.1]"
+"nba" 1.0 0 -7500403 true "" "plot count trees "
+"bro" 1.0 0 -2674135 true "" "plot nb-arb-brousse"
 "pen-3" 1.0 0 -5825686 true "" "plot nb-arb-case"
 
 PLOT
@@ -1393,10 +1373,10 @@ MONITOR
 9
 
 SWITCH
-15
-305
-118
-338
+20
+200
+123
+233
 RNA
 RNA
 0
@@ -1404,45 +1384,30 @@ RNA
 -1000
 
 SLIDER
-15
-340
-207
-373
+20
+235
+125
+268
 engagés-initiaux
 engagés-initiaux
 0
 count agriculteurs
-9.0
+20.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-375
-130
-408
-nb-proTG-max
-nb-proTG-max
-0
-50
-25.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-645
-365
-825
-398
+20
+350
+200
+383
 tps-au-champ
 tps-au-champ
 0
 100
-87.0
+81.0
 1
 1
 NIL
@@ -1469,15 +1434,15 @@ PENS
 "pen-2" 1.0 0 -2674135 true "" "plot count pousses"
 
 SLIDER
-645
-400
-825
-433
+20
+385
+200
+418
 q-présence-brousse
 q-présence-brousse
 0
 1
-0.02
+0.47
 0.01
 1
 NIL
@@ -1500,21 +1465,6 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" "plot count agriculteurs with [engagé = TRUE]"
-
-SLIDER
-20
-220
-192
-253
-nb-coupeurs
-nb-coupeurs
-0
-100
-15.0
-1
-1
-NIL
-HORIZONTAL
 
 PLOT
 1050
@@ -1553,24 +1503,24 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot %-under-tree"
 
 SLIDER
-215
+235
 440
-387
+407
 473
 fréquence-réu
 fréquence-réu
 1
 10
-3.0
+4.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-215
+235
 475
-387
+407
 508
 participants
 participants
@@ -1583,10 +1533,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-580
-455
-630
-492
+795
+390
+845
+427
 nb-agri
 count agriculteurs
 0
@@ -1594,10 +1544,10 @@ count agriculteurs
 9
 
 MONITOR
-540
-420
-630
-457
+755
+355
+845
+392
 agri-engagés
 count agriculteurs with [engagé = TRUE]
 17
@@ -1624,21 +1574,11 @@ PENS
 "pen-1" 1.0 0 -7500403 true "" "plot count coupeurs with [attrape = TRUE]"
 
 TEXTBOX
-215
+235
 425
-365
+385
 443
 Reunion RNA \n
-12
-0.0
-1
-
-TEXTBOX
-645
-350
-795
-368
-Présence champ en SS 
 12
 0.0
 1
@@ -1661,41 +1601,11 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [interet-RNA] of agriculteurs"
 
-SLIDER
-645
-440
-790
-473
-proba-discu
-proba-discu
-0
-100
-20.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-645
-475
-790
-508
-proba-denonce
-proba-denonce
-0
-100
-77.0
-1
-1
-NIL
-HORIZONTAL
-
 PLOT
-1175
-25
-1375
-175
+1160
+15
+1320
+180
 nb-coupes
 NIL
 NIL
@@ -1711,9 +1621,9 @@ PENS
 
 SLIDER
 635
-240
+220
 807
-273
+253
 nb-surveillants
 nb-surveillants
 0
@@ -1726,9 +1636,9 @@ HORIZONTAL
 
 SLIDER
 635
-275
+255
 812
-308
+288
 nb-champs-visités
 nb-champs-visités
 0
@@ -1751,10 +1661,10 @@ S-repreZ
 -1000
 
 SWITCH
-747
-185
-847
-218
+125
+315
+215
+348
 S-pop
 S-pop
 0
@@ -1763,9 +1673,9 @@ S-pop
 
 SWITCH
 635
-310
+290
 782
-343
+323
 coordination
 coordination
 1
@@ -1773,11 +1683,11 @@ coordination
 -1000
 
 PLOT
-890
-185
-1090
-335
-plot 1
+1320
+15
+1525
+180
+Max des moyenne tps champs
 NIL
 NIL
 0.0
@@ -1789,6 +1699,61 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot Max-tps-chp"
+
+INPUTBOX
+25
+115
+95
+175
+nombre-bergers
+10.0
+1
+0
+Number
+
+INPUTBOX
+105
+115
+170
+175
+nb-coupeurs
+15.0
+1
+0
+Number
+
+INPUTBOX
+20
+275
+100
+335
+nb-proTG-max
+25.0
+1
+0
+Number
+
+INPUTBOX
+20
+430
+110
+490
+proba-discu
+52.0
+1
+0
+Number
+
+INPUTBOX
+120
+430
+215
+490
+proba-denonce
+20.0
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
