@@ -1792,7 +1792,7 @@ Comme les arbres sont des point il peut y avoir des arbres assez proches dans l'
 
 ## TODO
 
-Il y a peut être une procédure a faire ou on empeche l'avoir trop d'arbre par patches. C'est peut êtres dans la procédure de protection. Les agri selectionne les arbres qu'ils veulent garder . Dans la dernière simu que j'ai fait il y a souvent plus de trois arbres/pousse par patches
+Il y a peut être une procédure a faire ou on empeche l'avoir trop d'arbre par patches. C'est peut êtres dans la procédure de protection. Les agri selectionne les arbres qu'ils veulent garder . Dans la dernière simu que j'ai fait il y a souvent plus de trois arbres/pousse par patches ==> DONE ligne 1042 avec l'usage de one-of
 
 ## HOW TO USE IT
 
