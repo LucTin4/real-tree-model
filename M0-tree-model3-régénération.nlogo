@@ -1032,23 +1032,23 @@ to protection-RNA ; ATTENTION DIFFICILE DE VOIR SI ELLE MARCHE COMME JE VEUX
   ; A partir d'un certains nombres de pousses protégées, il ne protège plus les nouvelles (nb potentiellement a faire varier)
   ; accélération de la croissance a faire dans une autres procédure.
 
-if RNA [
+  if RNA [
     ask agriculteurs with [engagé = TRUE][
       if id-agri = [id-parcelle] of patch-here [ ; si il est dans sa parcelle
-      if any? pousses with [[id-parcelle] of patch-here = [id-agri] of myself][ ; si il y a des pousses dans sa parcelle
+        if any? pousses with [[id-parcelle] of patch-here =[id-agri] of myself][ ; si il y a des pousses dans sa parcelle
           let _nb-pousses-protégées count pousses with [[id-parcelle] of patch-here = [id-agri] of myself and signalé = TRUE]
-          if _nb-pousses-protégées < nb-protG-max [ ; si il n'y a pas plus de 10 pousses protégées dans sa parcelle
-
-        ask pousses with [[id-parcelle] of patch-here = [id-agri] of myself and signalé = FALSE][
-        set color red
-        set signalé TRUE
+          if _nb-pousses-protégées < nb-protG-max [ ; si il n'y a pas plus de XX (interface) pousses protégées dans sa parcelle
+            if any? pousses with [[id-parcelle] of patch-here = [id-agri] of myself and signalé = FALSE][
+              ask one-of pousses with [[id-parcelle] of patch-here = [id-agri] of myself and signalé = FALSE][
+                set color red
+                set signalé TRUE
+              ]
             ]
           ]
         ]
       ]
     ]
   ]
-
 
 
 end
@@ -1407,7 +1407,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-60.0
+56.0
 1
 1
 NIL
@@ -1736,6 +1736,40 @@ proba-denonce
 1
 0
 Number
+
+BUTTON
+465
+435
+532
+468
+NIL
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+460
+470
+523
+503
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
