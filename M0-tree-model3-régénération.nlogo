@@ -38,6 +38,7 @@ globals [
   nb-arb-case
   Moy-tps-chp
   Max-tps-chp
+  stock-neems ; set up dans le procédure agriculteurs-generator
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -76,7 +77,7 @@ patches-own [
   culture ; can be mil or groundnut
   en-culture
   rendement-mil-g ; rendement de patch (à calibrer plus tard)
-  rendement-mil-p
+  rendement-mil-p ; en fagots
   rendement-groundnuts-g
   rendement-groundnuts-p
   id-parcelle ; permet de conservé la structure des parcelles lors de la rotation
@@ -94,9 +95,9 @@ bergers-own [
   troupeau-nourri ; pour l'instant TRUE/FALSE mais à détailler
   arbre-choisi
   nb-têtes ; à calibrer (mais va être difficile
-  nb-ha ; entre 3,8 (nouveaux installés 11%) et ~ 5,5 (89% de la pop)
+  nb-ha-b ; entre 3,8 (nouveaux installés 11%) et ~ 5,5 (89% de la pop)
   stock-fourrage
-
+  idAgri ; identifiant de mon agriculteur de référence
 ]
 
 breed [coupeurs coupeur]
@@ -113,6 +114,9 @@ agriculteurs-own [
   engagé ; TRUE/FALSE engagement dans la RNA
   interet-RNA
   jour-champ
+  nb-ha-a
+  stock-mil
+  idMyBerger
 ]
 
 breed [villages village]
@@ -169,9 +173,9 @@ to setup
   set mil-porcent 80
 
 
-  set conso-tête 1.5 ; à calibrer
+  set conso-tête 0.4 ; à calibrer
   set stock-limite 1000 ; stock à partir duquel les bergers coupent des arbres pour amortir #TODO
-  set tps-repousse 1825 ; = 5ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier. #TODO
+  set tps-repousse 1456 ; = 4ans nb d'année minimal pour que l'arbre reprenne sa forme selon Robert (// terrain avec Antoine) - a vérifier. #TODO
   set nb-rejets 3 ; difficile de savoir combien de rejets
   set devient-kadd 3000 ; = 8ans nb d'année avant que la pousse devienne un kadd
   set nb-coupe-fatal 4
@@ -196,6 +200,8 @@ to setup
   set proba-FA 70 ; nb de 0 à 99 fréquence où les agri vont couper FA si plus assez de fourrage
   set jour-réu 364 / fréquence-réu
   set Max-tps-chp 0
+
+
 
 
   ask patches [
@@ -421,8 +427,9 @@ to bergers-generator
     set troupeau-nourri FALSE
     set arbre-choisi one-of trees in-radius 100 with [proche-village = FALSE]
     set nb-têtes (random 13) + 12 ; les troupeaux qui restent ont entre 12 et 25 vaches
-    set nb-ha (random 3) + 2
+    set nb-ha-b (random 2) + 3.5
     set color brown
+    set idAgri 9999
   ]
 end
 
@@ -450,14 +457,23 @@ to agriculteurs-generator
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
 
-   foreach _myIdParcelle [ x ->
+  foreach _myIdParcelle [ x ->
     create-agriculteurs 1
-      [set id-agri x
+    [set id-agri x
       set size 1
       set jour-champ 0
       set interet-RNA 0
-       set engagé FALSE]
+      set engagé FALSE
+      set nb-ha-a (random 3) + 2
+      let _myWho who
+      if any? bergers with[idAgri = 9999][
+        ask one-of bergers with [idAgri = 9999][
+          set idAgri _myWho
+        ]
+      ]
     ]
+
+  ]
 
   ask n-of engagés-initiaux agriculteurs [
     set engagé TRUE
@@ -465,6 +481,9 @@ to agriculteurs-generator
     let _my-field fields with [who = [id-agri] of myself]
     ask _my-field [ set en-RNA TRUE]
   ]
+
+  let _nb-agri count agriculteurs
+  set stock-neems _nb-agri * 2
 
 end
 
@@ -503,7 +522,7 @@ to go
   if day-of-year = 310
   [rejets]
 
-  if day-of-year > 300 or day-of-year < 20 ; a changer février
+  if day-of-year > 249 ; a changer mars
   [nourrir-troupeau] ; peut-être porter la condition plutôt sur les stocks
 
   présence-champs
@@ -631,28 +650,33 @@ to récolte
 
   ask patches with [culture != "jachère"] [ifelse culture = "mil"[
     set rendement-mil-g 6.26
-    set rendement-mil-p 18.23][
+    set rendement-mil-p 1.00][; en fagots - 100 fag/ha ramené au patch 1 fag/10 m2
     set rendement-groundnuts-g 3.71
     set rendement-groundnuts-p 11.71]
   ]
 
   ask patches with [under-tree = TRUE and culture != "jachère"][ifelse culture = "mil"[
     set rendement-mil-g rendement-mil-g * 1.36
-    set rendement-mil-p rendement-mil-p * 1.4][; la valeur est arbitraire ici (à calibrer)
+    set rendement-mil-p rendement-mil-p * 2][; la valeur est arbitraire ici (à calibrer)
     set rendement-groundnuts-g rendement-groundnuts-g * 1 ; inutile car effet du F.A pas prouvé
     set rendement-groundnuts-p rendement-groundnuts-p * 1.5]
   ]
 
   ask patches with [pas-rotation > 0][ ; baisse de productivité si pas de rotation - valeurs arbitraires + est-ce utilise pour le modèle
-   set rendement-mil-g rendement-mil-g * 0.8
-   set rendement-mil-p rendement-mil-p * 0.8]
+   set rendement-mil-g rendement-mil-g * 1 ;plus de baisse de productivité si le mil n'a pas tourné
+   set rendement-mil-p rendement-mil-p * 1]
 
   set stock-mil-g (sum [rendement-mil-g] of patches) * (1 - (paille-laissée / 100)) ; calibrer le pourcentage de paille laissée aux champs
   set stock-mil-p sum [rendement-mil-p] of patches
   set stock-groundnuts-g sum [rendement-groundnuts-g] of patches
   set stock-groundnuts-p sum [rendement-groundnuts-p] of patches
 
-  ask bergers [set stock-fourrage ((stock-mil-p / 100) * nb-ha) * (1 - (paille-laissée / 100))] ; les bergers laissent-ils moins de paille que les autres?
+  ask bergers [set stock-fourrage ((stock-mil-p / 100) * nb-ha-b) * (1 - (paille-laissée / 100))] ; les bergers laissent-ils moins de paille que les autres?
+  ask agriculteurs [
+    let _nb-agri count agriculteurs
+    set stock-mil ((stock-mil-g / _nb-agri) * nb-ha-a) / 10
+    ]
+
 
 end
 
@@ -699,7 +723,7 @@ to nourrir-troupeau
 
   nourrir-paille
   ask bergers [
-    if stock-fourrage < stock-limite [
+    if stock-fourrage <= 0 [
       berger-coupe
     ]
   ]
@@ -716,14 +740,18 @@ to berger-coupe
   ; A FAIRE définir un stock de Neem au village + Intégrer un indice de peur / réduction des coupes.
   ; + utilisation de la variable de présence dans les champs à implémenter désormais.
 
-  let _arbres-restant count trees with [size != 0.1]; with [proche-village = FALSE and size != 0.1]
-  if _arbres-restant != 0 [
-    let _proba random 100
-    if _proba > proba-FA [
-    move-to one-of trees with [size != 0.1] ; with [proche-village = FALSE and size != 0.1]
-    ask trees-here [
-      set size 0.1
-      set nb-coupes nb-coupes + 1
+  ifelse stock-neems > 0 [
+    set stock-neems stock-neems - 1 ; problème le stock doit être reset mais a quelle vitesse?
+  ][
+    let _arbres-restant count trees with [size != 0.1]; with [proche-village = FALSE and size != 0.1]
+    if _arbres-restant != 0 [
+      let _proba random 100
+      if _proba > proba-FA [
+        move-to one-of trees with [size != 0.1] ; with [proche-village = FALSE and size != 0.1]
+        ask trees-here [
+          set size 0.1
+          set nb-coupes nb-coupes + 1
+        ]
       ]
     ]
   ]
@@ -738,12 +766,15 @@ to berger-jachère
 
   ask bergers [
     move-to one-of patches with [culture ="jachère"]
-      if not any? agriculteurs with [engagé = TRUE] in-radius 10 [
+    if not any? agriculteurs with [engagé = TRUE] in-radius 10 [
+      let _myAgriEngage? [engagé] of agriculteurs with[who = [idAgri] of myself]
+      if _myAgriEngage? = FALSE [
         if any? pousses in-radius 3 [
           ask pousses in-radius 3 [die]
         ]
       ]
     ]
+  ]
 
 end
 
@@ -818,16 +849,16 @@ to surveillance-representant
 
   if S-repreZ [
 
-  let n 1
-  ask surveillants [
-  while [n <= nb-champs-visités][
-      let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
-      ifelse _chp-RNA > 0 [
-      move-to one-of fields with [en-RNA = TRUE]
-      ask fields-here [set visité TRUE]
-      if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
-        let _proba1 random 100
-        if _proba1 < 100 / nb-champs-visités [
+    let n 1
+    ask surveillants [
+      while [n <= nb-champs-visités][                                    ; jusqu'à ce qu'il soit allé dans nb de champs prévu
+        let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
+        ifelse _chp-RNA > 0 [                                            ; il va d'abord dans les champs en RNA puis dans les autres
+          move-to one-of fields with [en-RNA = TRUE]
+          ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
+          if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
+            let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
+            if _proba1 < (100 / (nb-champs-visités * 0.66))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -836,12 +867,12 @@ to surveillance-representant
               ]
             ]
           ]
-      ][
-        move-to one-of fields with [visité = FALSE]
-        ask fields-here [set visité TRUE]
-        if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
-          let _proba1 random 100
-          if _proba1 < 100 / nb-champs-visités [
+        ][
+          move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
+          ask fields-here [set visité TRUE]
+          if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
+            let _proba1 random 100
+            if _proba1 < 100 / nb-champs-visités [
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -850,19 +881,18 @@ to surveillance-representant
               ]
             ]
           ]
+
+        ]
         set n n + 1
       ]
     ]
- ifelse coordination [
-    ][
-      ask fields [set visité FALSE]
-    ]
+       ifelse coordination [
+      ][
+        ask fields [set visité FALSE]
+      ]
   ]
 
-  if coordination [
-      ask fields [set visité FALSE]
-    ]
-  ]
+  ask fields [set visité FALSE]
 
 end
 
@@ -1172,8 +1202,11 @@ to update-time
   if day-of-year > 364 [
     set day-of-year 0
     set year year + 1
+    let _nb-agri count agriculteurs
+    set stock-neems _nb-agri * 2
    ask agriculteurs [
     set jour-champ 0
+
     ]
   ]
 
@@ -1188,10 +1221,21 @@ to update-graph
 ;  plotxy year stock-mil-p
     set-current-plot "Âge moyen du parc"
     ask trees [
-    set-current-plot-pen "pen-0"
+      set-current-plot-pen "pen-0"
       plotxy year mean [age-tree] of trees
     ]
+    set-current-plot "Stock de mil"
+    set-current-plot-pen "pen-0"
+    plotxy year stock-mil-g
+
+    set-current-plot "Stock de sacs mil"
+    ask agriculteurs [
+      set-current-plot-pen "pen-0"
+      plotxy year mean [stock-mil] of agriculteurs
+    ]
   ]
+
+
 
 end
 @#$#@#$#@
@@ -1386,13 +1430,13 @@ RNA
 SLIDER
 20
 235
-125
+192
 268
 engagés-initiaux
 engagés-initiaux
 0
-count agriculteurs
-20.0
+100
+40.0
 1
 1
 NIL
@@ -1407,7 +1451,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-56.0
+80.0
 1
 1
 NIL
@@ -1442,7 +1486,7 @@ q-présence-brousse
 q-présence-brousse
 0
 1
-0.6
+0.31
 0.01
 1
 NIL
@@ -1471,7 +1515,7 @@ PLOT
 195
 1250
 345
-stock-mil
+Stock de mil
 year
 NIL
 0.0
@@ -1482,7 +1526,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "if ticks > 170 [plot stock-mil-g]"
+"pen-0" 1.0 0 -7500403 true "" ""
 
 PLOT
 1250
@@ -1511,7 +1555,7 @@ fréquence-réu
 fréquence-réu
 1
 10
-4.0
+1.0
 1
 1
 NIL
@@ -1526,7 +1570,7 @@ participants
 participants
 0
 100
-15.0
+10.0
 1
 1
 NIL
@@ -1628,7 +1672,7 @@ nb-surveillants
 nb-surveillants
 0
 20
-0.0
+10.0
 1
 1
 NIL
@@ -1643,7 +1687,7 @@ nb-champs-visités
 nb-champs-visités
 0
 80
-0.0
+5.0
 1
 1
 NIL
@@ -1688,7 +1732,7 @@ INPUTBOX
 95
 175
 nombre-bergers
-10.0
+5.0
 1
 0
 Number
@@ -1699,7 +1743,7 @@ INPUTBOX
 170
 175
 nb-coupeurs
-15.0
+10.0
 1
 0
 Number
@@ -1721,7 +1765,7 @@ INPUTBOX
 110
 490
 proba-discu
-60.0
+80.0
 1
 0
 Number
@@ -1771,6 +1815,35 @@ NIL
 NIL
 1
 
+MONITOR
+650
+355
+747
+400
+NIL
+stock-neems
+1
+1
+11
+
+PLOT
+1310
+25
+1510
+175
+Stock de sacs mil
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"pen-0" 1.0 0 -7500403 true "" ""
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -1792,7 +1865,23 @@ Comme les arbres sont des point il peut y avoir des arbres assez proches dans l'
 
 ## TODO
 
-Il y a peut être une procédure a faire ou on empeche l'avoir trop d'arbre par patches. C'est peut êtres dans la procédure de protection. Les agri selectionne les arbres qu'ils veulent garder . Dans la dernière simu que j'ai fait il y a souvent plus de trois arbres/pousse par patches ==> DONE ligne 1042 avec l'usage de one-of
+Définir un stock de Neem au village, pour retarder l'étêtage des Faidherbia - fait mais prolème de la remise à jour des stocks (combien de temps pour qu"un Neem se régénère?). Pour l'instant nombre fixe tous les ans (2 par agriculteurs // nb de Neem dans les concessions) - le modif en réduisant la fréquence de coupe 
+
+Les stocks de mil en sac doivent être exprimées - 
+- comment résoudre le pb d'ha/agri? le même pour ts les agri? 
+- exprimer le stock de mil en nb/sac/ha 
+
+finir les conversions d'unité / calibration après l'atelier 
+
+stock de bois lié à la coupe des kadd par les bergers (stock variable selon l'âge de l'arbre et à la dernière coupe) 
+
+liste de recalibration en fonction de l'échelle 
+
+grouper les agriculteurs en concession: 
+- stock de mil par concession 
+- stock de bois 
+- stock de paille? 
+
 
 ## HOW TO USE IT
 
