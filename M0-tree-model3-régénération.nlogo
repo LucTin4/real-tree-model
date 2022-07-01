@@ -31,14 +31,16 @@ globals [
   duree-peur-crit
   duree-peur
   arb-reussite
-  proba-FA
+  tmier-FA
   nb-attrape-crit
   nb-coupe
   nb-arb-brousse
   nb-arb-case
   Moy-tps-chp
   Max-tps-chp
-  stock-neems ; set up dans le procédure agriculteurs-generator
+  charrette-bois
+  charrette-bois-année
+
 
 
   ; Mes variables globale dans les moniteur ou graph
@@ -67,6 +69,7 @@ globals [
   pouss-inter-prot
   MoyN-interet-RNA
   nb-engages
+
 
 ]
 
@@ -98,6 +101,7 @@ bergers-own [
   nb-ha-b ; entre 3,8 (nouveaux installés 11%) et ~ 5,5 (89% de la pop)
   stock-fourrage
   idAgri ; identifiant de mon agriculteur de référence
+  timer-FA
 ]
 
 breed [coupeurs coupeur]
@@ -117,6 +121,7 @@ agriculteurs-own [
   nb-ha-a
   stock-mil
   idMyBerger
+  nb-patches
 ]
 
 breed [villages village]
@@ -149,6 +154,11 @@ fields-own [
 breed [surveillants surveillant]
 surveillants-own [
 ]
+
+breed [concessions concession]
+concessions-own [
+]
+
 
 ;___________________________________________________________________________
 
@@ -197,7 +207,6 @@ to setup
   set duree-peur-crit 200 ; nb jour où les coupeurs recidiviste s'arretent de couper après etre surpris
   set duree-peur 30 ; nb jours où les coupeurs s'arretent de couper apres etre surpris
   set arb-reussite 2; nb de jeunes pousses devenues arbres à partir duquel agri voisins vont vouloir s'engager dans RNA
-  set proba-FA 70 ; nb de 0 à 99 fréquence où les agri vont couper FA si plus assez de fourrage
   set jour-réu 364 / fréquence-réu
   set Max-tps-chp 0
 
@@ -224,6 +233,7 @@ to setup
   coupeurs-generator
   agriculteurs-generator
   surveillants-generator
+  concessions-generator
 
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
@@ -245,6 +255,7 @@ to setup
   set nb-engages count agriculteurs with [engagé = TRUE]
   set nb-arb-brousse count trees with [[champ-brousse] of patch-here = TRUE]
   set nb-arb-case count trees with [[champ-brousse] of patch-here = FALSE]
+  set charrette-bois 0
 
 
 
@@ -354,7 +365,6 @@ to crops-assignment
     if pycor > 45 [set zone 0]
     if pxcor < 46 and pycor < 46 [set zone 1]
     if pxcor > 45 [set zone 2]
-
     ]
 
   let fields-id [who] of fields
@@ -430,6 +440,7 @@ to bergers-generator
     set nb-ha-b (random 2) + 3.5
     set color brown
     set idAgri 9999
+    set timer-FA 6
   ]
 end
 
@@ -465,6 +476,7 @@ to agriculteurs-generator
       set interet-RNA 0
       set engagé FALSE
       set nb-ha-a (random 3) + 2
+      set nb-patches count patches with [id-parcelle = [id-agri] of myself]
       let _myWho who
       if any? bergers with[idAgri = 9999][
         ask one-of bergers with [idAgri = 9999][
@@ -483,7 +495,12 @@ to agriculteurs-generator
   ]
 
   let _nb-agri count agriculteurs
-  set stock-neems _nb-agri * 2
+
+end
+
+to concessions-generator
+
+  ; créer les concessions en groupant des agriculteurs de brousse et de case
 
 end
 
@@ -512,6 +529,7 @@ to go
     récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     récolte-machine
     rotation-cultures
+    stock-agri
   ]
 
   if day-of-year < 140 [
@@ -529,8 +547,8 @@ to go
   Régénération-NA
   if day-of-year >= 140 [
     reperage-pousse]
-  surveillance-champ
   surveillance-representant
+  surveillance-champ
   if day-of-year >= 140 [
     coupe-pousse]
   croissance-pousse
@@ -672,12 +690,20 @@ to récolte
   set stock-groundnuts-p sum [rendement-groundnuts-p] of patches
 
   ask bergers [set stock-fourrage ((stock-mil-p / 100) * nb-ha-b) * (1 - (paille-laissée / 100))] ; les bergers laissent-ils moins de paille que les autres?
+
+
+
+end
+
+to stock-agri
+
   ask agriculteurs [
-    let _nb-agri count agriculteurs
-    set stock-mil ((stock-mil-g / _nb-agri) * nb-ha-a) / 10
+    ifelse [culture] of one-of patches with [id-parcelle = [id-agri] of myself] = "mil" [
+      set stock-mil nb-patches * 6.26
+    ][
+      set stock-mil 0
     ]
-
-
+  ]
 end
 
 to récolte-machine
@@ -736,25 +762,24 @@ end
 to berger-coupe
 
   ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement + plus de prise en compte de la distance au village
+  ; Les bergers coupent dorénavant 1 fois par semaine (1j/7)
 
-  ; A FAIRE définir un stock de Neem au village + Intégrer un indice de peur / réduction des coupes.
-  ; + utilisation de la variable de présence dans les champs à implémenter désormais.
-
-  ifelse stock-neems > 0 [
-    set stock-neems stock-neems - 1 ; problème le stock doit être reset mais a quelle vitesse?
-  ][
-    let _arbres-restant count trees with [size != 0.1]; with [proche-village = FALSE and size != 0.1]
-    if _arbres-restant != 0 [
-      let _proba random 100
-      if _proba > proba-FA [
-        move-to one-of trees with [size != 0.1] ; with [proche-village = FALSE and size != 0.1]
-        ask trees-here [
-          set size 0.1
-          set nb-coupes nb-coupes + 1
-        ]
+  let _arbres-restant count trees with [size != 0.1]; with [proche-village = FALSE and size != 0.1]
+  if _arbres-restant != 0 [
+    let _proba random 100
+    ifelse timer-FA = 6 [
+      move-to one-of trees with [size != 0.1] ; with [proche-village = FALSE and size != 0.1]
+      ask trees-here [
+        set size 0.1
+        set nb-coupes nb-coupes + 1
       ]
+      set timer-FA 0
+      set charrette-bois charrette-bois + 1
+    ][
+      set timer-FA timer-FA + 1
     ]
   ]
+
 
 
 
@@ -858,7 +883,7 @@ to surveillance-representant
           ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
             let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
-            if _proba1 < (100 / (nb-champs-visités * 0.66))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
+            if _proba1 < (100 / (nb-champs-visités * 0.25))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -872,7 +897,7 @@ to surveillance-representant
           ask fields-here [set visité TRUE]
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
             let _proba1 random 100
-            if _proba1 < 100 / nb-champs-visités [
+            if _proba1 < 100 / (nb-champs-visités * 0.25) [
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -1189,7 +1214,7 @@ to update-variables
   if Max-tps-chp < Moy-tps-chp [
     set Max-tps-chp Moy-tps-chp
   ]
-
+  set charrette-bois-année charrette-bois
   ; coupeur-attrape
   ; nb-coupe
 
@@ -1203,11 +1228,12 @@ to update-time
     set day-of-year 0
     set year year + 1
     let _nb-agri count agriculteurs
-    set stock-neems _nb-agri * 2
    ask agriculteurs [
     set jour-champ 0
-
     ]
+  ]
+  if day-of-year = 2 [
+    set charrette-bois 0
   ]
 
 
@@ -1233,6 +1259,9 @@ to update-graph
       set-current-plot-pen "pen-0"
       plotxy year mean [stock-mil] of agriculteurs
     ]
+    set-current-plot "bois"
+    set-current-plot-pen "pen-0"
+    plotxy year charrette-bois-année
   ]
 
 
@@ -1570,7 +1599,7 @@ participants
 participants
 0
 100
-10.0
+22.0
 1
 1
 NIL
@@ -1588,10 +1617,10 @@ count agriculteurs
 9
 
 MONITOR
-755
-355
-845
-392
+790
+350
+855
+387
 agri-engagés
 count agriculteurs with [engagé = TRUE]
 17
@@ -1672,7 +1701,7 @@ nb-surveillants
 nb-surveillants
 0
 20
-10.0
+8.0
 1
 1
 NIL
@@ -1700,7 +1729,7 @@ SWITCH
 218
 S-repreZ
 S-repreZ
-1
+0
 1
 -1000
 
@@ -1711,7 +1740,7 @@ SWITCH
 348
 S-pop
 S-pop
-0
+1
 1
 -1000
 
@@ -1722,7 +1751,7 @@ SWITCH
 323
 coordination
 coordination
-1
+0
 1
 -1000
 
@@ -1754,7 +1783,7 @@ INPUTBOX
 100
 335
 nb-proTG-max
-25.0
+35.0
 1
 0
 Number
@@ -1815,23 +1844,30 @@ NIL
 NIL
 1
 
-MONITOR
-650
-355
-747
-400
-NIL
-stock-neems
-1
-1
-11
-
 PLOT
 1310
 25
 1510
 175
 Stock de sacs mil
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"pen-0" 1.0 0 -7500403 true "" ""
+
+PLOT
+625
+385
+785
+505
+bois
 NIL
 NIL
 0.0
@@ -1873,7 +1909,7 @@ Les stocks de mil en sac doivent être exprimées -
 
 finir les conversions d'unité / calibration après l'atelier 
 
-stock de bois lié à la coupe des kadd par les bergers (stock variable selon l'âge de l'arbre et à la dernière coupe) 
+stock de bois lié à la coupe des kadd par les bergers (stock variable selon l'âge de l'arbre et à la dernière coupe) => le problème est que le stock de bois ne dépend pas du nb de kadd. Indicateur peu pertinent donc. potentiellement faire une procédure: a partir d'un certain nb d'arbre sur sa parcelle - les agriculteurs peuvent en couper. 
 
 liste de recalibration en fonction de l'échelle 
 
