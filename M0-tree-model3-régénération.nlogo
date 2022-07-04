@@ -1860,10 +1860,10 @@ NIL
 1
 
 PLOT
-1310
-25
-1510
-175
+1320
+15
+1480
+180
 Stock de sacs mil
 NIL
 NIL
@@ -1894,6 +1894,42 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
+
+PLOT
+1480
+15
+1640
+180
+delta mil
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot DelatMil"
+
+PLOT
+1465
+205
+1665
+355
+Delta Arbres
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot delat-Nb-arbres"
 
 @#$#@#$#@
 ## WHAT IS IT?
