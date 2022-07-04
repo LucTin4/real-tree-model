@@ -54,6 +54,9 @@ globals [
   année-rotation
 
   stock-mil-g
+  initStockMil  ; ke stock de mil initial a Year +1
+  DelatMil ; stock mil final - stock mil init
+  sacMoyenMil
   stock-mil-p
   stock-groundnuts-g
   stock-groundnuts-p
@@ -689,7 +692,9 @@ to récolte
   set stock-groundnuts-g sum [rendement-groundnuts-g] of patches
   set stock-groundnuts-p sum [rendement-groundnuts-p] of patches
 
-  ask bergers [set stock-fourrage ((stock-mil-p / 100) * nb-ha-b) * (1 - (paille-laissée / 100))] ; les bergers laissent-ils moins de paille que les autres?
+  ask bergers [
+    set stock-fourrage ((stock-mil-p / 100) * nb-ha-b) * (1 - (paille-laissée / 100))
+  ] ; les bergers laissent-ils moins de paille que les autres?
 
 
 
@@ -700,6 +705,9 @@ to stock-agri
   ask agriculteurs [
     ifelse [culture] of one-of patches with [id-parcelle = [id-agri] of myself] = "mil" [
       set stock-mil nb-patches * 6.26
+      if year < 2 [
+       set initStockMil  stock-mil
+      ]
     ][
       set stock-mil 0
     ]
@@ -1215,6 +1223,8 @@ to update-variables
     set Max-tps-chp Moy-tps-chp
   ]
   set charrette-bois-année charrette-bois
+  set sacMoyenMil mean [stock-mil] of agriculteurs
+  set DelatMil sacMoyenMil - initStockMil
   ; coupeur-attrape
   ; nb-coupe
 
@@ -1257,7 +1267,7 @@ to update-graph
     set-current-plot "Stock de sacs mil"
     ask agriculteurs [
       set-current-plot-pen "pen-0"
-      plotxy year mean [stock-mil] of agriculteurs
+      plotxy year sacMoyenMil
     ]
     set-current-plot "bois"
     set-current-plot-pen "pen-0"
