@@ -67,6 +67,8 @@ globals [
   coupeurs-attrapes
   age-moy-arb
   nb-arbres
+  init-nb-arbre
+  delat-Nb-arbres
   pouss
   pouss-prot
   pouss-inter-prot
@@ -183,6 +185,7 @@ to setup
   set gtree-influence 2 ; problème car valeur =/= pour l'arachide
   set patch-area 10
   set nb-arbres 535
+  set init-nb-arbre nb-arbres
   set mil-porcent 80
 
 
@@ -1225,6 +1228,8 @@ to update-variables
   set charrette-bois-année charrette-bois
   set sacMoyenMil mean [stock-mil] of agriculteurs
   set DelatMil sacMoyenMil - initStockMil
+  set delat-Nb-arbres nb-arbres - init-nb-arbre
+
   ; coupeur-attrape
   ; nb-coupe
 
