@@ -2,8 +2,8 @@ library(tidyverse)
 rm(list = ls())
 
 
-setwd("~/Téléchargements/")
-pse.df <- read.csv("population2820.csv", header = T)
+setwd("~/github/real-tree-model/data/")
+pse.df <- read.csv("resultat_pse/population3090.csv", header = T)
 
 ggplot(data = pse.df)+
   geom_point(aes(x = objective.om_delatMil, y = objective.om_trees, size = evolution.samples ))+
@@ -12,7 +12,7 @@ ggplot(data = pse.df)+
        y = "Nombre de faedherbia final")+
   theme_bw()
 
-ggsave("om_pse.png", width = 8)
+ggsave("../img/om_pse.png", width = 8)
 
 # columns_to_remove <- grep(".1", names(pse.df))
 # pse.df <- pse.df[,-columns_to_remove]
