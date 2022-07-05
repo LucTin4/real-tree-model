@@ -1,6 +1,6 @@
 library(ggplot2)
 
-setwd("~/Téléchargements/results_nsga2(1)/results_nsga2/")
+setwd("~/github/real-tree-model/data/results_nsga2/")
 
 ## Openfiles 
 l.file <- list.files(path = ".")
@@ -21,5 +21,6 @@ ggplot(data = data.df)+
        title = "Evolution de l'optimum sur un double objectif", subtitle = "Algorithme NSGA2", 
        colour = "Génération NSGA2")+
   theme_bw()
-  
-             
+ggsave("../../img/om_nsga2_evolution.png", width = 8)  
+
+
