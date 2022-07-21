@@ -1,0 +1,39 @@
+import _file_.M0TreeModel3Régénération._
+
+
+val evolution = OSEEvolution(
+  evaluation = model,
+  parallelism = 100,
+  termination = 100000,
+  origin = Seq(
+    tpsAuChamp  in (20.0 to 80.0 by 10.0),
+    qPrésenceBrousse in (0.2 to 0.8 by 0.2),
+    fréquenceRéu in (1.0 to 5.0 by 0.1),
+    participants in (5.0 to 30.0 by 5.0),
+    probaDiscu in (20.0 to 80.0 by 10.0),
+    probaDenonce in (20.0 to 80.0 by 10.0)
+  ),
+  objective = Seq(
+    om_delatMil under 500.0,
+    om_trees under 1000.0
+    ),
+  distribution = Island(10 minutes),
+  stochastic = Stochastic(seed = mySeed, sample = 30)
+) hook (workDirectory / "results_ose", frequency = 10)
+
+
+//val env = EGIEnvironment("vo.complex-systems.eu")
+
+val muse = SLURMEnvironment(
+    "delaye",
+    "muse-login.hpc-lr.univ-montp2.fr",
+    // optional parameters
+    partition = "agap_normal", // can be agap_short agap_normal agap_long
+    workDirectory = "/lustre/delaye/openmole",
+    //workDirectory = "/home/delaye/scratch/openmole",
+    sharedDirectory = "/storage/replicated/cirad_users/delaye/openmole",
+    time = 1 hours
+  )
+
+val local = LocalEnvironment(1)
+evolution on muse
