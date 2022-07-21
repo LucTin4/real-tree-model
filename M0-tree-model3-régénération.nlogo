@@ -210,7 +210,7 @@ to setup
   set effet-reunion 50
   set effet-reussite 75
   set effet-discussion 1
-  set effet-coupe 5 ; montant du score (0 à 100) qui baisse par effet de coupe
+  set effet-coupe 5; montant du score (0 à 100) qui baisse par effet de coupe
   set nb-coupes-vigilance 10 ; à partir duquel les agriculteurs stoppent systématiquement les coupeurs
   set age-max-arbre 100 ; arbre moyen de mort des arbres
   set reduc-age 20 ; nb d'année de vie à soustraire si coupes successive (nb-coupe-fatal) (a enlever)
@@ -857,9 +857,9 @@ to surveillance-champ
           set nb-attrape nb-attrape + 1
           set coupeurs-attrapes coupeurs-attrapes + 1
           let _proba random 100
-          if _proba > 20 [                        ; probable qu'il ne le voit pas avant
+;          if _proba > 20 [                        ; probable qu'il ne le voit pas avant
             set en-coupe FALSE
-          ]
+;          ]
         ]
       ][
         let _proba random 100
@@ -868,9 +868,9 @@ to surveillance-champ
             set attrape TRUE
             set nb-attrape nb-attrape + 1
             set coupeurs-attrapes coupeurs-attrapes + 1
-            if _proba > 20 [                      ; probable qu'il ne le voit pas avant
+;            if _proba > 20 [                      ; probable qu'il ne le voit pas avant
               set en-coupe FALSE
-            ]
+;            ]
           ]
         ]
       ]
@@ -899,7 +899,7 @@ to surveillance-representant
           ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
             let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
-            if _proba1 < (100 / (nb-champs-visités * 0.25))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
+            if _proba1 < (100 / (nb-champs-visités * 0.30))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -1163,17 +1163,21 @@ to nv-engagés-RNA
         ;;Si il y a des agriculteur engagé autour ET qui ne sont pas eux meme
         ifelse _proba < proba-discu [ ;; si la proba tiré au hasard est  inferieur a la valeur de gui
           ;; alors on augmenter
-          set interet-RNA interet-RNA + effet-discussion
+          set interet-RNA interet-RNA + effet-discussion + 0.2
         ][
           ;; sinon on baisse
-          set interet-RNA interet-RNA - effet-discussion + 0.5
+          set interet-RNA (interet-RNA - effet-discussion) + 0.7
         ]
       ][
         ;;; Si je n'ai pas de voisin engagé je ne peut pas discuter alors ça baisse
-        set interet-RNA interet-RNA - effet-discussion + 0.5
+        set interet-RNA (interet-RNA - effet-discussion) + 0.7
       ]
     ]
   ]
+  ask agriculteurs with [engagé  = TRUE][
+    if any? villages-here [
+      set interet-RNA (interet-RNA - effet-discussion) + 0.7
+  ]]
 
   ask agriculteurs [
     if interet-RNA >= 20 [
@@ -1513,7 +1517,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-71.0
+73.0
 1
 1
 NIL
@@ -1734,7 +1738,7 @@ nb-surveillants
 nb-surveillants
 0
 20
-8.0
+1.0
 1
 1
 NIL
@@ -1762,7 +1766,7 @@ SWITCH
 218
 S-repreZ
 S-repreZ
-1
+0
 1
 -1000
 
@@ -1773,7 +1777,7 @@ SWITCH
 348
 S-pop
 S-pop
-0
+1
 1
 -1000
 
@@ -1827,7 +1831,7 @@ INPUTBOX
 110
 490
 proba-discu
-80.0
+50.0
 1
 0
 Number
@@ -1838,7 +1842,7 @@ INPUTBOX
 215
 490
 proba-denonce
-0.0
+80.0
 1
 0
 Number
