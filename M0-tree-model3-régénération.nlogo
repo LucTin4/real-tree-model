@@ -40,6 +40,10 @@ globals [
   Max-tps-chp
   charrette-bois
   charrette-bois-année
+  stock-init-mil
+  stock-de-mil
+  delta-mil
+
 
 
 
@@ -94,6 +98,7 @@ patches-own [
   champ-brousse;
   zoné; TRUE/FALSE utilisé pour définition des zones de jachère
   zone; 3 zones pour la rotation de la jachère
+  arbre-ici
 
 ]
 
@@ -206,7 +211,7 @@ to setup
   set effet-reussite 75
   set effet-discussion 1
   set effet-coupe 5 ; montant du score (0 à 100) qui baisse par effet de coupe
-  set nb-coupes-vigilance 8 ; à partir duquel les agriculteurs stoppent systématiquement les coupeurs
+  set nb-coupes-vigilance 10 ; à partir duquel les agriculteurs stoppent systématiquement les coupeurs
   set age-max-arbre 100 ; arbre moyen de mort des arbres
   set reduc-age 20 ; nb d'année de vie à soustraire si coupes successive (nb-coupe-fatal) (a enlever)
   set nb-attrape-crit 3; a partir duquel coupeur s'arretent de couper plus longtemps
@@ -535,7 +540,6 @@ to go
     récolte ; est ce qu'il faut mettre la récolte avant le changement de culture?
     récolte-machine
     rotation-cultures
-    stock-agri
   ]
 
   if day-of-year < 140 [
@@ -560,6 +564,7 @@ to go
   croissance-pousse
   croissance-arbre
   mort-arbre
+  arbre-patches
 
   update-variables
   update-graph
@@ -700,21 +705,21 @@ to récolte
   ] ; les bergers laissent-ils moins de paille que les autres?
 
 
-
-end
-
-to stock-agri
-
-  ask agriculteurs [
-    ifelse [culture] of one-of patches with [id-parcelle = [id-agri] of myself] = "mil" [
-      set stock-mil nb-patches * 6.26
-      if year < 2 [
-       set initStockMil  stock-mil
-      ]
-    ][
-      set stock-mil 0
-    ]
+  If year = 1  [
+    set stock-init-mil stock-mil-g
   ]
+  if year = 2 [
+  set stock-init-mil (stock-init-mil + stock-mil-g) / 2
+  ]
+  if year = 3 [
+  set stock-init-mil (stock-init-mil + stock-mil-g) / 2
+  ]
+
+  set stock-de-mil stock-mil-g
+  if year >= 3 [set delta-mil (stock-de-mil - stock-init-mil) / 10]
+
+
+
 end
 
 to récolte-machine
@@ -1176,6 +1181,8 @@ to nv-engagés-RNA
     ]
     if interet-RNA <= 0 [
       set engagé FALSE
+;      let _my-field fields with [who = [id-agri] of myself]
+;      ask _my-field [ set en-RNA FALSE]
     ]
 
     if interet-RNA < 0 [
@@ -1198,6 +1205,19 @@ to desengagement-coupes
   ]
 end
 
+to arbre-patches
+
+  ask patches[
+    ifelse any? trees-here [
+      set arbre-ici TRUE
+    ][
+    set arbre-ici FALSE
+    ]
+  ]
+
+end
+
+
 to update-variables
 
   ; A l'issue des rotations les surfaces de chaque culture changent - monitorer ces variations fines.
@@ -1208,7 +1228,6 @@ to update-variables
   set total-jachère-area count patches with [culture = "jachère"] * patch-area
   set total-under-tree-area count patches with [under-tree = TRUE] * patch-area
   set stock-fourrage-moyen mean [stock-fourrage] of bergers
-  set %-under-tree (total-under-tree-area / (count patches * patch-area)) * 100
 
   ; indicateurs
   set %-under-tree (total-under-tree-area / (count patches * patch-area)) * 100
@@ -1226,9 +1245,8 @@ to update-variables
     set Max-tps-chp Moy-tps-chp
   ]
   set charrette-bois-année charrette-bois
-  set sacMoyenMil mean [stock-mil] of agriculteurs
-  set DelatMil sacMoyenMil - initStockMil
   set delat-Nb-arbres nb-arbres - init-nb-arbre
+
 
   ; coupeur-attrape
   ; nb-coupe
@@ -1252,6 +1270,7 @@ to update-time
   ]
 
 
+
 end
 
 to update-graph
@@ -1269,11 +1288,10 @@ to update-graph
     set-current-plot-pen "pen-0"
     plotxy year stock-mil-g
 
-    set-current-plot "Stock de sacs mil"
-    ask agriculteurs [
-      set-current-plot-pen "pen-0"
-      plotxy year sacMoyenMil
-    ]
+    set-current-plot "Delta-mil"
+    set-current-plot-pen "pen-0"
+    plotxy year delta-mil
+
     set-current-plot "bois"
     set-current-plot-pen "pen-0"
     plotxy year charrette-bois-année
@@ -1480,7 +1498,7 @@ engagés-initiaux
 engagés-initiaux
 0
 100
-40.0
+9.0
 1
 1
 NIL
@@ -1495,7 +1513,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-80.0
+71.0
 1
 1
 NIL
@@ -1614,7 +1632,7 @@ participants
 participants
 0
 100
-22.0
+10.0
 1
 1
 NIL
@@ -1731,7 +1749,7 @@ nb-champs-visités
 nb-champs-visités
 0
 80
-5.0
+10.0
 1
 1
 NIL
@@ -1744,7 +1762,7 @@ SWITCH
 218
 S-repreZ
 S-repreZ
-0
+1
 1
 -1000
 
@@ -1755,7 +1773,7 @@ SWITCH
 348
 S-pop
 S-pop
-1
+0
 1
 -1000
 
@@ -1766,7 +1784,7 @@ SWITCH
 323
 coordination
 coordination
-0
+1
 1
 -1000
 
@@ -1798,7 +1816,7 @@ INPUTBOX
 100
 335
 nb-proTG-max
-35.0
+25.0
 1
 0
 Number
@@ -1820,7 +1838,7 @@ INPUTBOX
 215
 490
 proba-denonce
-60.0
+0.0
 1
 0
 Number
@@ -1896,24 +1914,6 @@ PENS
 "pen-0" 1.0 0 -7500403 true "" ""
 
 PLOT
-1480
-15
-1640
-180
-delta mil
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot DelatMil"
-
-PLOT
 1465
 205
 1665
@@ -1930,6 +1930,24 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot delat-Nb-arbres"
+
+PLOT
+910
+590
+1110
+740
+Delta-mil
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"pen-0" 1.0 0 -7500403 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
