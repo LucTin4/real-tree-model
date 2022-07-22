@@ -132,6 +132,7 @@ agriculteurs-own [
   stock-mil
   idMyBerger
   nb-patches
+  mon-chp-RNA
 ]
 
 breed [villages village]
@@ -484,8 +485,9 @@ to agriculteurs-generator
     [set id-agri x
       set size 1
       set jour-champ 0
-      set interet-RNA 0
+      set interet-RNA 50
       set engagé FALSE
+      set mon-chp-RNA 0
       set nb-ha-a (random 3) + 2
       set nb-patches count patches with [id-parcelle = [id-agri] of myself]
       let _myWho who
@@ -856,9 +858,10 @@ to surveillance-champ
           set attrape TRUE
           set nb-attrape nb-attrape + 1
           set coupeurs-attrapes coupeurs-attrapes + 1
-          let _proba random 100
+;          let _proba random 100
 ;          if _proba > 20 [                        ; probable qu'il ne le voit pas avant
             set en-coupe FALSE
+            show "hihi"
 ;          ]
         ]
       ][
@@ -870,6 +873,7 @@ to surveillance-champ
             set coupeurs-attrapes coupeurs-attrapes + 1
 ;            if _proba > 20 [                      ; probable qu'il ne le voit pas avant
               set en-coupe FALSE
+              show "haha"
 ;            ]
           ]
         ]
@@ -899,7 +903,7 @@ to surveillance-representant
           ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
             let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
-            if _proba1 < (100 / (nb-champs-visités * 0.30))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
+            if _proba1 < (100 / (nb-champs-visités * 0.20))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -912,16 +916,16 @@ to surveillance-representant
           move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
           ask fields-here [set visité TRUE]
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
-;            let _proba1 random 100
-;            if _proba1 < 100 / (nb-champs-visités * 0.25) [
-;              ask coupeurs in-radius 10 with [en-coupe = TRUE] [
-;                set attrape TRUE
-;                set nb-attrape nb-attrape + 1
-;                set coupeurs-attrapes coupeurs-attrapes + 1
-;                set en-coupe FALSE
-;              ]
-;            ]
-;          ]
+            let _proba1 random 100
+            if _proba1 < 100 / (nb-champs-visités * 0.20) [
+              ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+                set attrape TRUE
+                set nb-attrape nb-attrape + 1
+                set coupeurs-attrapes coupeurs-attrapes + 1
+                set en-coupe FALSE
+              ]
+            ]
+          ]
 
         ]
         set n n + 1
@@ -1163,34 +1167,47 @@ to nv-engagés-RNA
         ;;Si il y a des agriculteur engagé autour ET qui ne sont pas eux meme
         ifelse _proba < proba-discu [ ;; si la proba tiré au hasard est  inferieur a la valeur de gui
           ;; alors on augmenter
-          set interet-RNA interet-RNA + effet-discussion + 0.2
+          set interet-RNA interet-RNA + effet-discussion
         ][
           ;; sinon on baisse
-          set interet-RNA (interet-RNA - effet-discussion) + 0.7
+          set interet-RNA (interet-RNA - effet-discussion) + indice-deseng
         ]
       ][
         ;;; Si je n'ai pas de voisin engagé je ne peut pas discuter alors ça baisse
-        set interet-RNA (interet-RNA - effet-discussion) + 0.7
+        set interet-RNA (interet-RNA - effet-discussion)  + indice-deseng
       ]
     ]
   ]
   ask agriculteurs with [engagé  = TRUE][
     if any? villages-here [
-      set interet-RNA (interet-RNA - effet-discussion) + 0.7
+      set interet-RNA (interet-RNA - effet-discussion)  + indice-deseng
   ]]
 
   ask agriculteurs [
-    if interet-RNA >= 20 [
+    if interet-RNA >= 100 [
       set engagé TRUE
+      let _my-field fields with [who = [id-agri] of myself]
+      ask _my-field [ set en-RNA TRUE]
     ]
+
     if interet-RNA <= 0 [
       set engagé FALSE
-;      let _my-field fields with [who = [id-agri] of myself]
-;      ask _my-field [ set en-RNA FALSE]
     ]
 
     if interet-RNA < 0 [
       set interet-RNA 0
+    ]
+  ]
+
+  ask agriculteurs [
+    if engagé = FALSE [
+      set mon-chp-RNA mon-chp-RNA + 1
+
+      if mon-chp-RNA > 2 [
+        let _my-field fields with [who = [id-agri] of myself]
+        ask _my-field [ set en-RNA FALSE]
+        set mon-chp-RNA 0
+      ]
     ]
   ]
 
@@ -1517,7 +1534,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-73.0
+20.0
 1
 1
 NIL
@@ -1738,7 +1755,7 @@ nb-surveillants
 nb-surveillants
 0
 20
-1.0
+7.0
 1
 1
 NIL
@@ -1753,7 +1770,7 @@ nb-champs-visités
 nb-champs-visités
 0
 80
-10.0
+3.0
 1
 1
 NIL
@@ -1766,7 +1783,7 @@ SWITCH
 218
 S-repreZ
 S-repreZ
-0
+1
 1
 -1000
 
@@ -1777,7 +1794,7 @@ SWITCH
 348
 S-pop
 S-pop
-1
+0
 1
 -1000
 
@@ -1831,7 +1848,7 @@ INPUTBOX
 110
 490
 proba-discu
-50.0
+60.0
 1
 0
 Number
@@ -1952,6 +1969,21 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
+
+SLIDER
+60
+515
+232
+548
+indice-deseng
+indice-deseng
+0.0
+1
+0.4
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2504,6 +2536,64 @@ NetLogo 6.2.2
       <value value="10"/>
       <value value="15"/>
     </enumeratedValueSet>
+  </experiment>
+  <experiment name="calibration-tpschamps" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="8000"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>nb-arbres</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>delta-mil</metric>
+    <enumeratedValueSet variable="nb-surveillants">
+      <value value="7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="60"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-pop">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-champs-visités">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.31"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-repreZ">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="coordination">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="indice-deseng" first="0" step="0.1" last="1"/>
+    <enumeratedValueSet variable="participants">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="tps-au-champ" first="0" step="10" last="100"/>
   </experiment>
 </experiments>
 @#$#@#$#@

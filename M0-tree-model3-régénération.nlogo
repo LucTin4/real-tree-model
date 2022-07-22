@@ -899,7 +899,7 @@ to surveillance-representant
           ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
             let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
-            if _proba1 < (100 / (nb-champs-visités * 0.30))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
+            if _proba1 < (100 / (nb-champs-visités * 0.20))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -913,7 +913,7 @@ to surveillance-representant
           ask fields-here [set visité TRUE]
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
             let _proba1 random 100
-            if _proba1 < 100 / (nb-champs-visités * 0.25) [
+            if _proba1 < 100 / (nb-champs-visités * 0.20) [
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -1182,11 +1182,13 @@ to nv-engagés-RNA
   ask agriculteurs [
     if interet-RNA >= 20 [
       set engagé TRUE
+      let _my-field fields with [who = [id-agri] of myself]
+      ask _my-field [ set en-RNA TRUE]
     ]
     if interet-RNA <= 0 [
       set engagé FALSE
-;      let _my-field fields with [who = [id-agri] of myself]
-;      ask _my-field [ set en-RNA FALSE]
+      let _my-field fields with [who = [id-agri] of myself]
+      ask _my-field [ set en-RNA FALSE]
     ]
 
     if interet-RNA < 0 [
