@@ -1534,7 +1534,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-20.0
+70.0
 1
 1
 NIL
@@ -1979,7 +1979,7 @@ indice-deseng
 indice-deseng
 0.0
 1
-0.4
+0.0
 0.1
 1
 NIL
@@ -2537,10 +2537,10 @@ NetLogo 6.2.2
       <value value="15"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="calibration-tpschamps" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="calibration-tpschamps" repetitions="5" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="8000"/>
+    <timeLimit steps="5460"/>
     <metric>%-under-tree</metric>
     <metric>coupeurs-attrapes</metric>
     <metric>nb-arbres</metric>
@@ -2593,7 +2593,7 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="participants">
       <value value="10"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="tps-au-champ" first="0" step="10" last="100"/>
+    <steppedValueSet variable="tps-au-champ" first="0" step="20" last="100"/>
   </experiment>
 </experiments>
 @#$#@#$#@
