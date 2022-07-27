@@ -43,6 +43,7 @@ globals [
   stock-init-mil
   stock-de-mil
   delta-mil
+  indice-deseng
 
 
 
@@ -166,10 +167,6 @@ breed [surveillants surveillant]
 surveillants-own [
 ]
 
-breed [concessions concession]
-concessions-own [
-]
-
 
 ;___________________________________________________________________________
 
@@ -221,6 +218,7 @@ to setup
   set arb-reussite 2; nb de jeunes pousses devenues arbres à partir duquel agri voisins vont vouloir s'engager dans RNA
   set jour-réu 364 / fréquence-réu
   set Max-tps-chp 0
+  set indice-deseng 0.8 ; il a été déterminé par une calibration par simulation.
 
 
 
@@ -245,7 +243,7 @@ to setup
   coupeurs-generator
   agriculteurs-generator
   surveillants-generator
-  concessions-generator
+
 
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
@@ -511,11 +509,6 @@ to agriculteurs-generator
 
 end
 
-to concessions-generator
-
-  ; créer les concessions en groupant des agriculteurs de brousse et de case
-
-end
 
 to surveillants-generator
 
@@ -894,25 +887,50 @@ to surveillance-representant
 
   if S-repreZ [
 
-    let n 1
-    ask surveillants [
-      while [n <= nb-champs-visités][                                    ; jusqu'à ce qu'il soit allé dans nb de champs prévu
-        let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
-        ifelse _chp-RNA > 0 [                                            ; il va d'abord dans les champs en RNA puis dans les autres
-          move-to one-of fields with [en-RNA = TRUE]
-          ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
-          if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
-            let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
-            if _proba1 < (100 / (nb-champs-visités * 0.20))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
-              ask coupeurs in-radius 10 with [en-coupe = TRUE] [
-                set attrape TRUE
-                set nb-attrape nb-attrape + 1
-                set coupeurs-attrapes coupeurs-attrapes + 1
-                set en-coupe FALSE
+    ifelse coordination-RNA [
+      let n 1
+      ask surveillants [
+        while [n <= nb-champs-visités][                                    ; jusqu'à ce qu'il soit allé dans nb de champs prévu
+          let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
+          ifelse _chp-RNA > 0 [                                            ; il va d'abord dans les champs en RNA puis dans les autres
+            move-to one-of fields with [en-RNA = TRUE]
+            ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
+            if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
+              let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
+              if _proba1 < (100 / (nb-champs-visités * 0.20))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
+                ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+                  set attrape TRUE
+                  set nb-attrape nb-attrape + 1
+                  set coupeurs-attrapes coupeurs-attrapes + 1
+                  set en-coupe FALSE
+                ]
               ]
             ]
+          ][
+            move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
+            ask fields-here [set visité TRUE]
+            if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
+              let _proba1 random 100
+              if _proba1 < 100 / (nb-champs-visités * 0.20) [
+                ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+                  set attrape TRUE
+                  set nb-attrape nb-attrape + 1
+                  set coupeurs-attrapes coupeurs-attrapes + 1
+                  set en-coupe FALSE
+                ]
+              ]
+            ]
+
           ]
-        ][
+          set n n + 1
+        ]
+      ]
+      ask fields [set visité FALSE]
+
+    ][
+      let n 1
+      ask surveillants [
+        while [n <= nb-champs-visités][
           move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
           ask fields-here [set visité TRUE]
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
@@ -926,18 +944,13 @@ to surveillance-representant
               ]
             ]
           ]
-
+          set n n + 1
         ]
-        set n n + 1
       ]
+      ask fields [set visité FALSE]
     ]
-       ifelse coordination [
-      ][
-        ask fields [set visité FALSE]
-      ]
   ]
 
-  ask fields [set visité FALSE]
 
 end
 
@@ -1203,7 +1216,7 @@ to nv-engagés-RNA
     if engagé = FALSE [
       set mon-chp-RNA mon-chp-RNA + 1
 
-      if mon-chp-RNA > 2 [
+      if mon-chp-RNA > 1 [
         let _my-field fields with [who = [id-agri] of myself]
         ask _my-field [ set en-RNA FALSE]
         set mon-chp-RNA 0
@@ -1534,7 +1547,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-70.0
+50.0
 1
 1
 NIL
@@ -1755,7 +1768,7 @@ nb-surveillants
 nb-surveillants
 0
 20
-7.0
+12.0
 1
 1
 NIL
@@ -1770,7 +1783,7 @@ nb-champs-visités
 nb-champs-visités
 0
 80
-3.0
+5.0
 1
 1
 NIL
@@ -1783,7 +1796,7 @@ SWITCH
 218
 S-repreZ
 S-repreZ
-1
+0
 1
 -1000
 
@@ -1794,18 +1807,18 @@ SWITCH
 348
 S-pop
 S-pop
-0
+1
 1
 -1000
 
 SWITCH
 635
 290
-782
+802
 323
-coordination
-coordination
-1
+coordination-RNA
+coordination-RNA
+0
 1
 -1000
 
@@ -1969,21 +1982,6 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
-
-SLIDER
-60
-515
-232
-548
-indice-deseng
-indice-deseng
-0.0
-1
-0.0
-0.1
-1
-NIL
-HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
