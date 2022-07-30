@@ -43,6 +43,8 @@ globals [
   stock-init-mil
   stock-de-mil
   delta-mil
+  indice-deseng
+
 
 
 
@@ -132,6 +134,7 @@ agriculteurs-own [
   stock-mil
   idMyBerger
   nb-patches
+  mon-chp-RNA
 ]
 
 breed [villages village]
@@ -163,10 +166,6 @@ fields-own [
 
 breed [surveillants surveillant]
 surveillants-own [
-]
-
-breed [concessions concession]
-concessions-own [
 ]
 
 
@@ -220,6 +219,8 @@ to setup
   set arb-reussite 2; nb de jeunes pousses devenues arbres à partir duquel agri voisins vont vouloir s'engager dans RNA
   set jour-réu 364 / fréquence-réu
   set Max-tps-chp 0
+  set indice-deseng 0.8 ; il a été déterminé par une calibration par simulation.
+  set malus-nb-chps 0.5
 
 
 
@@ -244,7 +245,7 @@ to setup
   coupeurs-generator
   agriculteurs-generator
   surveillants-generator
-  concessions-generator
+
 
   set total-mil-area count patches with [culture = "mil"] * patch-area
   set total-groundnuts-area count patches with [culture = "groundnuts"] * patch-area
@@ -276,8 +277,9 @@ end
 
   to trees-generator
 
-  ; génération des arbres en faisant attention qu'ils soient espacés d'une distance minimum.
-
+  ; La génération des arbres se fait un individu après l'autre jusqu'à ce que n arbres soient apparus. la valeur n est fixé selon la densité d'arbre à Diohine. Puisque cette densité est de 5.35 arbres par hectare et que l'espace simulé est de
+  ; 100 hectares, 535 arbres sont générés. La répartition des arbres est semi-aléatoire. Elle est contrainte par une condition d'espacement minimum des individus. Quand un arbre est généré, une zone à proximité, équivalente à un rayon de 2 patches autour de l'agent
+  ; est définie. Plus aucun arbre ne pourra apparaitre dans cette zone. Enfin les arbres apparaissent avec un certain âge. L'âge des arbres initiaux varie de 60 à 100 ans. L'âge moyen du parc initial est cosnciemment élevé pour pouvoir renvoyer à la situation réelle (mal formulé)
 
   let n 1
   while [n <= nb-arbres] [
@@ -309,7 +311,8 @@ end
 
 to villages-generator
 
-  ; le village apparait toujours au même endroit. sont déterminés les chanps de case et champs de brousse (distance-champ-brousse)
+  ; le village apparait toujours au même endroit. Autour de lui, dans un rayon de 40 patches, on retrouve les champs de case, au delà, les champs de brousse. Ce rayon est trop petit puisque l'on considère les champs intermédiaires comme des champs de ce cas.
+  ; or les champs de brousse se trouvent généralement à plus de &km du village. Cependant cela n'a pas une grande importance, puisque les déplacement des agents ne se fait pas de façon liénaire.
 
   create-villages 1
   [
@@ -324,9 +327,9 @@ end
 
 to parcels-generator
 
-  ; génération des parcelles à partir d'un agent (field) qui une fois créé détermine une zone d'influence autour de lui.
-  ; Les patches de cette zone gardent l'identité du field (id-parcelle) et sont donc liés.
-  ; problème de recouvrement des parcelles déjà générées, qui rend impossible le contrôle des surfaces de parcelles
+  ; Les parcelles sont générées une à une. Un agent est généré de façon aléatoire dans l'espace. Il va colorer une zone autour de lui, plus ou moins grande en fonction du nombre de parcelles que l'on veut. La parcelle représente donc cette zone, qui est liée à
+  ; l'agent générateur "field" par un identifiant (id-parcelle). Si un field apparait sur un patch déjà coloré, il se déplace vers un patch non coloré puis va pouvoir coloré la zone alentour. Les fields apparaissent tant qu'il n'y a plus de patches non colorés (noirs).(conteur arbre qui a poussé)
+  ; Le problème de l'hétérogénéité de la surface des parcelles se pose puisque certaines sont partiellement recouvertes lors de la génération.
 
    while [count patches with [pcolor = black] != 0][
     create-fields 1 [
@@ -366,11 +369,11 @@ end
 
 to crops-assignment
 
-  ; Ici à chaque parcelle créée est assigné une culture, encore une fois par l'intermédiaire des agents "fields". Permet de contrôler la part de chaque culture
+  ; Ici à chaque parcelle créée est assigné une culture, encore une fois par l'intermédiaire des agents "fields". Les types cultures sont assignés un à un. D'abord est déterminé la zone de jachère, puis les champs de mil et enfin les champs d'arachide.
+  ; A chaque fois q'un patch est mis en culture, il n'est plus concerné par la procédure (en-culture), ce qui permet de contrôler la part de la surface totale que presénte chaque culture (jachère 20%, mil 80% de l'espace cultivé et arachide 20%)
+  ; Pour la jachère l'espace des champs de brousse a été divisé en trois. Elle est en rotation sur ces zones durant un cycle de trois ans. Une proportion des patches restant équivalente à celle de mil dans les champs passent en mil. Le reste est défini comme de l'arachide.
   ; problème mineur lié à l'assignation 1 à 1: la valeur du slider =/= valeur finale (monitorée)
-  ; mieux renseigner la part de chaque culture (% mil, arachide, jachère)
-  ; 3 zones ont été définie - elles permettent la rotation de la jachère sur 3 ans.
-  ; problème - les champs de brousse sont éloignés d'environ 1km (hors de la surface de simulation)
+
 
    ask patches [
     if pycor > 45 [set zone 0]
@@ -421,8 +424,9 @@ end
 
 to crop-tree-influence
 
-  ;Génération de la zone d'infleunce (de fertilisation) des arbres sur les cultures. Calibration Roupsard et son doctorant.
-  ; Est-ce que cettte procédure est encore utile? Oui si on considère les stocks de mil et d'arachide comme Output intéressant.
+
+  ; Les arbres définissent une zone d'influence autour d'eux. Les patches de cette zone sont ceux qui bénéficient de l'effet fertilisant du kad. La zone est de 2 patches de rayon, soit 20m pour les patchs en mil, et d'un patch de rayon pour ceux en arachide.
+  ; C'est valeur ont été calibré grâce à la littérature (O.Roupsard, ....)
 
   ask trees [
     ask patches with [culture = "mil"] in-radius 2 [
@@ -437,9 +441,10 @@ end
 
 to bergers-generator
 
- ; génération des bergers du village. Ils sont liés à un troupeau dont le nombre de tête est variable et déterminé de façon aléatoire (calibrage à affiner?)
- ; et pocèdent un nombre d'ha entre 2 et 5 la aussi défini aléatoirement (calibrage à affiner?)
- ; est-il nécessaire de créer une variable "troupeau gardé"? Ne semble pas être un frein majeur à la régénération du parc.
+  ; Les bergers ne représentent que les bergers qui ne partent pas en transhumancee. Le nombre de berger a été calibré par le terrain. 19 bergers restent au village pendant la saison des pluie. Or Diohine est divisé en X quartier qui représentent
+  ; environ Xha de terrain cultivé. On a divisé le nombre de berger par celui des quartiers, ce qui nous donne environ 5 bergers. Les bergers sont liés à un troupeau dont le nombre de tête est variable et déterminé de façon aléatoire. Puisque les gros troupeaux
+  ; partent en transhumance, les tailles de troupeau sont relativement faible puisque le nombre de têtes est compris entre 12 et 25.
+
 
   create-bergers nombre-bergers
   [
@@ -457,8 +462,7 @@ end
 
 to coupeurs-generator
 
-  ; un nombre de coupeur (variable) est défini
-  ; Peut-être qu'il serait pertinent de faire varier ce nombre selon les besoins en bois / la sensibilisation des jeunes bergers?
+  ; Le nombre de coupeurs est un élément qui reste à préciser. Puisque le sujet est conflictuel, il est difficile d'avoir une idée du nombre de coupeurs sévissants à Diohine.
 
   create-coupeurs nb-coupeurs
   [
@@ -471,10 +475,8 @@ end
 
 to agriculteurs-generator
 
-  ; Pour chaque champ, un agriculteur est créé. Ils sont liés entre eux.
-  ; certains d'agriculteurs sont engagés dans la RNA (engagés-initiaux - variable qui reste à faire varier)
-  ; Il serait mieux d'assigner plusieurs champs à un même agriculteurs - si (hypo) l'agriculteur est plus suceptible de protéger les pousses
-  ; dans les champs proches.
+  ; Pour chaque champ, un agriculteur est créé. Ils sont liés entre eux. Les agriculteurs apparaissent avec un score de RNA de 50. Certains agriculteurs sont directement engagés (engagés-initiaux = 9). Ils ont donc un score de 100.
+  ; Il serait mieux d'assigner plusieurs champs à un même agriculteurs - si (hypo) l'agriculteur est plus suceptible de protéger les pousses dans les champs proches.
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
   set _myIdParcelle remove-duplicates _myIdParcelle ;on supprime les doublons
@@ -484,8 +486,9 @@ to agriculteurs-generator
     [set id-agri x
       set size 1
       set jour-champ 0
-      set interet-RNA 0
+      set interet-RNA 50
       set engagé FALSE
+      set mon-chp-RNA 0
       set nb-ha-a (random 3) + 2
       set nb-patches count patches with [id-parcelle = [id-agri] of myself]
       let _myWho who
@@ -509,13 +512,10 @@ to agriculteurs-generator
 
 end
 
-to concessions-generator
-
-  ; créer les concessions en groupant des agriculteurs de brousse et de case
-
-end
 
 to surveillants-generator
+
+  ; Le nombre de surveillant est un paramètre a faire varier. Il varie entre .... puisqu'il a semblait qu'au delà de cette valeur, les surveillants allaient être trop nombreux.
 
   create-surveillants nb-surveillants
 
@@ -856,9 +856,10 @@ to surveillance-champ
           set attrape TRUE
           set nb-attrape nb-attrape + 1
           set coupeurs-attrapes coupeurs-attrapes + 1
-          let _proba random 100
+;          let _proba random 100
 ;          if _proba > 20 [                        ; probable qu'il ne le voit pas avant
             set en-coupe FALSE
+            show "hihi"
 ;          ]
         ]
       ][
@@ -870,6 +871,7 @@ to surveillance-champ
             set coupeurs-attrapes coupeurs-attrapes + 1
 ;            if _proba > 20 [                      ; probable qu'il ne le voit pas avant
               set en-coupe FALSE
+              show "haha"
 ;            ]
           ]
         ]
@@ -890,30 +892,55 @@ to surveillance-representant
 
   if S-repreZ [
 
-    let n 1
-    ask surveillants [
-      while [n <= nb-champs-visités][                                    ; jusqu'à ce qu'il soit allé dans nb de champs prévu
-        let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
-        ifelse _chp-RNA > 0 [                                            ; il va d'abord dans les champs en RNA puis dans les autres
-          move-to one-of fields with [en-RNA = TRUE]
-          ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
-          if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
-            let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
-            if _proba1 < (100 / (nb-champs-visités * 0.20))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
-              ask coupeurs in-radius 10 with [en-coupe = TRUE] [
-                set attrape TRUE
-                set nb-attrape nb-attrape + 1
-                set coupeurs-attrapes coupeurs-attrapes + 1
-                set en-coupe FALSE
+    ifelse coordination-RNA [
+      let n 1
+      ask surveillants [
+        while [n <= nb-champs-visités][                                    ; jusqu'à ce qu'il soit allé dans nb de champs prévu
+          let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
+          ifelse _chp-RNA > 0 [                                            ; il va d'abord dans les champs en RNA puis dans les autres
+            move-to one-of fields with [en-RNA = TRUE]
+            ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
+            if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
+              let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
+              if _proba1 < (100 / (nb-champs-visités * malus-nb-chps))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
+                ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+                  set attrape TRUE
+                  set nb-attrape nb-attrape + 1
+                  set coupeurs-attrapes coupeurs-attrapes + 1
+                  set en-coupe FALSE
+                ]
               ]
             ]
+          ][
+            move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
+            ask fields-here [set visité TRUE]
+            if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
+              let _proba1 random 100
+              if _proba1 < 100 / (nb-champs-visités * malus-nb-chps) [
+                ask coupeurs in-radius 10 with [en-coupe = TRUE] [
+                  set attrape TRUE
+                  set nb-attrape nb-attrape + 1
+                  set coupeurs-attrapes coupeurs-attrapes + 1
+                  set en-coupe FALSE
+                ]
+              ]
+            ]
+
           ]
-        ][
+          set n n + 1
+        ]
+      ]
+      ask fields [set visité FALSE]
+
+    ][
+      let n 1
+      ask surveillants [
+        while [n <= nb-champs-visités][
           move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
           ask fields-here [set visité TRUE]
           if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
             let _proba1 random 100
-            if _proba1 < 100 / (nb-champs-visités * 0.20) [
+            if _proba1 < 100 / (nb-champs-visités * malus-nb-chps) [
               ask coupeurs in-radius 10 with [en-coupe = TRUE] [
                 set attrape TRUE
                 set nb-attrape nb-attrape + 1
@@ -922,18 +949,13 @@ to surveillance-representant
               ]
             ]
           ]
-
+          set n n + 1
         ]
-        set n n + 1
       ]
+      ask fields [set visité FALSE]
     ]
-       ifelse coordination [
-      ][
-        ask fields [set visité FALSE]
-      ]
   ]
 
-  ask fields [set visité FALSE]
 
 end
 
@@ -1163,36 +1185,47 @@ to nv-engagés-RNA
         ;;Si il y a des agriculteur engagé autour ET qui ne sont pas eux meme
         ifelse _proba < proba-discu [ ;; si la proba tiré au hasard est  inferieur a la valeur de gui
           ;; alors on augmenter
-          set interet-RNA interet-RNA + effet-discussion + 0.2
+          set interet-RNA interet-RNA + effet-discussion
         ][
           ;; sinon on baisse
-          set interet-RNA (interet-RNA - effet-discussion) + 0.7
+          set interet-RNA (interet-RNA - effet-discussion) + indice-deseng
         ]
       ][
         ;;; Si je n'ai pas de voisin engagé je ne peut pas discuter alors ça baisse
-        set interet-RNA (interet-RNA - effet-discussion) + 0.7
+        set interet-RNA (interet-RNA - effet-discussion)  + indice-deseng
       ]
     ]
   ]
   ask agriculteurs with [engagé  = TRUE][
     if any? villages-here [
-      set interet-RNA (interet-RNA - effet-discussion) + 0.7
+      set interet-RNA (interet-RNA - effet-discussion)  + indice-deseng
   ]]
 
   ask agriculteurs [
-    if interet-RNA >= 20 [
+    if interet-RNA >= 100 [
       set engagé TRUE
       let _my-field fields with [who = [id-agri] of myself]
       ask _my-field [ set en-RNA TRUE]
     ]
+
     if interet-RNA <= 0 [
       set engagé FALSE
-      let _my-field fields with [who = [id-agri] of myself]
-      ask _my-field [ set en-RNA FALSE]
     ]
 
     if interet-RNA < 0 [
       set interet-RNA 0
+    ]
+  ]
+
+  ask agriculteurs [
+    if engagé = FALSE [
+      set mon-chp-RNA mon-chp-RNA + 1
+
+      if mon-chp-RNA > 1 [
+        let _my-field fields with [who = [id-agri] of myself]
+        ask _my-field [ set en-RNA FALSE]
+        set mon-chp-RNA 0
+      ]
     ]
   ]
 
@@ -1519,7 +1552,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-73.0
+50.0
 1
 1
 NIL
@@ -1740,7 +1773,7 @@ nb-surveillants
 nb-surveillants
 0
 20
-1.0
+10.0
 1
 1
 NIL
@@ -1755,7 +1788,7 @@ nb-champs-visités
 nb-champs-visités
 0
 80
-10.0
+16.0
 1
 1
 NIL
@@ -1786,11 +1819,11 @@ S-pop
 SWITCH
 635
 290
-782
+802
 323
-coordination
-coordination
-1
+coordination-RNA
+coordination-RNA
+0
 1
 -1000
 
@@ -1833,7 +1866,7 @@ INPUTBOX
 110
 490
 proba-discu
-50.0
+60.0
 1
 0
 Number
@@ -1954,6 +1987,21 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
+
+SLIDER
+30
+520
+202
+553
+malus-nb-chps
+malus-nb-chps
+0
+1
+0.5
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2506,6 +2554,120 @@ NetLogo 6.2.2
       <value value="10"/>
       <value value="15"/>
     </enumeratedValueSet>
+  </experiment>
+  <experiment name="calibration-tpschamps" repetitions="5" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="5460"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>nb-arbres</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>delta-mil</metric>
+    <enumeratedValueSet variable="nb-surveillants">
+      <value value="7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="60"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-pop">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-champs-visités">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.31"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-repreZ">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="coordination">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="indice-deseng" first="0" step="0.1" last="1"/>
+    <enumeratedValueSet variable="participants">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="tps-au-champ" first="0" step="20" last="100"/>
+  </experiment>
+  <experiment name="calibration-surveillant" repetitions="5" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="5460"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>nb-arbres</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>delta-mil</metric>
+    <steppedValueSet variable="nb-surveillants" first="1" step="3" last="11"/>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="coordination-RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="60"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-pop">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="80"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="nb-champs-visités" first="1" step="5" last="20"/>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.31"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-repreZ">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tps-au-champ">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="participants">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="malus-nb-chps" first="0" step="0.2" last="1"/>
   </experiment>
 </experiments>
 @#$#@#$#@
