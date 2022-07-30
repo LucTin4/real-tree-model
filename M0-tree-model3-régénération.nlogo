@@ -1,3 +1,5 @@
+extensions [morphology] ; extension de Juste pour calculer le moran des arbres
+
 globals [
   gtree-influence ; le radius de non recouvrement des arbres
   gfield-influence
@@ -80,12 +82,13 @@ globals [
   pouss-inter-prot
   MoyN-interet-RNA
   nb-engages
-
+  moranIndexArbres
 
 ]
 
 patches-own [
-
+  nbarbresici
+  arbre-ici
   tree-influence
   under-tree ; TRUE/FALSE
   culture ; can be mil or groundnut
@@ -100,8 +103,6 @@ patches-own [
   champ-brousse;
   zoné; TRUE/FALSE utilisé pour définition des zones de jachère
   zone; 3 zones pour la rotation de la jachère
-  arbre-ici
-
 ]
 
 
@@ -1248,6 +1249,7 @@ to arbre-patches
 
   ask patches[
     ifelse any? trees-here [
+      set nbarbresici count trees-here
       set arbre-ici TRUE
     ][
     set arbre-ici FALSE
@@ -1285,7 +1287,9 @@ to update-variables
   ]
   set charrette-bois-année charrette-bois
   set delat-Nb-arbres nb-arbres - init-nb-arbre
-
+  if day-of-year = 360 [
+    set moranIndexArbres morphology:moran 0
+  ]
 
   ; coupeur-attrape
   ; nb-coupe
@@ -1953,10 +1957,10 @@ PENS
 "pen-0" 1.0 0 -7500403 true "" ""
 
 PLOT
-1465
-205
-1665
-355
+1450
+345
+1650
+495
 Delta Arbres
 NIL
 NIL
@@ -2002,6 +2006,45 @@ malus-nb-chps
 1
 NIL
 HORIZONTAL
+
+PLOT
+1485
+10
+1645
+175
+Indice de Moran Arbres
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot moranIndexArbres"
+
+TEXTBOX
+1500
+185
+1650
+301
+Indice de Moran : l'hypothèse nulle suppose que l'attribut analysé est distribué aléatoirement parmi les entités de la zone d'étude. Donc a 0 les arbres distribué aléaroirement. -1 les arbres sont influencé négativement pas l'espace +1 positivement
+9
+0.0
+1
+
+MONITOR
+1570
+290
+1635
+335
+Moran
+moranIndexArbres
+10
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
