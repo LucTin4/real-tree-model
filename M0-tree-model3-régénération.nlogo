@@ -221,7 +221,6 @@ to setup
   set jour-réu 364 / fréquence-réu
   set Max-tps-chp 0
   set indice-deseng 0.8 ; il a été déterminé par une calibration par simulation.
-  set malus-nb-chps 0.5
 
 
 
@@ -1556,7 +1555,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-50.0
+60.0
 1
 1
 NIL
@@ -1591,7 +1590,7 @@ q-présence-brousse
 q-présence-brousse
 0
 1
-0.31
+0.1
 0.01
 1
 NIL
@@ -2001,7 +2000,7 @@ malus-nb-chps
 malus-nb-chps
 0
 1
-0.5
+0.1
 0.1
 1
 NIL
