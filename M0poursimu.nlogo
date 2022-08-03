@@ -1,4 +1,4 @@
-extensions [morphology] ; extension de Juste pour calculer le moran des arbres
+
 
 globals [
   gtree-influence ; le radius de non recouvrement des arbres
@@ -1368,9 +1368,7 @@ to update-variables
   ]
   set charrette-bois-année charrette-bois
   set delat-Nb-arbres nb-arbres - init-nb-arbre
-  if day-of-year = 360 [
-    set moranIndexArbres morphology:moran 0
-  ]
+
 
   ; coupeur-attrape
   ; nb-coupe
@@ -1637,7 +1635,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-60.0
+50.0
 1
 1
 NIL
@@ -1858,7 +1856,7 @@ nb-surveillants
 nb-surveillants
 1
 20
-6.0
+11.0
 1
 1
 NIL
@@ -1936,7 +1934,7 @@ INPUTBOX
 110
 490
 proba-discu
-60.0
+40.0
 1
 0
 Number
@@ -2789,7 +2787,7 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <steppedValueSet variable="malus-nb-chps" first="0" step="0.2" last="1"/>
   </experiment>
-  <experiment name="calibration-surveillance-déléguée" repetitions="5" runMetricsEveryStep="true">
+  <experiment name="calibration-surveillance-déléguée" repetitions="6" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="5460"/>
@@ -2797,7 +2795,7 @@ NetLogo 6.2.2
     <metric>nb-arbres</metric>
     <metric>nb-engages</metric>
     <metric>nb-coupe</metric>
-    <steppedValueSet variable="nb-surveillants" first="1" step="2" last="12"/>
+    <steppedValueSet variable="nb-surveillants" first="1" step="2" last="11"/>
     <enumeratedValueSet variable="coordination-RNA">
       <value value="false"/>
     </enumeratedValueSet>
