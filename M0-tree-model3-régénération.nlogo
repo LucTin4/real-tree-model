@@ -47,6 +47,7 @@ globals [
   delta-mil
   indice-deseng
   nb-champs-visités
+  malus-nb-chps
 
 
 
@@ -83,6 +84,7 @@ globals [
   MoyN-interet-RNA
   nb-engages
   moranIndexArbres
+  pousse-interm
 
 ]
 
@@ -221,6 +223,7 @@ to setup
   set jour-réu 364 / fréquence-réu
   set Max-tps-chp 0
   set indice-deseng 0.8 ; il a été déterminé par une calibration par simulation.
+  set malus-nb-chps 0.25
 
 
 
@@ -561,8 +564,9 @@ to go
   Régénération-NA
   if day-of-year >= 140 [
     reperage-pousse]
+ surveillance-champs
   surveillance-representant
-  surveillance-champ
+
   if day-of-year >= 140 [
     coupe-pousse]
   croissance-pousse
@@ -846,7 +850,7 @@ to présence-champs
 
 end
 
-to surveillance-champ
+to surveillance-champs
 
   if S-pop [
 
@@ -883,7 +887,6 @@ to surveillance-champ
     ]
   ]
   ]
-
 
 end
 
@@ -1184,7 +1187,7 @@ end
 
 to Régénération-NA
 
-  if RNA [
+
     if ticks <= 1092 [
     if day-of-year > 310
     [protection-RNA ]
@@ -1196,7 +1199,7 @@ to Régénération-NA
 
     nv-engagés-RNA
     ]
-  ]
+
 
 end
 
@@ -1207,7 +1210,7 @@ to protection-RNA ; ATTENTION DIFFICILE DE VOIR SI ELLE MARCHE COMME JE VEUX
   ; A partir d'un certains nombres de pousses protégées, il ne protège plus les nouvelles (nb potentiellement a faire varier)
   ; accélération de la croissance a faire dans une autres procédure.
 
-  if RNA [
+
     ask agriculteurs with [engagé = TRUE][
       if id-agri = [id-parcelle] of patch-here [ ; si il est dans sa parcelle
         if any? pousses with [[id-parcelle] of patch-here =[id-agri] of myself][ ; si il y a des pousses dans sa parcelle
@@ -1223,7 +1226,7 @@ to protection-RNA ; ATTENTION DIFFICILE DE VOIR SI ELLE MARCHE COMME JE VEUX
         ]
       ]
     ]
-  ]
+
 
 
 end
@@ -1371,6 +1374,7 @@ to update-variables
   if day-of-year = 360 [
     set moranIndexArbres morphology:moran 0
   ]
+  set pousse-interm count pousses with [age > age-p-interm]
 
   ; coupeur-attrape
   ; nb-coupe
@@ -1602,17 +1606,6 @@ MONITOR
 1
 9
 
-SWITCH
-20
-200
-123
-233
-RNA
-RNA
-0
-1
--1000
-
 SLIDER
 20
 235
@@ -1637,7 +1630,7 @@ tps-au-champ
 tps-au-champ
 0
 100
-60.0
+10.0
 1
 1
 NIL
@@ -1660,7 +1653,7 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot count pousses with [signalé = TRUE]"
-"pen-1" 1.0 0 -7500403 true "" "plot count pousses with [age > age-p-interm]"
+"pen-1" 1.0 0 -7500403 true "" "plot pousse-interm\n"
 "pen-2" 1.0 0 -2674135 true "" "plot count pousses"
 
 SLIDER
@@ -1672,7 +1665,7 @@ q-présence-brousse
 q-présence-brousse
 0
 1
-0.2
+0.1
 0.01
 1
 NIL
@@ -1865,17 +1858,6 @@ NIL
 HORIZONTAL
 
 SWITCH
-635
-185
-740
-218
-S-repreZ
-S-repreZ
-0
-1
--1000
-
-SWITCH
 125
 315
 215
@@ -2058,21 +2040,6 @@ false
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
 
-SLIDER
-30
-520
-202
-553
-malus-nb-chps
-malus-nb-chps
-0
-1
-0.6
-0.01
-1
-NIL
-HORIZONTAL
-
 PLOT
 1485
 10
@@ -2122,6 +2089,17 @@ nb-champs-visités
 17
 1
 11
+
+SWITCH
+635
+185
+742
+218
+S-reprez
+S-reprez
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2173,7 +2151,21 @@ Le modèle
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+Exploration 1
+- on souhaite tester la surveillance populaire 
+avec comme paramètres variants 
+	- le temps que les paysans passe dans les champs ( 2 variables - tps-au-champ et q-présence brousse). On cherchera à déterminer un investissement en temps nécessaire pour permettre une densification. Le temps au champs est progressif (valeur 0 20 40 60 80 100), ils vont dans leur champs de brousse soit très peu (0.1) soit deux fois moins que dans leurs champs de case (0.5) soit autant (1)
+	- la propension des gens à parler de RNA entre eux. Avec 3 steps - la RNA n'est pas un sujet (discu 1fois/10), elle l'est mais dans une moindre mesure (1fois/2), elle l'est totalement (80 - 8fois/10)
+	- la porpension des gens à dénoncer le coupeur et à l'arrêter. Avec 3 steps - ils dénoncent rarement (20), ils dénoncent 1fois/2, ils dénoncent systématiquement (100) 
+	- la fréquence des rénunions spécifiques à la RNA entre personnes du villages. Elles sont soit inexistantes (0), soit elles interviennent rarement lors des événements de l'année (2fois/an), soit fréquentes (1fois/mois en saison sèche - 8) 
+
+Exploration 2 
+- on souhaite tester la surveillance déléguées avec comme paramètres variables 
+	- le nombre de surveillants (de 1 à 10 par pas de 1). Au delà de cette valeur, le nombre de surveillants apparait ridicule par rapport à la surface à surveiller (1km2). 
+	- la coordination RNA (True/False). Est ce que les surveillants priorisent les champs en RNA? (ce qui veut dire qu'il y a une coordination entre les habitants pour informer les surveillants sur quels champs sont en RNA). 
+	- le temps au champs. Les agri vont soit très peu au champs (10) soit beaucoup (80) et vont toujours 10 fois moins dans les champs de brousse (1/10). On cherche à voir si la présence à une importance sur la régénération malgré le fait que la surveillance soit déléguée. En d'autre terme il s'agit de savoir si la seule protection des pousses nécessite aussi un investissement au champs minimum. 
+	- même chose que l'Explo1 pour: les réunions et leur fréquence, la propension des gens à discuter
+
 
 ## EXTENDING THE MODEL
 
@@ -2632,15 +2624,12 @@ NetLogo 6.2.2
       <value value="9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="nombre-bergers">
-      <value value="10"/>
+      <value value="5"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="proba-discu">
-      <value value="20"/>
-      <value value="50"/>
-      <value value="85"/>
-    </enumeratedValueSet>
+    <steppedValueSet variable="proba-discu" first="20" step="10" last="80"/>
     <enumeratedValueSet variable="S-pop">
       <value value="true"/>
+      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="RNA">
       <value value="true"/>
@@ -2651,8 +2640,6 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="fréquence-réu">
       <value value="1"/>
-      <value value="3"/>
-      <value value="6"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="q-présence-brousse">
       <value value="0.02"/>
@@ -2670,9 +2657,7 @@ NetLogo 6.2.2
       <value value="85"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="participants">
-      <value value="5"/>
       <value value="10"/>
-      <value value="15"/>
     </enumeratedValueSet>
   </experiment>
   <experiment name="calibration-tpschamps" repetitions="5" runMetricsEveryStep="false">
@@ -2733,62 +2718,6 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <steppedValueSet variable="tps-au-champ" first="0" step="20" last="100"/>
   </experiment>
-  <experiment name="calibration-surveillant" repetitions="5" runMetricsEveryStep="false">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="5460"/>
-    <metric>%-under-tree</metric>
-    <metric>coupeurs-attrapes</metric>
-    <metric>nb-arbres</metric>
-    <metric>MoyN-interet-RNA</metric>
-    <metric>nb-engages</metric>
-    <metric>delta-mil</metric>
-    <steppedValueSet variable="nb-surveillants" first="1" step="3" last="11"/>
-    <enumeratedValueSet variable="engagés-initiaux">
-      <value value="9"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="coordination-RNA">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="nombre-bergers">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="proba-discu">
-      <value value="60"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="S-pop">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="RNA">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="proba-denonce">
-      <value value="80"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="nb-champs-visités" first="1" step="5" last="20"/>
-    <enumeratedValueSet variable="fréquence-réu">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="q-présence-brousse">
-      <value value="0.31"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="nb-proTG-max">
-      <value value="25"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="nb-coupeurs">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="S-repreZ">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="tps-au-champ">
-      <value value="50"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="participants">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="malus-nb-chps" first="0" step="0.2" last="1"/>
-  </experiment>
   <experiment name="calibration-surveillance-déléguée" repetitions="5" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
@@ -2840,6 +2769,134 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="participants">
       <value value="10"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Exploration1(Surveillance-pop)" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="8396"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>age-moy-arb</metric>
+    <metric>nb-arbres</metric>
+    <metric>init-nb-arbre</metric>
+    <metric>delat-Nb-arbres</metric>
+    <metric>pouss</metric>
+    <metric>pouss-prot</metric>
+    <metric>pouss-inter-prot</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>moranIndexArbres</metric>
+    <enumeratedValueSet variable="nb-surveillants">
+      <value value="6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="coordination-RNA">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="10"/>
+      <value value="50"/>
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-reprez">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-pop">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="20"/>
+      <value value="50"/>
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="0"/>
+      <value value="2"/>
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.1"/>
+      <value value="0.5"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="participants">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="tps-au-champ" first="0" step="20" last="100"/>
+  </experiment>
+  <experiment name="Exploration2(Surveillance-déléguée)" repetitions="20" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="8396"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>age-moy-arb</metric>
+    <metric>nb-arbres</metric>
+    <metric>init-nb-arbre</metric>
+    <metric>delat-Nb-arbres</metric>
+    <metric>pouss</metric>
+    <metric>pouss-prot</metric>
+    <metric>pouss-inter-prot</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>moranIndexArbres</metric>
+    <steppedValueSet variable="nb-surveillants" first="1" step="1" last="10"/>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="coordination-RNA">
+      <value value="false"/>
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="10"/>
+      <value value="50"/>
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-reprez">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="S-pop">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="0"/>
+      <value value="2"/>
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="participants">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tps-au-champ">
+      <value value="10"/>
+      <value value="80"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
