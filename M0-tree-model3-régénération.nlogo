@@ -1734,7 +1734,7 @@ fréquence-réu
 fréquence-réu
 1
 10
-1.0
+2.0
 1
 1
 NIL
@@ -1756,10 +1756,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-795
-390
-845
-427
+885
+405
+935
+442
 nb-agri
 count agriculteurs
 0
@@ -1767,10 +1767,10 @@ count agriculteurs
 9
 
 MONITOR
-790
-350
-855
-387
+885
+370
+950
+407
 agri-engagés
 count agriculteurs with [engagé = TRUE]
 17
@@ -1851,7 +1851,7 @@ nb-surveillants
 nb-surveillants
 1
 20
-6.0
+1.0
 1
 1
 NIL
@@ -1918,7 +1918,7 @@ INPUTBOX
 110
 490
 proba-discu
-60.0
+10.0
 1
 0
 Number
@@ -1969,28 +1969,10 @@ NIL
 1
 
 PLOT
-1320
-15
-1480
-180
-Stock de sacs mil
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"pen-0" 1.0 0 -7500403 true "" ""
-
-PLOT
-625
-385
-785
-505
+660
+355
+850
+500
 bois
 NIL
 NIL
@@ -2023,10 +2005,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot delat-Nb-arbres"
 
 PLOT
-910
-590
-1110
-740
+1320
+15
+1480
+180
 Delta-mil
 NIL
 NIL
@@ -2816,7 +2798,6 @@ NetLogo 6.2.2
       <value value="100"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="fréquence-réu">
-      <value value="0"/>
       <value value="2"/>
       <value value="8"/>
     </enumeratedValueSet>
@@ -2836,7 +2817,7 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <steppedValueSet variable="tps-au-champ" first="0" step="20" last="100"/>
   </experiment>
-  <experiment name="Exploration2(Surveillance-déléguée)" repetitions="20" runMetricsEveryStep="true">
+  <experiment name="Exploration2(Surveillance-déléguée)" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="8396"/>
@@ -2878,7 +2859,6 @@ NetLogo 6.2.2
       <value value="80"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="fréquence-réu">
-      <value value="0"/>
       <value value="2"/>
       <value value="8"/>
     </enumeratedValueSet>
