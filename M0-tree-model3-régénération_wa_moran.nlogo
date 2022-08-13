@@ -864,7 +864,7 @@ to surveillance-champs
 ;          let _proba random 100
 ;          if _proba > 20 [                        ; probable qu'il ne le voit pas avant
             set en-coupe FALSE
-           
+            show "hihi"
 ;          ]
         ]
       ][
@@ -876,7 +876,6 @@ to surveillance-champs
             set coupeurs-attrapes coupeurs-attrapes + 1
 ;            if _proba > 20 [                      ; probable qu'il ne le voit pas avant
               set en-coupe FALSE
-              
 ;            ]
           ]
         ]
@@ -2721,7 +2720,7 @@ NetLogo 6.2.2
       <value value="10"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="Exploration1(Surveillance-pop)" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="Exploration1(Surveillance-pop)" repetitions="5" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="8396"/>
