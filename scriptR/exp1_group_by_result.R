@@ -8,10 +8,21 @@ require(data.table)
 require(ggplot2)
 require(dplyr)
 library(stringr)
+library(reshape2)
 
 rm(list = ls())
 
-data.df <- fread("~/Documents/CIRAD/2022/2_DSCATT_Dynamic_carbon/Stages/lucas/Exploration1-sp-050820221251.csv", skip = 6)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+path <- "../data/exploration1/"
+l.files <- list.files(path)
+
+data.df <- data.frame()
+for(i in 1:length(l.files)){
+  tmp <- fread(paste0(path, l.files[i]), skip = 6)
+  data.df <- rbind(data.df, tmp)
+}
+
 colnames(data.df)[17] <- "pct-under-tree"
 colnames(data.df)[1] <- "run.number"
 colnames(data.df) <- str_replace_all(colnames(data.df),"-", ".")
@@ -36,5 +47,29 @@ median.df <- data.df %>%
             nb.engages = median(nb.engages)
             
 )
+write.table(median.df,"/tmp/median_simu.csv", row.names = F)
 
+
+## On peut aussi faire des boxplot avec les valeurs des 20 replications
+
+ggplot(data = data.df)+
+  geom_boxplot(aes(x = as.factor(proba.discu), y = nb.arbres))+
+  labs(x = "probabilité de discussion", "nombre d'arbres")+
+  facet_grid(fréquence.réu~tps.au.champ, labeller = label_both)+
+  theme_bw()
+ggsave("../img/boxplot_discussion_freq_tps_champs.png", width = 8)
+
+ggplot(data = data.df)+
+  geom_boxplot(aes(x = as.factor(fréquence.réu), y = nb.arbres))+
+  labs(x = "fréquance des réunions", "nombre d'arbres")+
+  facet_grid(proba.discu~tps.au.champ, labeller = label_both)+
+  theme_bw()
+ggsave("../img/boxplot_freq_proba_discu_tps_champs.png", width = 8)
+
+ggplot(data = data.df)+
+  geom_boxplot(aes(x = as.factor(tps.au.champ), y = nb.arbres))+
+  labs(x = "Temps passé au champs", "nombre d'arbres")+
+  facet_grid(fréquence.réu~proba.discu, labeller = label_both)+
+  theme_bw()
+ggsave("../img/boxplot_tps_champs_freq_discu.png", width = 8)
 
