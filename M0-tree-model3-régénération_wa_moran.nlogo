@@ -864,7 +864,7 @@ to surveillance-champs
 ;          let _proba random 100
 ;          if _proba > 20 [                        ; probable qu'il ne le voit pas avant
             set en-coupe FALSE
-            show "hihi"
+
 ;          ]
         ]
       ][
