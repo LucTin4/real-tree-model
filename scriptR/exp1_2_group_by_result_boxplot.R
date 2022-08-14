@@ -6,6 +6,7 @@
 
 require(data.table)
 require(ggplot2)
+require(patchwork)
 require(dplyr)
 library(stringr)
 library(reshape2)
@@ -72,4 +73,41 @@ ggplot(data = data.df)+
   facet_grid(fréquence.réu~proba.discu, labeller = label_both)+
   theme_bw()
 ggsave("../img/boxplot_tps_champs_freq_discu.png", width = 8)
+
+###########################################################################################
+## Exploration n°2 dans laquel on introduit des surveillant délégué
+###########################################################################################
+
+data2.df <- fread("../data/exploration2/Exploration2-sp-130820222135.csv", skip = 6)
+colnames(data2.df)[17] <- "pct-under-tree"
+colnames(data2.df)[1] <- "run.number"
+colnames(data2.df) <- str_replace_all(colnames(data2.df),"-", ".")
+
+
+## on va s'intéresser d'abord a des frequ de réunion faible
+sel <- data2.df$fréquence.réu == 2
+
+fr2 <- ggplot(data = data2.df[sel,])+
+  geom_boxplot(aes(x = as.factor(nb.surveillants), y = nb.arbres))+
+  scale_y_continuous(limits = c(0, 4000))+
+  labs(x = "nb de surveillant", y = "nombre d'arbres", subtitle = "Fréquence des réunions : 2 par ans")+
+  facet_grid(proba.discu~tps.au.champ, labeller = label_both)+
+  theme_bw()
+fr2
+
+sel <- data2.df$fréquence.réu == 8
+
+fr8 <- ggplot(data = data2.df[sel,])+
+  geom_boxplot(aes(x = as.factor(nb.surveillants), y = nb.arbres))+
+  scale_y_continuous(limits = c(0, 4000))+
+  labs(x = "nb de surveillant", y = "nombre d'arbres", subtitle = "Fréquence des réunions : 8 par ans")+
+  facet_grid(proba.discu~tps.au.champ, labeller = label_both)+
+  theme_bw()
+fr8
+
+fr2 + fr8
+
+ggsave("../img/exp2_boxplot_nSurveillant_discussion_tps_champs.png", width = 10)
+
+
 
