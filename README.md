@@ -42,7 +42,7 @@ Il semble que tout les paramêtres jouent un rôle dans le ce cas là
 
 ### boxplot de l'exploration 2
 
-![](img/exp2_boxplot_%2CnSurveillant_discussion_tps_champs.png)
+![](img/exp2_boxplot_nSurveillant_discussion_tps_champs.png)
 
 En conparant, la seconde figure de l'explo 1, et celle-ci, il semble qu'il y ait un vrai effet de la surveillance quand le nombre de réunion est bas, et que les population locales ne passe que peut de temps aux champs pendant la saison sèche. 
 
