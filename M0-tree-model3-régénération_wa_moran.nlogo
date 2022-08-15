@@ -721,7 +721,7 @@ to récolte
   ]
 
   set stock-de-mil stock-mil-g
-  if year >= 3 [set delta-mil (stock-de-mil - stock-init-mil) / 10]
+  if ticks = 1095 [set stock-init-mil stock-de-mil]
 
 
 
@@ -749,13 +749,13 @@ to nourrir-paille
 
 
   ask bergers [
-     ifelse stock-fourrage - conso-tête * nb-têtes > 0 [ ;
-     set stock-fourrage stock-fourrage - conso-tête * nb-têtes
-        set stock-mil-p stock-mil-p - conso-tête * nb-têtes
-      ][
-        set stock-fourrage 0
-       ]
+    ifelse stock-fourrage - conso-tête * nb-têtes > 0 [ ;
+      set stock-fourrage stock-fourrage - conso-tête * nb-têtes
+      set stock-mil-p stock-mil-p - conso-tête * nb-têtes
+    ][
+      set stock-fourrage 0
     ]
+  ]
 
 
 end
@@ -1367,6 +1367,8 @@ to update-variables
   ]
   set charrette-bois-année charrette-bois
   set delat-Nb-arbres nb-arbres - init-nb-arbre
+  set DelatMil stock-mil-g - stock-init-mil
+
   ;if day-of-year = 360 [
   ;  set moranIndexArbres morphology:moran 0
   ;]
@@ -1414,7 +1416,7 @@ to update-graph
 
     set-current-plot "Delta-mil"
     set-current-plot-pen "pen-0"
-    plotxy year delta-mil
+    plotxy year DelatMil
 
     set-current-plot "bois"
     set-current-plot-pen "pen-0"
