@@ -3,13 +3,13 @@ rm(list = ls())
 
 
 setwd("~/github/real-tree-model/data/")
-pse.df <- read.csv("resultat_pse/population3090.csv", header = T)
+pse.df <- read.csv("results_pse/population9750.csv", header = T)
 
 ggplot(data = pse.df)+
-  geom_point(aes(x = objective.om_delatMil, y = objective.om_trees, size = evolution.samples ))+
+  geom_point(aes(x = objective.om_stockMil, y = objective.om_charette, size = evolution.samples ))+
   labs(title = "Pattern Space Exploration",
-       x = "Variation de la prod. de mil", 
-       y = "Nombre de faedherbia final")+
+       x = "Prod. de mil", 
+       y = "Prod. bois de chauffe")+
   theme_bw()
 
 ggsave("../img/om_pse.png", width = 8)
