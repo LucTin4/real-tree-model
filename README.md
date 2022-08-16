@@ -49,3 +49,13 @@ En conparant, la seconde figure de l'explo 1, et celle-ci, il semble qu'il y ait
 Les surveillants (a partir de 4), on un effet imédiat sur le nombre d'arbre en fin de simulation bien que le nombre de réunion reste bas (2 réunion par ans) et quelque soit la probabilité de discission. 
 
 Mais il semble aussi que le temps passé au champs en saison sèche permettent d'augmenter le nombre absolut d'arbre en fin de simulation.
+
+## PSE
+
+J'ai fait tourné un PSE sur deux observables de la viabilité (les récoltes de mil et le bois de chauffe). 
+
+voilà le résultat
+
+![](img/om_pse.png)
+
+Il y a un beau domaine de validité (toutes les zones qui sont ateignable par le modèle), il faudrait maintenant convertire les valeurs que les acteurs nous ont donné en atelier en valeur de model (e.g. ramener a la population) pour faire apparaitre les limite de viabilité de la zone. 
