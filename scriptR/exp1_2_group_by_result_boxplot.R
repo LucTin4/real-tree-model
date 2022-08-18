@@ -54,6 +54,8 @@ write.table(median.df,"/tmp/median_simu.csv", row.names = F)
 ## On peut aussi faire des boxplot avec les valeurs des 20 replications
 
 ggplot(data = data.df)+
+  geom_hline(yintercept=2500, linetype="dashed", color = "#636363")+
+  geom_hline(yintercept=535, linetype="dashed", color = "#bdbdbd")+
   geom_boxplot(aes(x = as.factor(proba.discu), y = nb.arbres))+
   labs(x = "probabilité de discussion", "nombre d'arbres")+
   facet_grid(fréquence.réu~tps.au.champ, labeller = label_both)+
@@ -61,6 +63,8 @@ ggplot(data = data.df)+
 ggsave("../img/boxplot_discussion_freq_tps_champs.png", width = 8)
 
 ggplot(data = data.df)+
+  geom_hline(yintercept=2500, linetype="dashed", color = "#636363")+
+  geom_hline(yintercept=535, linetype="dashed", color = "#bdbdbd")+
   geom_boxplot(aes(x = as.factor(fréquence.réu), y = nb.arbres))+
   labs(x = "fréquance des réunions", "nombre d'arbres")+
   facet_grid(proba.discu~tps.au.champ, labeller = label_both)+
@@ -68,6 +72,8 @@ ggplot(data = data.df)+
 ggsave("../img/boxplot_freq_proba_discu_tps_champs.png", width = 8)
 
 ggplot(data = data.df)+
+  geom_hline(yintercept=2500, linetype="dashed", color = "#636363")+
+  geom_hline(yintercept=535, linetype="dashed", color = "#bdbdbd")+
   geom_boxplot(aes(x = as.factor(tps.au.champ), y = nb.arbres))+
   labs(x = "Temps passé au champs", "nombre d'arbres")+
   facet_grid(fréquence.réu~proba.discu, labeller = label_both)+
@@ -88,6 +94,8 @@ colnames(data2.df) <- str_replace_all(colnames(data2.df),"-", ".")
 sel <- data2.df$fréquence.réu == 2
 
 fr2 <- ggplot(data = data2.df[sel,])+
+  geom_hline(yintercept=2500, linetype="dashed", color = "#636363")+
+  geom_hline(yintercept=535, linetype="dashed", color = "#bdbdbd")+
   geom_boxplot(aes(x = as.factor(nb.surveillants), y = nb.arbres))+
   scale_y_continuous(limits = c(0, 4000))+
   labs(x = "nb de surveillant", y = "nombre d'arbres", subtitle = "Fréquence des réunions : 2 par ans")+
@@ -98,6 +106,8 @@ fr2
 sel <- data2.df$fréquence.réu == 8
 
 fr8 <- ggplot(data = data2.df[sel,])+
+  geom_hline(yintercept=2500, linetype="dashed", color = "#636363")+
+  geom_hline(yintercept=535, linetype="dashed", color = "#bdbdbd")+
   geom_boxplot(aes(x = as.factor(nb.surveillants), y = nb.arbres))+
   scale_y_continuous(limits = c(0, 4000))+
   labs(x = "nb de surveillant", y = "nombre d'arbres", subtitle = "Fréquence des réunions : 8 par ans")+
