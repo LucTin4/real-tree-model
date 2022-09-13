@@ -1,5 +1,10 @@
 # real-tree-model
- ebauche du modèle: M0 = effet de la présence des arbres sur les rendements mil/arachide 
+
+Le mémoire de stage est disponible au [téléchargement ici](https://github.com/LucTin4/real-tree-model/raw/main/M%C3%A9moire_Lucas_Broutin%20-ag1_compressed.pdf)
+ 
+ 
+ 
+Ebauche du modèle: M0 = effet de la présence des arbres sur les rendements mil/arachide 
 Implémentation 1: génération des arbres avec une répartition semi-aléatoire avec une contrainte d'éloignement minimum 
 
 **Question sci** : combien de surveillant dans un senario centralisé pour atteindre un résultat avec le minimum de présence au champs dans un scénario de surveillance communautaire.
