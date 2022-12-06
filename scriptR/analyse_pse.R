@@ -34,5 +34,21 @@ ggsave("../img/om_pse.png", width = 8)
 #   gather(param,value,clean_deltaMil,clean_om_trees,clean_om_charette,clean_caughhtC) %>%
 #   mutate(exp="right")
 
+ggplot(data = pse.df)+
+  geom_point(aes(x = objective.om_stockMil/10, y = objective.om_charette, size = evolution.samples ))+
+  labs(title = "Pattern Space Exploration",
+       subtitle = "viability threshold",
+       x = "Prod. de mil", 
+       y = "Prod. bois de chauffe")+
+  geom_hline(yintercept=56)+   # 12 charette pour 20 personnes -> 56 pour 94
+  geom_vline(xintercept=5400)+ # 600 kg pour une famille de 10 -> 5460 kg pour 94 
+  theme_bw()
+
+
+## dans netlogo show length remove-duplicates [id-parcelle] of patches with [culture = "mil"]
+## 66 donc 66 parcelles arachide
+## robert dit 4 parcelle pour une famille de 10 --> donc 66 parcelles pour une population de 165 personnes 
+## 600 kg mini  de mil par ans pour 10 -> 60 kg par personnes et par ans 
+## 
 
 pse.df_selected <- pse.df_selected[,-c(1:28)]
