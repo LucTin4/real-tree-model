@@ -20,7 +20,7 @@ globals [
   pousse-sauvée ; nb jours à partir duquel la pousse ne peut plus être détruit par une machine
   distance-champ-brousse ; jusqu'où s'étendent les champs intermédiaires nb * patch-area
   nombre-coupeurs ; a combien estimer le nombre de coupeur
-  paille-laissée ; avant slider - mais aucune paille laissée désormais variable a-t-elle encore un sens?
+  paille-laissée ; avant slider - mais aucune paille laissée désormais variable a-t-elle encore un sens?                            ##############
   age-p-interm ; âge à partir duquel la pousse est sauvée des machines mais menacée par les coupes
   effet-reunion
   effet-reussite
@@ -284,9 +284,15 @@ end
 
   to trees-generator
 
-  ; La génération des arbres se fait un individu après l'autre jusqu'à ce que n arbres soient apparus. la valeur n est fixé selon la densité d'arbre à Diohine. Puisque cette densité est de 5.35 arbres par hectare et que l'espace simulé est de
-  ; 100 hectares, 535 arbres sont générés. La répartition des arbres est semi-aléatoire. Elle est contrainte par une condition d'espacement minimum des individus. Quand un arbre est généré, une zone à proximité, équivalente à un rayon de 2 patches autour de l'agent
-  ; est définie. Plus aucun arbre ne pourra apparaitre dans cette zone. Enfin les arbres apparaissent avec un certain âge. L'âge des arbres initiaux varie de 60 à 100 ans. L'âge moyen du parc initial est cosnciemment élevé pour pouvoir renvoyer à la situation réelle (mal formulé)
+  ; La génération des arbres se fait un individu après l'autre jusqu'à ce que "n" arbres
+  ; soient apparus. la valeur n est fixé selon la densité d'arbre à Diohine. Puisque cette
+  ; densité est de 5.35 arbres par hectare et que l'espace simulé est de 100 hectares,
+  ; 535 arbres sont générés. La répartition des arbres est semi-aléatoire.
+  ; Elle est contrainte par une condition d'espacement minimum des individus. Quand un arbre
+  ; est généré, une zone à proximité, équivalente à un rayon de 2 patches autour de l'agent
+  ; est définie. Plus aucun arbre ne pourra apparaitre dans cette zone. Enfin les arbres apparaissent
+  ; avec un certain âge. L'âge des arbres initiaux varie de 60 à 100 ans. L'âge moyen du parc
+ ;  initial est cosnciemment élevé pour pouvoir renvoyer à la situation réelle (mal formulé)
 
   let n 1
   while [n <= nb-arbres] [
@@ -318,8 +324,10 @@ end
 
 to villages-generator
 
-  ; le village apparait toujours au même endroit. Autour de lui, dans un rayon de 40 patches, on retrouve les champs de case, au delà, les champs de brousse. Ce rayon est trop petit puisque l'on considère les champs intermédiaires comme des champs de ce cas.
-  ; or les champs de brousse se trouvent généralement à plus de &km du village. Cependant cela n'a pas une grande importance, puisque les déplacement des agents ne se fait pas de façon liénaire.
+  ; le village apparait toujours au même endroit. Autour de lui, dans un rayon de 40 patches, on retrouve les champs de case,
+  ; au delà, les champs de brousse. Ce rayon est trop petit puisque l'on considère les champs intermédiaires comme des champs de ce cas.
+  ; or les champs de brousse se trouvent généralement à plus de &km du village. Cependant cela n'a pas une grande importance,
+  ;  puisque les déplacement des agents ne se fait pas de façon liénaire.
 
   create-villages 1
   [
@@ -334,8 +342,11 @@ end
 
 to parcels-generator
 
-  ; Les parcelles sont générées une à une. Un agent est généré de façon aléatoire dans l'espace. Il va colorer une zone autour de lui, plus ou moins grande en fonction du nombre de parcelles que l'on veut. La parcelle représente donc cette zone, qui est liée à
-  ; l'agent générateur "field" par un identifiant (id-parcelle). Si un field apparait sur un patch déjà coloré, il se déplace vers un patch non coloré puis va pouvoir coloré la zone alentour. Les fields apparaissent tant qu'il n'y a plus de patches non colorés (noirs).(conteur arbre qui a poussé)
+  ; Les parcelles sont générées une à une. Un agent est généré de façon aléatoire dans l'espace. Il va colorer une zone autour de lui,
+  ; plus ou moins grande en fonction du nombre de parcelles que l'on veut. La parcelle représente donc cette zone, qui est liée à
+  ; l'agent générateur "field" par un identifiant (id-parcelle). Si un field apparait sur un patch déjà coloré, il se déplace vers un
+  ; patch non coloré puis va pouvoir coloré la zone alentour. Les fields apparaissent tant qu'il n'y a plus de patches non colorés (noirs).
+  ; (conteur arbre qui a poussé)
   ; Le problème de l'hétérogénéité de la surface des parcelles se pose puisque certaines sont partiellement recouvertes lors de la génération.
 
    while [count patches with [pcolor = black] != 0][
@@ -376,9 +387,15 @@ end
 
 to crops-assignment
 
-  ; Ici à chaque parcelle créée est assigné une culture, encore une fois par l'intermédiaire des agents "fields". Les types cultures sont assignés un à un. D'abord est déterminé la zone de jachère, puis les champs de mil et enfin les champs d'arachide.
-  ; A chaque fois q'un patch est mis en culture, il n'est plus concerné par la procédure (en-culture), ce qui permet de contrôler la part de la surface totale que presénte chaque culture (jachère 20%, mil 80% de l'espace cultivé et arachide 20%)
-  ; Pour la jachère l'espace des champs de brousse a été divisé en trois. Elle est en rotation sur ces zones durant un cycle de trois ans. Une proportion des patches restant équivalente à celle de mil dans les champs passent en mil. Le reste est défini comme de l'arachide.
+  ; Ici à chaque parcelle créée est assigné une culture, encore une fois par l'intermédiaire des agents "fields".
+  ; Les types cultures sont assignés un à un. D'abord est déterminé la zone de jachère, puis les champs de mil et
+  ; enfin les champs d'arachide.
+  ; A chaque fois q'un patch est mis en culture, il n'est plus concerné par la procédure (en-culture), ce qui
+  ; permet de contrôler la part de la surface totale que presénte chaque culture (jachère 20%, mil 80% de ;
+  ; l'espace cultivé et arachide 20%)
+  ; Pour la jachère l'espace des champs de brousse a été divisé en trois. Elle est en rotation sur ces zones
+  ; durant un cycle de trois ans. Une proportion des patches restant équivalente à celle de mil dans les champs
+  ; passent en mil. Le reste est défini comme de l'arachide.
   ; problème mineur lié à l'assignation 1 à 1: la valeur du slider =/= valeur finale (monitorée)
 
 
@@ -432,7 +449,8 @@ end
 to crop-tree-influence
 
 
-  ; Les arbres définissent une zone d'influence autour d'eux. Les patches de cette zone sont ceux qui bénéficient de l'effet fertilisant du kad. La zone est de 2 patches de rayon, soit 20m pour les patchs en mil, et d'un patch de rayon pour ceux en arachide.
+  ; Les arbres définissent une zone d'influence autour d'eux. Les patches de cette zone sont ceux qui bénéficient de l'effet fertilisant du kad.
+  ; La zone est de 2 patches de rayon, soit 20m pour les patchs en mil, et d'un patch de rayon pour ceux en arachide.
   ; C'est valeur ont été calibré grâce à la littérature (O.Roupsard, ....)
 
   ask trees [
@@ -448,8 +466,10 @@ end
 
 to bergers-generator
 
-  ; Les bergers ne représentent que les bergers qui ne partent pas en transhumancee. Le nombre de berger a été calibré par le terrain. 19 bergers restent au village pendant la saison des pluie. Or Diohine est divisé en X quartier qui représentent
-  ; environ Xha de terrain cultivé. On a divisé le nombre de berger par celui des quartiers, ce qui nous donne environ 5 bergers. Les bergers sont liés à un troupeau dont le nombre de tête est variable et déterminé de façon aléatoire. Puisque les gros troupeaux
+  ; Les bergers ne représentent que les bergers qui ne partent pas en transhumancee. Le nombre de berger a été calibré par le terrain.
+  ; 19 bergers restent au village pendant la saison des pluie. Or Diohine est divisé en X quartier qui représentent
+  ; environ Xha de terrain cultivé. On a divisé le nombre de berger par celui des quartiers, ce qui nous donne environ 5 bergers.
+  ; Les bergers sont liés à un troupeau dont le nombre de tête est variable et déterminé de façon aléatoire. Puisque les gros troupeaux
   ; partent en transhumance, les tailles de troupeau sont relativement faible puisque le nombre de têtes est compris entre 12 et 25.
 
 
@@ -482,7 +502,8 @@ end
 
 to agriculteurs-generator
 
-  ; Pour chaque champ, un agriculteur est créé. Ils sont liés entre eux. Les agriculteurs apparaissent avec un score de RNA de 50. Certains agriculteurs sont directement engagés (engagés-initiaux = 9). Ils ont donc un score de 100.
+  ; Pour chaque champ, un agriculteur est créé. Ils sont liés entre eux. Les agriculteurs apparaissent avec un score de RNA de 50.
+  ; Certains agriculteurs sont directement engagés (engagés-initiaux = 9). Ils ont donc un score de 100.
   ; Il serait mieux d'assigner plusieurs champs à un même agriculteurs - si (hypo) l'agriculteur est plus suceptible de protéger les pousses dans les champs proches.
 
   let _myIdParcelle [id-parcelle] of patches ;on récupère toute les identifiant de tout les patches
@@ -529,7 +550,9 @@ to surveillants-generator
 end
 
 ;______________________________________________________________________________________________
-
+; FIN DU SETUP
+; Debut du GO
+;______________________________________________________________________________________________
 
 to go
 
@@ -686,7 +709,7 @@ to récolte
   ]
 
   ask patches with [culture != "jachère"] [ifelse culture = "mil"[
-    set rendement-mil-g 6.26
+    set rendement-mil-g 0.626
     set rendement-mil-p 1.00][; en fagots - 100 fag/ha ramené au patch 1 fag/10 m2
     set rendement-groundnuts-g 3.71
     set rendement-groundnuts-p 11.71]
@@ -786,7 +809,7 @@ end
 to berger-coupe
 
   ; chaque jour le berger choisit un arbre et le coupe (pas de simulation du déplacement + plus de prise en compte de la distance au village
-  ; Les bergers coupent dorénavant 1 fois par semaine (1j/7)
+  ; Les bergers coupent dorénavant 1 fois par semaine (1j/7) un arbre et ils ont besoin d'une charette pour le transporter
 
   let _arbres-restant count trees with [size != 0.1]; with [proche-village = FALSE and size != 0.1]
   if _arbres-restant != 0 [
@@ -969,78 +992,6 @@ to surveillance-representant
     ]
   ]
 ]
-
-;  if S-repreZ [
-;
-;    let id-surv [who] of surveillants
-;    foreach id-surv [ x ->
-;      ask surveillant x [
-;    ifelse coordination-RNA [
-;      let n 1
-;        while [n <= nb-champs-visités][                                    ; jusqu'à ce qu'il soit allé dans nb de champs prévu
-;          let nb-fields count fields with [visité = FALSE]
-;          if nb-fields = 0 [
-;            ask fields [set visité FALSE]]
-;          let _chp-RNA count fields with [en-RNA = TRUE and visité = FALSE]
-;          ifelse _chp-RNA > 0 [                                            ; il va d'abord dans les champs en RNA puis dans les autres
-;            move-to one-of fields with [en-RNA = TRUE]
-;            ask fields-here [set visité TRUE]                              ; il se souvient des champs où il est déjà allé dans la journée
-;            if any? coupeurs with [en-coupe = TRUE] in-radius 10 [         ; si il voit un coupeur aux alentours
-;              let _proba1 random 100                                      ; la proba qu'il le surprenne effectivement dans les champs dépend du nb de champ
-;              if _proba1 < (100 / (nb-champs-visités * malus-nb-chps))[                     ; a visiter dans la journée (bcp de champs // peu de temps passer dans chacun
-;                ask coupeurs in-radius 10 with [en-coupe = TRUE] [
-;                  set attrape TRUE
-;                  set nb-attrape nb-attrape + 1
-;                  set coupeurs-attrapes coupeurs-attrapes + 1
-;                  set en-coupe FALSE
-;                ]
-;              ]
-;            ]
-;          ][
-;            move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
-;            ask fields-here [set visité TRUE]
-;            if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
-;              let _proba1 random 100
-;              if _proba1 < 100 / (nb-champs-visités * malus-nb-chps) [
-;                ask coupeurs in-radius 10 with [en-coupe = TRUE] [
-;                  set attrape TRUE
-;                  set nb-attrape nb-attrape + 1
-;                  set coupeurs-attrapes coupeurs-attrapes + 1
-;                  set en-coupe FALSE
-;                ]
-;              ]
-;            ]
-;
-;          ]
-;          set n n + 1
-;        ]
-;    ][
-;      let n 1
-;        while [n <= nb-champs-visités][
-;           let nb-fields count fields with [visité = FALSE]
-;          if nb-fields = 0 [
-;            ask fields [set visité FALSE]]
-;          move-to one-of fields with [visité = FALSE]                   ; quand il n'y a plus de champ en RNA, continu dans les autres champs
-;          ask fields-here [set visité TRUE]
-;          if any? coupeurs with [en-coupe = TRUE] in-radius 10 [
-;            let _proba1 random 100
-;            if _proba1 < 100 / (nb-champs-visités * malus-nb-chps) [
-;              ask coupeurs in-radius 10 with [en-coupe = TRUE] [
-;                set attrape TRUE
-;                set nb-attrape nb-attrape + 1
-;                set coupeurs-attrapes coupeurs-attrapes + 1
-;                set en-coupe FALSE
-;              ]
-;            ]
-;          ]
-;          set n n + 1
-;        ]
-;      ]
-;    ]
-;  ]
-;]
-
-
 
 end
 
@@ -1510,7 +1461,7 @@ TEXTBOX
 645
 20
 795
-41
+45
 1 patch = 10 m2\nEnv = 1 000 000 m2 = 100 ha
 9
 0.0
