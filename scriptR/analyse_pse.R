@@ -13,6 +13,7 @@ ggplot(data = pse.df)+
   theme_bw()
 
 ggsave("../img/om_pse.png", width = 8)
+ggsave("../img/om_pse.svg", width = 8)
 
 # columns_to_remove <- grep(".1", names(pse.df))
 # pse.df <- pse.df[,-columns_to_remove]
@@ -35,7 +36,7 @@ ggsave("../img/om_pse.png", width = 8)
 #   mutate(exp="right")
 
 ggplot(data = pse.df)+
-  geom_point(aes(x = objective.om_stockMil/10, y = objective.om_charette, size = evolution.samples ))+
+  geom_point(aes(x = objective.om_stockMil/10, y = objective.om_charette, size = evolution.samples ), colour = "#bdbdbd")+
   labs(title = "Pattern Space Exploration",
        subtitle = "viability threshold",
        x = "Prod. de mil", 
@@ -43,7 +44,7 @@ ggplot(data = pse.df)+
   geom_hline(yintercept=56)+   # 12 charette pour 20 personnes -> 56 pour 94
   geom_vline(xintercept=5400)+ # 600 kg pour une famille de 10 -> 5460 kg pour 94 
   theme_bw()
-
+ggsave("../img/om_pse_base.svg", width = 8)
 
 ## dans netlogo show length remove-duplicates [id-parcelle] of patches with [culture = "mil"]
 ## 66 donc 66 parcelles arachide
