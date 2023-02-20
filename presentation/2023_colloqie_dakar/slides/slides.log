@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022) (preloaded format=xelatex 2023.2.2)  20 FEB 2023 10:36
+This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022) (preloaded format=xelatex 2023.2.2)  20 FEB 2023 16:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1557,6 +1557,8 @@ LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
  (./slides.nav)
 LaTeX Font Info:    Font shape `TU/FiraSans(0)/m/n' will be
 (Font)              scaled to size 6.0pt on input line 29.
+LaTeX Font Info:    Font shape `TU/FiraSans(0)/m/it' will be
+(Font)              scaled to size 6.0pt on input line 29.
 LaTeX Font Info:    Trying to load font information for U+msa on input line 29.
 
 
@@ -1572,14 +1574,14 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 LaTeX Font Info:    Font shape `TU/FiraSans(0)/m/n' will be
 (Font)              scaled to size 5.0pt on input line 29.
 LaTeX Font Info:    Font shape `TU/FiraSans(0)/m/it' will be
-(Font)              scaled to size 6.0pt on input line 29.
-LaTeX Font Info:    Font shape `TU/FiraSans(0)/m/it' will be
 (Font)              scaled to size 5.0pt on input line 29.
 LaTeX Font Info:    Font shape `TU/FiraSans(0)/b/n' will be
 (Font)              scaled to size 6.0pt on input line 29.
 LaTeX Font Info:    Font shape `TU/FiraSans(0)/m/n' will be
 (Font)              scaled to size 17.28pt on input line 31.
 LaTeX Font Info:    Font shape `TU/FiraSans(0)/b/n' will be
+(Font)              scaled to size 17.28pt on input line 31.
+LaTeX Font Info:    Font shape `TU/FiraSans(0)/b/it' will be
 (Font)              scaled to size 17.28pt on input line 31.
 LaTeX Font Info:    Font shape `TU/FiraSans(0)/b/n' will be
 (Font)              scaled to size 10.95pt on input line 31.
@@ -1696,6 +1698,16 @@ Overfull \hbox (4.54573pt too wide) in paragraph at lines 139--139
 [11
 
 ]
+File: img/end.JPG Graphic file (type bmp)
+<img/end.JPG>
+ [12
+
+]
+File: img/photo_groupe.JPG Graphic file (type bmp)
+<img/photo_groupe.JPG>
+ [13
+
+]
 \tf@nav=\write6
 \openout6 = `slides.nav'.
 
@@ -1710,12 +1722,12 @@ Package rerunfilecheck Info: File `slides.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 28012 strings out of 476724
- 612867 string characters out of 5805028
+ 28034 strings out of 476724
+ 613319 string characters out of 5805028
  1857966 words of memory out of 5000000
- 47564 multiletter control sequences out of 15000+600000
- 520021 words of font info for 127 fonts, out of 8000000 for 9000
+ 47583 multiletter control sequences out of 15000+600000
+ 520029 words of font info for 128 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  128i,18n,156p,435b,705s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on slides.pdf (11 pages).
+Output written on slides.pdf (13 pages).
