@@ -1,0 +1,8 @@
+If you"re not Faidherbia, you’re agains us
+
+Le bassin arachidier est une région du Sénégal qui a largement misé sur l’association fumure organique et engrais minéral depuis la colonisation. Aujourd’hui l’approvisionnement en engrais minéral n’est plus accessible pour les paysans de la zone. Pour autant, la fertilité a continué à se maintenir ou à réduire dans des proportions relativement faibles grâce au maintien du « parc à Faidherbia » et a la fumure organique. Dans le cadre du projet DSCATT[1], nous avons co-défini avec les agriculteurs du village de Diohine, un ensemble d’aspiration. L’une d’elles relevait de la restauration d’un environnement dégradé qui passait notamment par la densification du « parc à faidherbia ». “Plus d’arbres”, voilà notamment ce que souhaitent les habitants
+pour freiner la sahélisation (Lericollais, Milleville, et Pontié 1999).
+
+Le résultat de ce travail de co-construction de modèle à base d’agent (ComMod, 2005) à amener les participants à questionner les règles de gestions du bois qui sert à cuire la nourriture. Le modèle permet de quantifier la perte de production issue de la surexploitation des abris. Il met aussi en évidence l’effectivité de différentes règles de gestions entre une gestion communautaire et gestion centrale.
+
+Ces résultats sont portés par les participants de la démarche, pour animer des ateliers avec les villages de la zone pour chercher collectivement des solutions de gestions diversifier pour restaurer la fertilité des sols et maintenir et développer le couvert arboré. Nous présenterons l’ensemble du processus, de la co-construction à l’opérationnalisation du processus par les populations.
