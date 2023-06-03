@@ -8,10 +8,13 @@ pse.df <- read.csv("results_pse/population33200.csv", header = T)
 sel <- pse.df$evolution.samples > 4
 
 ggplot(data = pse.df[sel,])+
-  geom_point(aes(x = objective.om_stockMil, y = objective.om_charette, size = evolution.samples ))+
+  geom_point(aes(x = objective.om_stockMil, y = objective.om_charette, 
+                 size = evolution.samples, colour =  nbProTGMax))+
   labs(title = "Pattern Space Exploration",
        x = "Prod. de mil", 
        y = "Prod. bois de chauffe")+
+  xlim(40000,55000)+
+  ylim(0,50)+
   theme_bw()
 
 ggsave("../img/om_pse.png", width = 8)
