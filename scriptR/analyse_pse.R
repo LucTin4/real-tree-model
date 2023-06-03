@@ -3,9 +3,11 @@ rm(list = ls())
 
 
 setwd("~/github/real-tree-model/data/")
-pse.df <- read.csv("results_pse/population9750.csv", header = T)
+pse.df <- read.csv("results_pse/population33200.csv", header = T)
 
-ggplot(data = pse.df)+
+sel <- pse.df$evolution.samples > 4
+
+ggplot(data = pse.df[sel,])+
   geom_point(aes(x = objective.om_stockMil, y = objective.om_charette, size = evolution.samples ))+
   labs(title = "Pattern Space Exploration",
        x = "Prod. de mil", 
@@ -35,7 +37,7 @@ ggsave("../img/om_pse.svg", width = 8)
 #   gather(param,value,clean_deltaMil,clean_om_trees,clean_om_charette,clean_caughhtC) %>%
 #   mutate(exp="right")
 
-ggplot(data = pse.df)+
+ggplot(data = pse.df[sel,])+
   geom_point(aes(x = objective.om_stockMil/10, y = objective.om_charette, size = evolution.samples ), colour = "#bdbdbd")+
   labs(title = "Pattern Space Exploration",
        subtitle = "viability threshold",
