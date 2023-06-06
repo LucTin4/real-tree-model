@@ -13,11 +13,14 @@
 \linenumbers
 
 %%%%%% Bibliography %%%%%%
-% Replace "sample" in the \addbibresource line below with the name of your .bib file.
-\usepackage[style=nejm, 
-citestyle=numeric-comp,
-sorting=none]{biblatex}
-\addbibresource{sample.bib}
+
+\usepackage[
+    style=nejm, 
+    citestyle=numeric-comp,
+    sorting=none, 
+    backend=biber]{biblatex}
+
+\addbibresource{treeModel.bib}
 
 %%%%%% Title %%%%%%
 % Full titles can be a maximum of 100 characters, including spaces. 
@@ -64,7 +67,7 @@ sorting=none]{biblatex}
 
     How can a participatory simulation model contribute to understanding the socio-ecological dynamics and fostering innovative strategies for sustainable management of trees, crops, and pastoralism in the peanut basin?
 
-    In the agro-pastoral zones, the Sahelian ecosystems have undergone significant degradation, characterized by a reduction in tree cover, as a consequence of the droughts in the 1960s and 1990s. The peanut basin stands out for its positive interrelationships between trees, crops, and pastoralism. However, the regeneration of the Faidherbia park has declined since the major droughts. Through collaborative efforts with agro-pastoral farmers, we have developed a simulation model that aims to unravel the complex social and ecological dynamics at play and explore potential strategies in partnership with local communities.
+    In the agro-pastoral zones, the Sahelian ecosystems have undergone significant degradation, characterized by a reduction in tree cover, as a consequence of the droughts in the 1960s and 1990s. The peanut basin stands out for its positive interrelationships between trees, crops, and pastoralism. However, the regeneration of the Faidherbia park has declined since the major droughts. Through collaborative efforts with agro-pastoral farmers, we have developed a simulation model -- The SAFIRe model : Simulation of Agents for Fertility, Integrated Energy, Food security, and Reforestation-- that aims to unravel the complex social and ecological dynamics at play and explore potential strategies in partnership with local communities.
 
     By exploring the results of the model co-designed with local stakeholders, we have identified more effective management strategies, as per the request of the local actors. However, more importantly, we have collectively questioned the conditions for improving tree cover and the viability of the socio-ecosystem, particularly in relation to the demand for firewood and local cereal for sustenance. This has prompted the stakeholders to engage in community-wide discussions and transform agro-pastoralists into leaf protectors.
 
@@ -153,22 +156,118 @@ The manuscript should start with a brief introduction that lays out the problem 
 
 \section{Materials and Methods}
 
-\subsection{ODD}
+\subsection{Modelling for Empowerment - An Anthropological Approach to Participatory Model Co-construction}
+Collecte de données, par des atreliers et des entretiens mobiles
+
+\begin{quote}
+"mais en quoi l’expérience du voyage anthropologique propose t-elle de renouveler ou de recon-sidérer l’épistémologie du déplacement (de l’un vers l’autre) ? Par-delà la constitution des objets des sciences sociales, ethnies, cultures, sociétés, en quoi le voyage du sujet est-il progressivement devenu vecteur de la réflexion théorique, et parabole du jet ? "
+\end{quote}
+
+\subsection{ODD }
+
+    Dans cette section nous allons décrire le modèle The SAFIRe model (Simulation of Agents for Fertility, Integrated Energy, Food security, and Reforestation) en utilisant le framwork de description ODD \cite{grimm_standard_2006,grimm_odd_2010,grimm_odd_2020}.
+
+    \subsubsection{Overview}
+
+        \textbf{Purpose}
+
+        The objective of this study was co-defined with the participants based on their desire to restore trees and biodiversity. According to their perspective, the decline in tree population is strongly linked to individual practices associated with pastoralism. Thus, the aim was to reassess the functioning of their system, the role of "tree cutters," and the optimization of surveillance by comparing community-based surveillance efforts with centralized surveillance conducted by them and the forestry department.\\
+
+        Throughout the study, we also examined the role of farmers and agro-pastoralists in the disappearance of trees. It was observed that young tree seedlings are no longer marked and destroyed by animal-drawn tools.
+
+        \textbf{State variables and scales}
+
+    
+        \textbf{Process overview and scheduling}
+        \textbf{}
+        \textbf{}
+        \textbf{}
+        \textbf{}
+
+
+    \subsubsection{Design Concepts}
+        \textbf{Basic principles}
+        \textbf{Objectives}
+        \textbf{Emergence}
+        \textbf{Sensing}
+        \textbf{Interaction}
+        \textbf{Stochasticity}
+        \textbf{Observation}
+
+    \subsubsection{Details}
+        \textbf{Initialization}
+        \textbf{Input data}
+        \textbf{Submodels}
+
 
 \subsection{Statistical Analysis and Companion Modeling}
 
 On va parler de ComMod, de viabilité et de la manière dont on questionne les deux
 
+    \subsubsection{Sensitivity analysis : saltelli method}
+
+    Sensitivity analysis comprises a range of techniques that assess how a model responds to variations in its input parameters. These statistical methods aim to quantify the extent to which changes in the inputs influence the variability observed in the outputs. In accordance with the definition provided by Saltelli et al. (2008)\cite{saltelli_global_2008}, sensitivity analysis determines the "relative importance of each input in determining [output] variability." Consequently, these methods often yield a ranking or ordering of the inputs based on their respective sensitivity levels.\\
+
+    \subsubsection{Pattern Space Exploration (PSE)}
+    The PSE \cite{cherel_beyond_2015}  method, based on genetic algorythme, is specifically designed to comprehensively cover the output space, resulting in its maximum score in output exploration -- e.g. "explore the output's diversity of a model"\footnote{\url{https://openmole.org/PSE.html}, consulté le 5 juin 2023}. By exploring the output space, the PSE method uncovers new patterns, providing insights into the model's sensitivity by examining the corresponding input values. Unlike calibration-based methods, PSE's effectiveness is influenced by the dimensionality of the output space, as it keeps a record of all the covered locations during exploration. This can become costly when dealing with more than three or four dimensions.
+
+    In addition, the PSE method usually takes stochasticity into account by estimating selected models using the median of multiple output values obtained from model runs. For our purposes, and as we are in a situation where the results need to be discussed with stakeholders, we have chosen to focus not on the median, but on the last decille. This means that simulations are retained if more than 90\% of the results converge towards the identified output.
+
 \section{Results}
 
-\subsection{Sensibilité - Saltelli}
+L'analyse de saltelli nous permet de comparer deux scénarios de surveillance, ce qui nous permet d'identifier les phénomènes de réarrangement de variables qui s'opère quand ont change de régime de surveillance.\\
+    
+Suite a cela nous avons pratiqué un PSE (Patern Space exploration) pour identifier les simulations qui, dans le contexte d'une surveillance communautaire, permettent d'augmenter le nombre d'arbres. On fait face ici à un processus non linéaire avec une augmentation de la fertilité corrélé à une augmentation du nombre d'arbres.
 
-Le fait de passer a une surveillance communautaire réduire l'influence de la discussion et déplace le focus sur le temps au champs
+    \subsection{Sensibilité - Saltelli}
 
+    Nous avons pratiqué deux fois la même analyse sur des scénarios de simulation différents. Nous avons dans un premier temps effectué une analyse sur le système de surveillance communautaire. La seconde analyse transfert la charge du travail sur une surveillance dédier pour mimer le fonctionnement de la surveillance par les agents des eaux et forêt.\\
+    
+    Confronter ces deux analyses nous permet d'évaluer l'influence d'un changement de pratique sur le fonctionnement du système pour bien situer les changements structuraux qu'ils induisent.
 
-Il faudrait refaire un saltelli en ajoutant le nombre de jeune pousse protégé, ce qui fera se déplacé le narratif sur le nombre de jeune pousse détrute par les agriculteurs aux même.
+    \subsubsection{Surveillances communautaire}
 
-\subsection{Patern Space exploration}
+        Dans un scenario de surveillance communautaire, l'analyse de sensibilité globale montre que la probabilité de discution de l'intérêt des arbres jour un rôle extrement important aussi bien sur la production en mil ($0.67$) que sur le nombre total d'arbre ($0.65$) en fin de simulation (c.f. table \ref{tab:saltelliCom}).\\
+
+        La fresquance des réunions de sensibilisation au bénéfice de l'abre, joue un rôle -- bien que plus limité -- sur la quantité d'arbre ($0.23$', et sur la production de mil ($0.28$). Dans la même proportion le temps passé au champs a aussi un effet sur le nombre d'arbres ($0.26$), et sur la production de mil ($0.18$).\\
+
+        Enfin des la probabilité de dénoncé un coupeur d'arbre quand on le voie à un impacte plutot limité sur le nombre d'arbre ($0.12$), et encore plus sur la production de mil ($0.08$).\\
+
+        \begin{table}
+            \centering
+            \begin{tabular}{cccccc}
+            \hline
+                & \textbf{probaDiscu} & \textbf{probaDenonce} & \textbf{FreqMeet} & \textbf{qPrésenceBrousse} & \textbf{TimeField} \\ \hline
+                \textbf{om\_trees} & 0.65 & 0.12 & 0.23 & 0.061 & 0.26 \\
+                \textbf{om\_stockMil} & 0.67 & 0.08 & 0.28 & 0.05 & 0.18 \\ 
+            \end{tabular}
+            \caption{Saltelli sensitivity analysis when surveillance is delegated to the community}
+            \label{tab:saltelliCom}
+        \end{table}
+
+    \subsubsection{Surveillances par les eaux et forêts}
+
+        Dans un scenarion dans lequel la surveillance est effectué par un agents des eaux et forêt la dynamique change un peut. Dans le mesure ou cette surveillance n'est plus faite par la population, la 
+
+    \subsection{Patern Space exploration}
+
+    L'algorime de PSE demande à discretiser l'espace des sorties de modèles. Son objectif est alors de criblé la diversité de cet espace des sorties. Nous avons paramétré l'objectif pour qu'il ne conserve comme pertiant que les résultat qui sont atteinte dans 95\% des cas de la simulation. Les paramètre d'entrer -- XXXX -- sont laissé libre pour permettre la recherche.\\
+    
+    tpsAuChamp in (0.0, 100.0),
+    qPrésenceBrousse in (0.0, 1.0),
+    fréquenceRéu in (1.0, 10.0),
+    probaDenonce in (0.0, 100.0),
+    probaDiscu in (1.0, 100.0),
+    nbProTGMax in (5.0, 50.0)
+
+    Sur la figure \ref{fig:PSE} on a filtré les résultats qui ont été atteint plus de 4 fois par le modèle pour se concentré sur les situatiuon les plus probable. On constate qu'il y a une relation négative entre la production de mil et la production de bois de chauffe. 
+
+        \begin{figure}[h]
+            \centering
+            \includegraphics[width=\textwidth]{./img/om_pse.png}
+            \caption{Résultat de 33600 évolutions de l'algorithme PSE. Chaque point est un résultat dans l'espace des sorties. La couleur met en évidence le nombre de jeunes pousses protégé par les agriculteurs, et la taille des points donne une idée de la "facilité" pour le modèle à atteindre cet espace. Plus un point est gros, plus le modèle arrive à l'atteindre.}
+            \label{fig:PSE}
+        \end{figure}
 
 Viabilité du système 
 
