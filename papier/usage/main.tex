@@ -10,6 +10,8 @@
 \usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{lineno}
+\usepackage{booktabs}% pour les table depuis R
+\usepackage{makecell}
 \linenumbers
 
 %%%%%% Bibliography %%%%%%
@@ -227,22 +229,33 @@ Suite a cela nous avons pratiqué un PSE (Patern Space exploration) pour identif
 
     \subsubsection{Surveillances communautaire}
 
-        Dans un scenario de surveillance communautaire, l'analyse de sensibilité globale montre que la probabilité de discution de l'intérêt des arbres jour un rôle extrement important aussi bien sur la production en mil ($0.67$) que sur le nombre total d'arbre ($0.65$) en fin de simulation (c.f. table \ref{tab:saltelliCom}).\\
+        Dans un scenario de surveillance communautaire, l'analyse de sensibilité globale montre que la probabilité de discution de l'intérêt des arbres joue un rôle extrement important aussi bien sur la production en mil ($0.72$) que sur le nombre total d'arbre ($0.59$) en fin de simulation (c.f. table \ref{tab:saltelliCom}).\\
 
-        La fresquance des réunions de sensibilisation au bénéfice de l'abre, joue un rôle -- bien que plus limité -- sur la quantité d'arbre ($0.23$', et sur la production de mil ($0.28$). Dans la même proportion le temps passé au champs a aussi un effet sur le nombre d'arbres ($0.26$), et sur la production de mil ($0.18$).\\
+        La fresquance des réunions de sensibilisation au bénéfice de l'abre, joue un rôle -- bien que plus limité -- sur la quantité d'arbre ($0.23$', et sur la production de mil ($0.30$). Dans la même proportion le temps passé au champs a aussi un effet sur le nombre d'arbres ($0.29$), et sur la production de mil ($0.16$).\\
 
-        Enfin des la probabilité de dénoncé un coupeur d'arbre quand on le voie à un impacte plutot limité sur le nombre d'arbre ($0.12$), et encore plus sur la production de mil ($0.08$).\\
+        Enfin des la probabilité de dénoncé un coupeur d'arbre quand on le voie à un impacte sur le nombre d'arbre ($0.25$), mais moins la production de mil ($0.12$).\\
+
+        La présence en brouse n'a que peut d'importance sur le nombre d'arbre et sur la production de mil. 
 
         \begin{table}
-            \centering
-            \begin{tabular}{cccccc}
-            \hline
-                & \textbf{probaDiscu} & \textbf{probaDenonce} & \textbf{FreqMeet} & \textbf{qPrésenceBrousse} & \textbf{TimeField} \\ \hline
-                \textbf{om\_trees} & 0.65 & 0.12 & 0.23 & 0.061 & 0.26 \\
-                \textbf{om\_stockMil} & 0.67 & 0.08 & 0.28 & 0.05 & 0.18 \\ 
-            \end{tabular}
+            \centering\begingroup\fontsize{10}{12}\selectfont
+            
+                \begin{tabular}[]{lrrrrrr}
+                    \toprule
+                    ~ & om\_trees & om\_stockMil\\
+                    \hline
+                    \addlinespace
+                    probaDiscu & 0.59 & 0.72\\
+                    fréquenceRéu & 0.23 & 0.30\\
+                    tpsAuChamp & 0.29 & 0.16\\
+                    probaDenonce & 0.25 & 0.12\\
+                    nbProTGMax & 0.33 & 0.10\\
+                    qPrésenceBrousse & 0.11 & 0.04\\
+                    \bottomrule
+                \end{tabular}
             \caption{Saltelli sensitivity analysis when surveillance is delegated to the community}
             \label{tab:saltelliCom}
+            \endgroup{}
         \end{table}
 
     \subsubsection{Surveillances par les eaux et forêts}
