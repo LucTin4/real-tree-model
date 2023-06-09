@@ -240,7 +240,7 @@ Suite a cela nous avons pratiqué un PSE (Patern Space exploration) pour identif
         \begin{table}
             \centering\begingroup\fontsize{10}{12}\selectfont
             
-                \begin{tabular}[]{lrrrrrr}
+                \begin{tabular}[]{lrr}
                     \toprule
                     ~ & om\_trees & om\_stockMil\\
                     \hline
@@ -260,18 +260,54 @@ Suite a cela nous avons pratiqué un PSE (Patern Space exploration) pour identif
 
     \subsubsection{Surveillances par les eaux et forêts}
 
-        Dans un scenarion dans lequel la surveillance est effectué par un agents des eaux et forêt la dynamique change un peut. Dans le mesure ou cette surveillance n'est plus faite par la population, la 
+        Dans un scenarion dans lequel la surveillance est effectué par un agents des eaux et forêt la dynamique change un peut (c.f. table \ref{tab:saltelliReprz}). Dans le mesure ou cette surveillance n'est plus faite par la population. 
+
+        \begin{table}
+            \centering\begingroup\fontsize{10}{12}\selectfont
+                \begin{tabular}[]{lll}
+                        \toprule
+                        ~ & om\_trees & om\_stockMil\\
+                        \hline
+                        \addlinespace
+                        nbProTGMax & 0.5 & 0.3\\ ok
+                        tpsAuChamp & 0.29 & 0.22\\ ok
+                        nbSurveillants & 0.20 & 0.29\\ ok
+                        probaDiscu & 0.15 & 0.27\\ ok
+                        qPrésenceBrousse & 0.15 & 0.10\\
+                        fréquenceRéu & 0.07 & 0.14\\
+                        probaDenonce & 0.00 & 0.02\\
+                        \bottomrule
+                \end{tabular}
+                \caption{Saltelli sensitivity analysis when surveillance is managed transandially}
+                \label{tab:saltelliReprz}
+            \endgroup{}
+        \end{table}
+
+        Le temps au champ, et la probabilité de discuter d'un sujet en lien avec la préservation des arbres sont deux paramètres qui ont une influence relativement forte dans les mêmes ordre de grandeur que le nombre de surveillant. Dans un contexte ou la surveillance n'est pas assuré par la population, la fréquance des réunion, et le probabilité de dénoncé un coupeur n'ont que peut d'influence.
 
     \subsection{Patern Space exploration}
 
-    L'algorime de PSE demande à discretiser l'espace des sorties de modèles. Son objectif est alors de criblé la diversité de cet espace des sorties. Nous avons paramétré l'objectif pour qu'il ne conserve comme pertiant que les résultat qui sont atteinte dans 95\% des cas de la simulation. Les paramètre d'entrer -- XXXX -- sont laissé libre pour permettre la recherche.\\
+    L'algorime de PSE demande à discretiser l'espace des sorties de modèles. Son objectif est alors de criblé la diversité de cet espace des sorties. Nous avons paramétré l'objectif pour qu'il ne conserve comme pertiant que les résultat qui sont atteinte dans 95\% des cas de la simulation. Les paramètre d'entrer -- tabe \ref{tab:PSEparamsPop} -- sont laissé libre pour permettre la recherche.\\
     
-    tpsAuChamp in (0.0, 100.0),
-    qPrésenceBrousse in (0.0, 1.0),
-    fréquenceRéu in (1.0, 10.0),
-    probaDenonce in (0.0, 100.0),
-    probaDiscu in (1.0, 100.0),
-    nbProTGMax in (5.0, 50.0)
+    \begin{table}
+        \centering\begingroup\fontsize{10}{12}\selectfont
+            \begin{tabular}[]{ll}
+                    \toprule
+                    Variables & Range\\
+                    \hline
+                    \addlinespace
+                    tpsAuChamp & (0.0, 100.0)\\
+                    qPrésenceBrousse & (0.0, 1.0)\\
+                    fréquenceRéu & (1.0, 10.0)\\
+                    probaDenonce & (0.0, 100.0)\\
+                    probaDiscu & (1.0, 100.0)\\
+                    nbProTGMax & (5.0, 50.0)\\
+                    \bottomrule
+            \end{tabular}
+            \caption{Variation range for PSE parameters in a community surveillance contexte}
+            \label{tab:PSEparamsPop}
+        \endgroup{}
+    \end{table}
 
     Sur la figure \ref{fig:PSE} on a filtré les résultats qui ont été atteint plus de 4 fois par le modèle pour se concentré sur les situatiuon les plus probable. On constate qu'il y a une relation négative entre la production de mil et la production de bois de chauffe. 
 
