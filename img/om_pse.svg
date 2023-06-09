@@ -121,10 +121,10 @@
 <circle cx='238.84' cy='108.82' r='1.42' style='stroke-width: 0.71; stroke: #1C3D5B; fill: #1C3D5B;' />
 <circle cx='117.64' cy='77.09' r='1.42' style='stroke-width: 0.71; stroke: #275278; fill: #275278;' />
 <circle cx='316.42' cy='116.76' r='1.42' style='stroke-width: 0.71; stroke: #4FA3E4; fill: #4FA3E4;' />
-<rect x='320.62' y='120.72' width='63.76' height='15.87' style='stroke-width: 1.07; stroke: #252525; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9; fill-opacity: 0.10;' />
-<rect x='83.44' y='53.29' width='58.66' height='13.88' style='stroke-width: 1.07; stroke: #252525; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9; fill-opacity: 0.10;' />
-<text x='409.88' y='124.88' text-anchor='middle' style='font-size: 22.76px;fill: #252525; font-family: "Liberation Sans";' textLength='13.01px' lengthAdjust='spacingAndGlyphs'>1</text>
-<text x='167.60' y='53.49' text-anchor='middle' style='font-size: 22.76px;fill: #252525; font-family: "Liberation Sans";' textLength='13.01px' lengthAdjust='spacingAndGlyphs'>2</text>
+<rect x='338.47' y='120.72' width='28.05' height='15.87' style='stroke-width: 1.07; stroke: #252525; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9; fill-opacity: 0.10;' />
+<rect x='98.75' y='53.29' width='30.60' height='13.88' style='stroke-width: 1.07; stroke: #252525; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9; fill-opacity: 0.10;' />
+<text x='371.63' y='124.88' text-anchor='middle' style='font-size: 22.76px;fill: #252525; font-family: "Liberation Sans";' textLength='13.01px' lengthAdjust='spacingAndGlyphs'>1</text>
+<text x='129.35' y='53.49' text-anchor='middle' style='font-size: 22.76px;fill: #252525; font-family: "Liberation Sans";' textLength='13.01px' lengthAdjust='spacingAndGlyphs'>2</text>
 <rect x='33.71' y='23.54' width='420.80' height='218.15' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHwyNzMuNzU=)'>
