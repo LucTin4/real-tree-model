@@ -1,0 +1,39 @@
+import _file_.M0TreeModel3_wa_moran._
+// laisser tourner 250 heures
+val evolution = PSEEvolution(
+  evaluation = model,
+  parallelism = 100,
+  termination = 100000,
+  genome = Seq(
+      tpsAuChamp in (0.0, 100.0),
+      qPrésenceBrousse in (0.0, 1.0),
+      fréquenceRéu in (1.0, 10.0),
+      probaDenonce in (0.0, 100.0),
+      probaDiscu in (1.0, 100.0),
+      nbProTGMax in (5.0, 50.0)
+  ),
+  objective = Seq(
+    om_stockMil aggregate "percentile(om_stockMil, Seq(5)).head" in(0.0 to 100000.0 by 100.0), //Attention on veux dans la cadre de la viabilité que les résultats soit sur a 95%  --> seq(5)
+    om_charette aggregate "percentile(om_charette, Seq(5)).head" in(0.0 to 150.0 by 1.0)
+    ),
+  // distribution = Island(10 minutes), // doit durée plus que le temps de calcul
+  stochastic = Stochastic(seed = mySeed, sample = 30)
+) hook (workDirectory / "results_pse_mil_bois_obj3", frequency = 10)
+// dans le fichier "results_pse_mil_bois_obj1" on a mis les résultats de --> percentile(om_stockMil, Seq(5)).head" in(0.0 to 100000.0 by 1000.0) --> c'est bien les sembles du dernier quartile qui sont conservé
+// dans le fichier "results_pse_mil_bois_obj2" on a mis les résultats de --> percentile(om_stockMil, Seq(95)).head" in(0.0 to 100000.0 by 1000.0)
+
+//val env = EGIEnvironment("vo.complex-systems.eu")
+
+val muse = SLURMEnvironment(
+    "delaye",
+    "muse-login.hpc-lr.univ-montp2.fr",
+    // optional parameters
+    partition = "agap_short", // can be agap_short (1h) agap_normal(48h) agap_long(no limit)
+    workDirectory = "/lustre/delaye/openmole",
+    //workDirectory = "/home/delaye/scratch/openmole",
+    sharedDirectory = "/storage/replicated/cirad_users/delaye/openmole",
+    time = 1 hours
+  )
+
+val local = LocalEnvironment(1)
+evolution on muse

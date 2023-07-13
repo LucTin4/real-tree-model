@@ -1,0 +1,46 @@
+// Ce script fait un saltelli sur le mécanisme de surveillance par les eaux et foret
+
+import _file_.M0TreeModel3_wa_moran._
+
+val replications = Replication(
+    evaluation = model, // the model to run
+    seed = mySeed,         // the seed variable
+    sample = 10,           // the number of model executions
+    aggregation = Seq(om_trees aggregate median, om_stockMil aggregate median )
+)
+
+// it's replication how is evaluated in the model
+val sensitivAnalyse = SensitivitySaltelli(
+      evaluation = replications,
+      inputs = Seq(
+          nbSurveillants in (1.0, 20.0),
+          probaDiscu in (1.0, 100.0),
+          probaDenonce in (1.0, 100.0),
+          fréquenceRéu in (1.0, 10.0),
+          qPrésenceBrousse in (0.0, 1.0),
+          tpsAuChamp in (0.0, 100.0),
+          nbProTGMax in (1.0, 100.0)
+          
+        ),
+      outputs = Seq(om_trees, om_stockMil),
+      sample = 70 // 7 parametres x 10 chemins le nombre de trajectoir est r de k+1  campolongo et al. 2007, An effective screening design for sensitivity analysis of large models
+      //level = 10
+    ) hook (workDirectory / "results_saltelli_sreprez_pousse")
+
+
+
+val muse = SLURMEnvironment(
+    "delaye",
+    "muse-login.hpc-lr.univ-montp2.fr",
+    // optional parameters
+    partition = "agap_normal", // can be agap_short agap_normal agap_long
+    workDirectory = "/lustre/delaye/openmole",
+    //workDirectory = "/home/delaye/scratch/openmole",
+    sharedDirectory = "/storage/replicated/cirad_users/delaye/openmole",
+    time = 1 hours
+  )
+
+val local = LocalEnvironment(1)
+//sensitivAnalyse on muse by 20
+
+sensitivAnalyse on muse

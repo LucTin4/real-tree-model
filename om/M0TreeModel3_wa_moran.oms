@@ -1,0 +1,95 @@
+val mySeed = Val[Int]
+val engagésInitiaux = Val[Double]
+val tpsAuChamp = Val[Double]
+val qPrésenceBrousse = Val[Double]
+val fréquenceRéu = Val[Double]
+val participants = Val[Double]
+val nbSurveillants = Val[Double]
+val SPop = Val[Boolean]
+val coordinationRNA = Val[Boolean]
+val nombreBergers = Val[Double]
+val nbCoupeurs = Val[Double]
+val nbProTGMax = Val[Double]
+val probaDiscu = Val[Double]
+val probaDenonce = Val[Double]
+val SReprez = Val[Boolean]
+val nbChampsVisités = Val[Double]
+
+val om_trees = Val[Double]
+val om_charette = Val[Double]
+val om_stockMil = Val[Double]
+val om_underTrees = Val[Double]
+val om_nbCoupe = Val[Double]
+val om_caughtCutter = Val[Double]
+val om_delatMil = Val[Double]
+val om_delatArbres = Val[Double]
+
+val launch = List("setup", "while [ticks <= 8395] [go] ;; You should set your running/stopping criteria here instead")
+            
+val model = NetLogo6Task(
+  workDirectory / "M0-tree-model3-régénération_wa_moran.nlogo",
+  launch,
+  embedWorkspace = false,
+  seed = mySeed
+) set (
+  inputs += (mySeed),
+  outputs += (mySeed),
+  inputs += engagésInitiaux mapped "engagés-initiaux",
+  inputs += tpsAuChamp mapped "tps-au-champ",
+  inputs += qPrésenceBrousse mapped "q-présence-brousse",
+  inputs += fréquenceRéu mapped "fréquence-réu",
+  inputs += participants mapped "participants",
+  inputs += nbSurveillants mapped "nb-surveillants",
+  inputs += SPop mapped "S-pop",
+  inputs += coordinationRNA mapped "coordination-RNA",
+  inputs += nombreBergers mapped "nombre-bergers",
+  inputs += nbCoupeurs mapped "nb-coupeurs",
+  inputs += nbProTGMax mapped "nb-proTG-max",
+  inputs += probaDiscu mapped "proba-discu",
+  inputs += probaDenonce mapped "proba-denonce",
+  inputs += SReprez mapped "S-reprez",
+  outputs += nbChampsVisités mapped "nb-champs-visités",
+  outputs += engagésInitiaux mapped "engagés-initiaux",
+  outputs += tpsAuChamp mapped "tps-au-champ",
+  outputs += qPrésenceBrousse mapped "q-présence-brousse",
+  outputs += fréquenceRéu mapped "fréquence-réu",
+  outputs += participants mapped "participants",
+  outputs += nbSurveillants mapped "nb-surveillants",
+  outputs += SPop mapped "S-pop",
+  outputs += coordinationRNA mapped "coordination-RNA",
+  outputs += nombreBergers mapped "nombre-bergers",
+  outputs += nbCoupeurs mapped "nb-coupeurs",
+  outputs += nbProTGMax mapped "nb-proTG-max",
+  outputs += probaDiscu mapped "proba-discu",
+  outputs += probaDenonce mapped "proba-denonce",
+  outputs += SReprez mapped "S-reprez",
+  
+  outputs += om_trees mapped "nb-arbres",
+  outputs += om_charette mapped "charrette-bois-année",
+  outputs += om_stockMil mapped "stock-mil-g",
+  outputs += om_underTrees mapped "%-under-tree",
+  outputs += om_nbCoupe mapped "nb-coupe",
+  outputs += om_caughtCutter mapped "coupeurs-attrapes",
+  outputs += om_delatMil mapped "DelatMil",
+  outputs += om_delatArbres mapped "delat-Nb-arbres",
+
+  // Default values. Can be removed if OpenMOLE Vals are set by values coming from the workflow
+  //mySeed := 0,
+  //nbSurveillants := 1.0,
+  engagésInitiaux := 9.0,
+  coordinationRNA := true,
+  nombreBergers := 5.0,
+  //probaDiscu := 10.0,
+  SReprez := false,
+  SPop := true,
+  probaDenonce := 50.0,
+  fréquenceRéu := 2.0,
+  //qPrésenceBrousse := 0.2,
+  //nbProTGMax := 25.0,
+  nbCoupeurs := 10.0,
+  participants := 10.0,
+  //tpsAuChamp := 10.0,
+  
+)
+
+model hook display

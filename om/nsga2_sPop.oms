@@ -1,25 +1,26 @@
 import _file_.M0TreeModel3Régénération._
 
 
-val evolution = OSEEvolution(
+
+val evolution = NSGA2Evolution(
   evaluation = model,
   parallelism = 100,
   termination = 100000,
-  origin = Seq(
-    tpsAuChamp  in (20.0 to 80.0 by 10.0),
-    qPrésenceBrousse in (0.2 to 0.8 by 0.2),
-    fréquenceRéu in (1.0 to 5.0 by 0.1),
-    participants in (5.0 to 30.0 by 5.0),
-    probaDiscu in (20.0 to 80.0 by 10.0),
-    probaDenonce in (20.0 to 80.0 by 10.0)
+  genome = Seq(
+    tpsAuChamp  in (0.0, 100.0),
+    qPrésenceBrousse in (0.0, 1.0),
+      fréquenceRéu in (1.0, 10.0),
+      probaDenonce in (0.0, 100.0),
+      probaDiscu in (1.0, 100.0),
+      nbProTGMax in (5.0, 100.0)
   ),
   objective = Seq(
-    om_delatMil under 500.0,
-    om_trees under 1000.0
+    -om_trees,
+    -om_stockMil
     ),
   distribution = Island(10 minutes),
   stochastic = Stochastic(seed = mySeed, sample = 30)
-) hook (workDirectory / "results_ose", frequency = 10)
+) hook (workDirectory / "results_nsga2_sPop", frequency = 10)
 
 
 //val env = EGIEnvironment("vo.complex-systems.eu")
