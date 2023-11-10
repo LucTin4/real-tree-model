@@ -92,53 +92,53 @@ globals [
 ]
 
 patches-own [
-  nbarbresici
-  arbre-ici
-  tree-influence
-  under-tree ; TRUE/FALSE
-  culture ; can be mil or groundnut
-  en-culture
-  rendement-mil-g ; rendement de patch (à calibrer plus tard)
-  rendement-mil-p ; en fagots
-  rendement-groundnuts-g
-  rendement-groundnuts-p
-  id-parcelle ; permet de conservé la structure des parcelles lors de la rotation
-  pas-rotation ; permet de suivre les parcelles qui n'ont pas rotatées ( système de +1)
-  rotation ; TRUE/FALSE qui exclue de la procédure les parcelles ayant déjà rotatées
-  champ-brousse;
-  zoné; TRUE/FALSE utilisé pour définition des zones de jachère
-  zone; 3 zones pour la rotation de la jachère
+  nbarbresici    ; number
+  arbre-ici      ; TRUE/FALSE
+  tree-influence ; TRUE/FALSE
+  under-tree     ; TRUE/FALSE
+  culture        ; Peut être mils ou arachide (mil or groundnut)
+  en-culture     ; TRUE/FALSE
+  rendement-mil-g        ; rendement de patch en graine (compter en kg)
+  rendement-mil-p        ; rendement de patch en plante (compter en fagots)
+  rendement-groundnuts-g ; rendement de patch en graine (compter en kg)
+  rendement-groundnuts-p ; rendement de patch en graine (compter en kg)
+  id-parcelle            ; permet de conservé la structure des parcelles lors de la rotation
+  pas-rotation           ; permet de suivre les parcelles qui n'ont pas tourné ( système de +1)
+  rotation               ; TRUE/FALSE qui exclue de la procédure les parcelles ayant déjà tourné
+  champ-brousse          ; TRUE/FALSE
+  zoné                   ; TRUE/FALSE utilisé pour définition des zones de jachère
+  zone                   ; Id de la zone, 3 zones pour la rotation de la jachère
 ]
 
 
 breed [bergers berger]
 bergers-own [
-  troupeau-nourri ; pour l'instant TRUE/FALSE mais à détailler
-  arbre-choisi
-  nb-têtes ; à calibrer (mais va être difficile
-  nb-ha-b ; entre 3,8 (nouveaux installés 11%) et ~ 5,5 (89% de la pop)
-  stock-fourrage
-  idAgri ; identifiant de mon agriculteur de référence
-  timer-FA
+  troupeau-nourri ; TRUE/FALSE
+  arbre-choisi    ; agent set d'un arbres identifier par le berger (ATTENTION ne débouche sur rien nettoyage)
+  nb-têtes        ; int nombre de tête de bétail en UGBT
+  nb-ha-b         ; entre 3,8 (nouveaux installés 11%) et ~ 5,5 (89% de la pop)
+  stock-fourrage  ; volume de fourrage dont je dispose a travers mon argi de ref.
+  idAgri          ; identifiant de mon agriculteur de référence
+  timer-FA        ; freq de coupe en tick (si 6 = coupe 1 fois tout les 6 j)
 
 ]
 
 breed [coupeurs coupeur]
 coupeurs-own [
-  attrape
-  nb-attrape
-  jours-peur
-  en-coupe
+  attrape    ; TRUE/FALSE
+  nb-attrape ; compteur du nombre de fois ou le coupeur s'est fait attrapé
+  jours-peur ; nombre de tick pendant lesquels le joueur ne vas plus coupé après s'etre fait attrapé
+  en-coupe   ; TRUE/FALSE periode durant laquel le coupeur peut se faire attrapé
 
 ]
 
 breed [agriculteurs agriculteur]
 agriculteurs-own [
-  id-agri ; ce qui le lie à son unique parcelle
-  engagé ; TRUE/FALSE engagement dans la RNA
-  interet-RNA
-  jour-champ
-  nb-ha-a
+  id-agri     ; ce qui le lie à son unique parcelle
+  engagé      ; TRUE/FALSE engagement dans la RNA
+  interet-RNA ; int. score d'interet pour la RNA
+  jour-champ  ; nombre de jour que l'agriulteur passe au champs
+  nb-ha-a     ;
   stock-mil
   idMyBerger
   nb-patches
