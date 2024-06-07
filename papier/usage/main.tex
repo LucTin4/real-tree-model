@@ -195,42 +195,163 @@ Après une validation approfondie du modèle avec les acteurs locaux, dans une d
 
         \textbf{Purpose}
 
+        The peanut basin is facing a loss of soil fertility. Chemical amendments are either unavailable in the area or economically inaccessible for farmers. Therefore, soil fertility depends on two aspects: the presence of livestock in the territory to maintain year-round manure, and the Faedherbia albida trees which play a fundamental role in crop cycles. Indeed, these trees have the unique characteristic of shedding their leaves during the growing season and fixing nitrogen from the air into the soil.
+
+        The model thus aims to evaluate and explore solutions for managing the Faedherbia park to increase their density. The model focuses on exploring so-called community initiatives.
+
         The objective of this study was co-defined with the participants based on their desire to restore trees and biodiversity. According to their perspective, the decline in tree population is strongly linked to individual practices associated with pastoralism. Thus, the aim was to reassess the functioning of their system, the role of "tree cutters," and the optimization of surveillance by comparing community-based surveillance efforts with centralized surveillance conducted by them and the forestry department.\\
 
         Throughout the study, we also examined the role of farmers and agro-pastoralists in the disappearance of trees. It was observed that young tree seedlings are no longer marked and destroyed by animal-drawn tools.
 
         \textbf{Entities, state variables and scales}
-        Nous avons 
-        Les patches
 
-        les bergers
+        The entities in the model are relatively numerous: some are static (trees, plots, and village), while others are in motion (shepherds, farmers, woodcutters, and overseers). 
 
-        les agriculteurs
+        patches : nbarbresici: Number of trees present on this patch; arbre-ici: Indicates if there is a tree on this patch (reference to a specific tree); tree-influence: Influence of the tree on this patch (can represent aspects like shade, nutrients affected by the tree, etc.); under-tree: (TRUE/FALSE) Indicates if the patch is under a tree; culture: Type of crop on this patch (can be millet or groundnut); en-culture: Indicates if the patch is currently used for crops; rendement-mil-g: Yield of millet on the patch in terms of grains (to be calibrated later); rendement-mil-p: Yield of millet on the patch in terms of bundles; rendement-groundnuts-g: Yield of groundnuts on the patch in terms of grains; rendement-groundnuts-p: Yield of groundnuts on the patch in terms of bundles; id-parcelle: Identifies the parcel, allowing the structure of the parcels to be maintained during rotation; pas-rotation: Tracks parcels that have not yet rotated (system of +1); rotation: (TRUE/FALSE) Indicates if the parcel has already undergone rotation; champ-brousse: Indicates if the patch is in bushland; zoné: (TRUE/FALSE) Indicates if the patch is used for defining fallow zones; zone: Indicates to which fallow rotation zone the patch belongs (there are 3 zones for fallow rotation).
 
-        les surveillants
+        Trees : proche-village: Likely unnecessary variable (trees in villages are also pruned); nb-coupes: Number of cuts; nb-jour-coupe: Number of cutting days; age-tree: Age of the tree. Trees have olso a subclass Saplings composed by age: Age in days ; signalé: Reported; rna-coupe: Cut in RNA.
 
-        les arbres (qui peuvent être arbre, pousse)
+
+        farmers : id-agri: Links to the farmer's unique parcel; engagé: TRUE/FALSE engagement in the Assisted natural regeneration (RNA in fr); interet-RNA: Interest in the RNA; jour-champ: Days spent in the field; nb-ha-a: Number of hectares allocated; stock-mil: Stock of millet; idMyBerger: Identifier of the associated shepherd; nb-patches: Number of patches; mon-chp-RNA: Field in the RNA.
+
+
+        hearder : troupeau-nourri: does the herd have enough to eat, currently TRUE/FALSE; arbre-choisi: tree chosen to be cut and fed to animals as fodder ; nb-têtes: herd size for the shepherd ; nb-ha-b: Between 3.8 (newly settled, 11\%) and ~5.5 (89\% of the population); stock-fourrage: Forage stock; idAgri: Identifier of my reference farmer.
+
+        woodcutters : attrape: Captured (TRUE/FALSE); nb-attrape: Number time he was captured; jours-peur: Days of fear after capuration; en-coupe: Currently cutting.
+
+
+        The simulated space, through which the agents interact, represents 100 hectares. It is composed of 1000 spatial entities (patches) with a size of 10 square meters (resolution). It is exclusively agricultural since the inhabited area of the village is condensed into a single point. (The areas that are not cultivated, such as wetlands and pathways, are rare and have not been represented.)
+
+        The irreducible time step is one day (tick). The various elements of the system (interactions, etc.) take into account the seasonality that structures agricultural activities. Every 364 days, a new year begins and the rhythm of the seasons continues. A second time unit can be considered: the year, which consists of seasons. Simulations are generally carried out over 23 years. At the beginning of the simulation, the first 3 years are considered to initialize the model.
+
     
-        \textbf{Process overview and scheduling}
-        \textbf{}
-        \textbf{}
-        \textbf{}
-        \textbf{}
+        \textbf{Process overview and scheduling}\\
+
+        This section provides an overview of the processes and their scheduling within the model. The model is composed of several sub-models that simulate various aspects of the ecosystem and human activities. Each process is organized and executed in a specific sequence to reflect the interactions and dependencies within the system. The following describes repeated procedures that occur at each time step:
+
+        \begin{itemize}
+            \item Harvest and Crop Management
+            \begin{itemize}
+                \item Harvest and stockpiling: Farmers harvest crops and store them in their stockpiles.
+                \item Effect of machinery on unprotected saplings: Machinery used in the fields may damage or destroy unprotected saplings.
+                \item Crop rotation: Farmers rotate crops between different fields to maintain soil fertility and reduce pest buildup.
+            \end{itemize}
+
+            \item Tree Growth and Reproduction
+            \begin{itemize}
+                \item Sprouting: New saplings sprout around mature trees, influenced by tree density and environmental conditions.
+                \item Sapling growth: Saplings grow over time, with growth rates dependent on available resources and environmental factors.
+                \item Aging and death of trees: Trees age and may eventually die due to old age, disease, or other environmental factors.
+            \end{itemize}
+
+            \item Livestock Feeding and Forage Use of Acacias
+            \begin{itemize}
+                \item Feeding livestock with straw: Shepherds feed their livestock with straw collected from the fields.
+                \item Tree cutting: Trees are cut down for forage or other uses by the shepherds.
+                \item Livestock in fallow land and cutting of saplings: Livestock graze in fallow lands, and shepherds may cut down saplings to manage the land.
+            \end{itemize}
+
+            \item Cutting of Saplings by Woodcutters
+            \begin{itemize}
+                \item Detection of saplings: Woodcutters search for and identify saplings that can be cut.
+                \item Cutting of saplings: Once identified, saplings are cut by the woodcutters for use as firewood or other purposes.
+            \end{itemize}
+
+            \item Farmer Engagement
+            \begin{itemize}
+                \item Participation in meetings: Farmers participate in community meetings to discuss agricultural practices and share knowledge.
+                \item Observing the success of neighbors: Farmers observe the practices and successes of their neighbors to learn and adapt.
+                \item Social interaction and motivation: Social interactions among farmers influence their motivation and engagement in community activities.
+                \item Protection of saplings: Farmers take actions to protect saplings from damage by livestock or machinery.
+            \end{itemize}
+
+            \item Surveillance
+            \begin{itemize}
+                \item Surveillance and presence of farmers in the fields (generalized community surveillance): Farmers patrol their fields and monitor for any issues such as pests or unauthorized grazing.
+                \item Delegated community surveillance: Specific individuals or groups are assigned the task of community surveillance to ensure all fields are monitored effectively.
+            \end{itemize}
+        \end{itemize}
 
 
     \subsubsection{Design Concepts}
-        \textbf{Basic principles}
-        \textbf{Objectives}
-        \textbf{Emergence}
-        \textbf{Sensing}
-        \textbf{Interaction}
-        \textbf{Stochasticity}
-        \textbf{Observation}
+        \textbf{Basic principles}\\
+
+        
+
+        \textbf{Objectives}\\
+        \textbf{Adaptation}\\
+        
+        Two agents exhibit adaptive/changing behaviors: the woodcutters and the farmers. The response of the woodcutters to being caught by a sapling protector varies according to the number of times they have been caught previously. Farmers have a score describing their interest in tree protection. This score evolves constantly according to several rules: encountering another engaged farmer, observing the success of a neighbor's protection system, participating in meetings, etc.
+
+        \textbf{Emergence}\\
+        \textbf{Sensing}\\
+        \textbf{Interaction}\\
+
+        The interaction between agents is direct. Woodcutters interact directly with the saplings by cutting them down. Similarly, shepherds interact directly with the trees by utilizing them for forage. Farmers and supervisors also have direct interactions with woodcutters by stopping them from cutting the saplings. Additionally, farmers destroy young saplings that are not protected.
+
+        \begin{itemize}
+            \item \textbf{Woodcutters and Saplings}: Woodcutters seek out saplings and cut them down for use as firewood or other purposes. This direct interaction reduces the number of saplings in the environment.
+            \item \textbf{Shepherds and Trees}: Shepherds interact with trees by feeding their livestock with tree foliage or cutting down trees for forage. This direct interaction affects the tree population and influences the availability of forage resources.
+            \item \textbf{Farmers and Woodcutters}: Farmers interact with woodcutters by attempting to stop them from cutting saplings. When farmers encounter woodcutters in the field, they may intervene to protect the saplings.
+            \item \textbf{Supervisors and Woodcutters}: Supervisors, acting as protectors, also interact directly with woodcutters. They monitor the fields and stop woodcutters from cutting down saplings to ensure the protection of young trees.
+            \item \textbf{Farmers and Unprotected Saplings}: Farmers destroy young saplings that are not protected. This interaction occurs when farmers are working in their fields and come across unprotected saplings, which they remove to prevent interference with their crops.
+        \end{itemize}
+
+        \textbf{Stochasticity}\\
+
+        Many events in the model rely on stochasticity since they are probabilistic. Probability is often used as a frequency measure. This is the case for the movements of farmers in their fields and the probability that farmers will discuss the RNA (Assisted natural regeneration) with each other.
+
+        Stochasticity is used to represent uncertainty, particularly concerning whether supervisors catch woodcutters. Since supervisors do not spend the entire day in a single field, they may visit a field without encountering the woodcutter.
+
+        Finally, randomness is used to create variability in initial conditions. This is the case for the number of heads in different herds, which vary in size, and for the initial age of each tree, resulting in trees of varying ages.
+
+        \begin{itemize}
+            \item Partial Randomness as Uncertainty
+            \begin{itemize}
+                \item Farmer Movements: The movements of farmers within their fields are determined randomly. This means that their location at any given time is based on a probability distribution, ensuring variability in their positions.
+                \item Discussions about RNA: The likelihood that farmers will engage in discussions about the RNA is also probabilistic. This frequency-based probability allows for random interactions among farmers, influencing their engagement with the RNA.
+                \item Supervisors and Woodcutters: The uncertainty in supervisors catching woodcutters is modeled using partial randomness. Supervisors patrol fields but may not always encounter woodcutters due to the random nature of their patrol routes and the woodcutters' activities.
+            \end{itemize}
+
+            \item Randomness for Initial Variability
+            \begin{itemize}
+                \item Herd Sizes: The initial number of heads in each herd is determined randomly, resulting in herds of varying sizes. This introduces variability into the model, reflecting real-world differences in herd sizes.
+                \item Tree Ages: The initial age of each tree is assigned randomly, creating a population of trees with a range of ages. This variability in tree ages ensures a more realistic representation of a forest with trees at different stages of growth.\\
+            \end{itemize}
+        \end{itemize}
+
+        \textbf{Collective actions}\\
+
+        Collective forms emerge with the engagement of farmers in the protection of saplings. The larger the group of engaged farmers, the more likely it is for others to join, and the more assured the group's longevity.
+
+        \begin{itemize}
+            \item Farmer Engagement: As farmers begin to engage in sapling protection, they form groups that work collectively towards this goal.
+            \item Group Growth: The probability of additional farmers joining the group increases with the group's size. This creates a positive feedback loop where the more farmers are engaged, the more likely it is for others to join.
+            \item Group Longevity: The sustainability of the group is enhanced as it grows. A larger group of engaged farmers is more resilient and capable of maintaining their collective efforts over time.\\
+        \end{itemize}
+
+
+        \textbf{Observation}\\
 
     \subsubsection{Details}
-        \textbf{Initialization}
-        \textbf{Input data}
-        \textbf{Submodels}
+        
+        \textbf{Initialization}\\
+        At initialization, the environment is generated with the following steps:
+
+        \begin{itemize}
+            \item Generation of Parcels and Crops: The landscape is divided into parcels, each designated for specific types of crops. This step sets up the agricultural fields and assigns crop types to each parcel.
+            \item Generation of Trees and Their Fertilizing Effects: Trees are distributed throughout the environment, considering their effects on soil fertility. Trees influence the nutrient levels of the patches they occupy, enhancing soil quality in their vicinity.
+            \item Generation of Human Agents: Human agents, including shepherds, woodcutters, farmers, and supervisors, are created and placed in the environment. Each agent type has specific roles and behaviors that contribute to the model's dynamics.
+            \item Generation of the Village: The village is established as a central location where human agents reside. This step involves setting up the village infrastructure and assigning homes to the agents.
+        \end{itemize}
+
+        \textbf{Input data}\\
+
+        We dont use input data.
+
+        \textbf{Submodels}\\
+
+
 
 
 \subsection{Statistical Analysis and Companion Modeling}
