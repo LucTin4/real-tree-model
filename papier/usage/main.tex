@@ -27,7 +27,7 @@
 %%%%%% Title %%%%%%
 % Full titles can be a maximum of 100 characters, including spaces. 
 % Title Format: Use title case, capitalizing the first letter of each word, except for certain small words, such as articles and short prepositions
-\title{From Local Actors to Leaf Protectors: A Collaborative Modeling Approach for Rethinking Tree Management and Protection Measures in Senegal's Groundnut Basin}
+\title{From Local Actors to Leaf Protectors: A Companion Modeling Approach for Rethinking Tree Management and Protection Measures in Senegal's Groundnut Basin}
 
 %%%%%% Authors %%%%%%
 % Authors should be listed in order of contribution to the paper, by first name, then middle initial (if any), followed by last name.
@@ -362,11 +362,28 @@ Our work is grounded in the approach of companion modeling \cite{barreteau_our_2
     Sensitivity analysis comprises a range of techniques that assess how a model responds to variations in its input parameters. These statistical methods aim to quantify the extent to which changes in the inputs influence the variability observed in the outputs. In accordance with the definition provided by Saltelli et al. (2008)\cite{saltelli_global_2008}, sensitivity analysis determines the "relative importance of each input in determining [output] variability." Consequently, these methods often yield a ranking or ordering of the inputs based on their respective sensitivity levels.\\
 
     \subsubsection{Pattern Space Exploration (PSE)}
-    The PSE \cite{cherel_beyond_2015}  method, based on genetic algorythme, is specifically designed to comprehensively cover the output space, resulting in its maximum score in output exploration -- e.g. "explore the output's diversity of a model"\footnote{\url{https://openmole.org/PSE.html}, consulté le 5 juin 2023}. By exploring the output space, the PSE method uncovers new patterns, providing insights into the model's sensitivity by examining the corresponding input values. Unlike calibration-based methods, PSE's effectiveness is influenced by the dimensionality of the output space, as it keeps a record of all the covered locations during exploration. This can become costly when dealing with more than three or four dimensions.
+    The PSE \cite{cherel_beyond_2015}  method, based on genetic algorythme, is specifically designed to comprehensively cover the output space, resulting in its maximum score in output exploration -- e.g. "explore the output's diversity of a model"\footnote{\url{https://openmole.org/PSE.html}, consulté le 5 juin 2023}. By exploring the output space (c.f. fig. \ref{fig:PSE_explained}), the PSE method uncovers new patterns, providing insights into the model's sensitivity by examining the corresponding input values. Unlike calibration-based methods, PSE's effectiveness is influenced by the dimensionality of the output space, as it keeps a record of all the covered locations during exploration.
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\textwidth]{./img/pse_descritption.png}
+        \caption{description of how the “pattern space exploration” genetic algorithm works. We see "p1" and "p2" as input parameters, and "s1" and "s2" as output parameters. The algorithm seeks to reach every cell in the grid of "s1" and "s2" to discover the model's output result domains. A and B and C are outputs of contrasting models}
+        \label{fig:PSE_explained}
+    \end{figure}
+    
 
     In addition, the PSE method usually takes stochasticity into account by estimating selected models using the median of multiple output values obtained from model runs. For our purposes, and as we are in a situation where the results need to be discussed with stakeholders, we have chosen to focus not on the median, but on the last decille. This means that simulations are retained if more than 90\% of the results converge towards the identified output.
 
+    The algorithm's ability to explore a diversity of output forms is extraordinarily powerful in the context of companion modeling. Indeed, participants in co-construction sessions gradually became accustomed to the practice of modeling \cite{etienne_companion_2014}. They developed the ability to interrelate various elements of the system. However, the strength of agent-based modeling lies in the fact that they cannot anticipate emergent phenomena. Once the model has gained sufficient confidence, questioning the group about marginal aspects or unconsidered input parameter sets in the model proves to be extremely fruitful from the perspectives of emancipation and anticipating unforeseeable situations.
+
     \subsubsection{Engaging Stakeholders in Result and Thresholds Discussions}
+
+    Working with participants on the PSE results enabled us to address the final conditions and thus the various configurations of the future. To facilitate this, we organized a feedback workshop during which we presented the simulation outcomes and discussed their implications for the systems they had described.
+
+    Subsequently, we took time for collective reflection during which the participants collaboratively defined the final conditions that seemed particularly compelling to them. This interest was formalized around contrasting models.
+
+    These archetype outputs allowed us to address and clarify situations that were previously unthinkable \cite{banos_simulation_2010}. On figure \ref{fig:PSE_explained}, we can perceive situations A, B, and C as a series of contrasting scenarios for which we will discuss with the participants the configurations that have led to these outcomes. This leads to extremely rich discussions that compel stakeholders to consider these previously unthinkable situations and to collectively discuss the processes for satisfying individual needs regarding the collective inputs.
+
 
 \section{Results}
 
@@ -468,12 +485,22 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
 
     Sur la figure \ref{fig:PSE} on a filtré les résultats qui ont été atteint plus de 4 fois par le modèle pour se concentré sur les situatiuon les plus probable. On constate qu'il y a une relation négative entre la production de mil et la production de bois de chauffe. 
 
-        \begin{figure}[h]
-            \centering
-            \includegraphics[width=\textwidth]{./img/om_pse.png}
-            \caption{Résultat de 33600 évolutions de l'algorithme PSE. Chaque point est un résultat dans l'espace des sorties. La couleur met en évidence le nombre de jeunes pousses protégé par les agriculteurs, et la taille des points donne une idée de la "facilité" pour le modèle à atteindre cet espace. Plus un point est gros, plus le modèle arrive à l'atteindre.}
-            \label{fig:PSE}
-        \end{figure}
+    \begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.85\textwidth}
+           \includegraphics[width=1\linewidth]{./img/om_pse_sPop.png}
+           \caption{}
+           \label{fig:pseSPOP} 
+        \end{subfigure}
+        
+        \begin{subfigure}[b]{0.85\textwidth}
+           \includegraphics[width=1\linewidth]{./img/om_pse_sReprez.png}
+           \caption{}
+           \label{fig:pseSDELEG}
+        \end{subfigure}
+        
+        \caption{PSE results for two different management scenarios: (a) community management and (b) management delegated to an external 'operator'. The size of the points (GA. sample) represents the number of times the algorithm reached this space during its evolution. The color of the points represents the number of young tree saplings that were protected. The x-axis denotes the millet production that was achievable, and the y-axis corresponds to the wood fuel extraction for cooking that was realized in the system. In figure (a), the two numbered squares, 1 and 2, represent the two contrasting situations that were discussed.}\label{fig:PSE}
+    \end{figure}
 
 Viabilité du système 
 
@@ -516,43 +543,43 @@ This work is part of the research and development project DSCATT (Dynamics of So
 \subsection*{Conflicts of Interest}
 The author(s) declare(s) that there is no conflict of interest regarding the publication of this article.
 
-\subsection*{Data Availability}
-A data availability statement is compulsory for all research articles. This statement describes whether and how others can access the data supporting the findings of the paper, including 1) what the nature of the data is, 2) where the data can be accessed, and 3) any restrictions on data access and why.
+% \subsection*{Data Availability}
+% A data availability statement is compulsory for all research articles. This statement describes whether and how others can access the data supporting the findings of the paper, including 1) what the nature of the data is, 2) where the data can be accessed, and 3) any restrictions on data access and why.
 
-If data are in an archive, include the accession number or a placeholder for it. Also include any materials that must be obtained through a Material Transfer Agreements (MTA). 
+% If data are in an archive, include the accession number or a placeholder for it. Also include any materials that must be obtained through a Material Transfer Agreements (MTA). 
 
-\section*{Supplementary Materials}
-Describe any supplementary materials submitted with the manuscript (e.g., audio files, video clips or datasets). 
+% \section*{Supplementary Materials}
+% Describe any supplementary materials submitted with the manuscript (e.g., audio files, video clips or datasets). 
 
-Please group supplementary materials in the following order: materials and methods, figures, tables, and other files (such as movies, data, interactive images, or database files). 
+% Please group supplementary materials in the following order: materials and methods, figures, tables, and other files (such as movies, data, interactive images, or database files). 
 
-\medskip Example:
-Fig. S1. Title of the first supplementary figure.
+% \medskip Example:
+% Fig. S1. Title of the first supplementary figure.
 
-Fig. S2. Title of the second supplementary figure.
+% Fig. S2. Title of the second supplementary figure.
 
-Table S1. Title of the first supplementary table.
+% Table S1. Title of the first supplementary table.
 
-Data file S1. Title of the first supplementary data file.
+% Data file S1. Title of the first supplementary data file.
 
-Movie S1. Title of the first supplementary movie.
+% Movie S1. Title of the first supplementary movie.
 
-\medskip
-Be sure to submit all supplementary materials with the manuscript and remember to reference the supplementary materials at appropriate points within the manuscript. We recommend citing specific items, rather than referring to the supplementary materials in general, for example: ``See Figures S1-S10 in the Supplementary Material for comprehensive image analysis.''
+% \medskip
+% Be sure to submit all supplementary materials with the manuscript and remember to reference the supplementary materials at appropriate points within the manuscript. We recommend citing specific items, rather than referring to the supplementary materials in general, for example: ``See Figures S1-S10 in the Supplementary Material for comprehensive image analysis.''
 
-A link to access the supplementary materials will be provided in the published article.
+% A link to access the supplementary materials will be provided in the published article.
 
-Supplementary Materials may include additional author notes—for example, a list of group authors.
+% Supplementary Materials may include additional author notes—for example, a list of group authors.
 
-\section*{Guidelines for References}
+% \section*{Guidelines for References}
 
-There is only one reference list for all sources cited in the main text, figure and table legends, and Supplementary Materials. Do not include a second reference list in the Supplementary Materials section. Include references cited only in the Supplementary Materials at the end of the reference section of the main text; reference numbering should continue as if the Supplementary Materials are a continuation of the main text. References cited only in the Supplementary Materials section are not counted toward length guidelines.
+% There is only one reference list for all sources cited in the main text, figure and table legends, and Supplementary Materials. Do not include a second reference list in the Supplementary Materials section. Include references cited only in the Supplementary Materials at the end of the reference section of the main text; reference numbering should continue as if the Supplementary Materials are a continuation of the main text. References cited only in the Supplementary Materials section are not counted toward length guidelines.
 
-Authors are responsible for ensuring that the information in each reference is complete and accurate.
+% Authors are responsible for ensuring that the information in each reference is complete and accurate.
 
-DOIs, if available, should be included for each reference.
+% DOIs, if available, should be included for each reference.
 
-Please do not include any extraneous language such as explanatory notes as part of a reference to a given source. The Journal of Remote Sensing prefers that manuscripts do not include end notes; if information is important enough to include, please put into main text.  If you need to include notes, please explain why they are needed in your cover letter to the editor.
+% Please do not include any extraneous language such as explanatory notes as part of a reference to a given source. The Journal of Remote Sensing prefers that manuscripts do not include end notes; if information is important enough to include, please put into main text.  If you need to include notes, please explain why they are needed in your cover letter to the editor.
 
 \printbibliography
 
