@@ -6,7 +6,7 @@
 \usepackage{setspace}
 \usepackage[margin=1.25in]{geometry}
 \usepackage{graphicx}
-\graphicspath{ {./figures/} }
+%\graphicspath{ {./figures/} }
 \usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{lineno}
@@ -89,87 +89,12 @@ La région sahélienne a été le témoin d'une série de sécheresses dévastat
 En 2018, un constat alarmant mettait en lumière le fait que près de 40\% de la population mondiale était exposée aux conséquences de la dégradation des sols (Monique Barbut, Secrétaire exécutive de la Convention des Nations Unies sur la lutte contre la désertification). Dans ce contexte, les enjeux liés à la conservation et à la restauration de la fertilité des sols demeurent cruciaux. 
 C'est dans ce contexte qu'a émergé l'initiative "4 pour 1000" (4p1000) en 2015, une proposition visant à accroître la séquestration du carbone dans les sols agricoles, présentée comme une solution pour améliorer la fertilité des sols et contribuer à l'atténuation du changement climatique \cite{kon_kam_king_soil_2018}.
 
-Ester Boserup (1965) a avancé l'idée que la baisse de la fertilité des sols pousse les agriculteurs à intensifier leurs pratiques. Les travaux antérieurs cherchant à établir des liens entre phénomènes sociaux et pratiques agricoles se sont souvent centrés sur l'intensification. Toutefois, dans le cadre du projet de recherche et développement DSCATT (Dynamique de la Séquestration du Carbone dans les sols des systèmes agricoles Tropicaux et Tempérés), qui s'inscrit dans l'initiative 4p1000, notre objectif était de comprendre les relations qu'entretiennent les populations locales du bassin arachidier sénégalais avec les arbres. Pour ce faire, nous avons examiné les usages des arbres et les pratiques de gestion des populations locales afin de construire un modèle de simulation co-construit: le modèle SAFIRe (Simulation of Agents for Fertility, Integrated Energy, Food security, and Reforestation). Cette approche s'inscrit dans un cadre de Modélisation d'accompagnement (ComMod) \cite{etienne_companion_2014,barreteau_our_2003} et d'Exploration d'accompagnement (ComExp) \cite{delay_comexp_2020} visant à explorer collectivement les futurs possibles pour le territoire.
+Ester Boserup \cite{boserup_conditions_1965} a avancé l'idée que la baisse de la fertilité des sols pousse les agriculteurs à intensifier leurs pratiques. Les travaux antérieurs cherchant à établir des liens entre phénomènes sociaux et pratiques agricoles se sont souvent centrés sur l'intensification. Toutefois, dans le cadre du projet de recherche et développement DSCATT (Dynamique de la Séquestration du Carbone dans les sols des systèmes agricoles Tropicaux et Tempérés), qui s'inscrit dans l'initiative 4p1000, notre objectif était de comprendre les relations qu'entretiennent les populations locales du bassin arachidier sénégalais avec les arbres. Pour ce faire, nous avons examiné les usages des arbres et les pratiques de gestion des populations locales afin de construire un modèle de simulation co-construit: le modèle SAFIRe (Simulation of Agents for Fertility, Integrated Energy, Food security, and Reforestation). Cette approche s'inscrit dans un cadre de Modélisation d'accompagnement (ComMod) \cite{etienne_companion_2014,barreteau_our_2003} et d'Exploration d'accompagnement (ComExp) \cite{delay_comexp_2020} visant à explorer collectivement les futurs possibles pour le territoire.
 
 Dans le contexte de la gestion durable des terres, les options de restauration identifiées par les paysans sont étroitement liées à la surveillance des arbres pour réduire les risques de prédation par les populations avoisinantes. Deux pistes d'exploration ont émergé des échanges avec les communautés locales : l'influence de la surveillance déléguée aux agents des eaux et forêt, ainsi que les conditions de développement du parc arboré lorsque la surveillance reste sous la responsabilité de la population. Cette étude vise à approfondir ces aspects dans le but de contribuer à une meilleure compréhension des pratiques de gestion durable des ressources naturelles et de la biodiversité dans un contexte sahélien en mutation.
 
-% %%%%% Citations in the text %%%%%%
-% \subsection*{Citations}
-% Citations of references in the text should be identified using numbers in square brackets e.g., ``as discussed by Cui \cite{Cui1}'' or ``as discussed elsewhere \cite{Cui1,Ninomiya1,Li1,Wang1,Yang1}.'' All references should be cited within the text and uncited references will be removed. 
-
-% As an example, this template includes a ``sample.bib'' file containing the references in BibTeX.
-
-% %%%%%% Equations %%%%%%
-% \subsection*{Equations}
-% Equations should be provided in a text format, rather than as an image. Equations should be numbered consecutively, in round brackets, on the right-hand side of the page by using the ``\textbackslash begin\{equation\}'' command. They should be referred to as Equation 1, etc. in the main text.
-
-% \medskip For example, see Equation \ref{eq:1} and Equation \ref{eq:2} below.
-% \begin{equation} \label{eq:1}
-%     a^2 + b^2 = c^2
-% \end{equation}
-% \begin{equation} \label{eq:2}
-% \begin{split}
-% A & = \frac{\pi r^2}{2} \\
-%  & = \frac{1}{2} \pi r^2
-% \end{split}
-% \end{equation}
-
-% %%%%%% Figures %%%%%%
-% \subsection*{Figures}
-% Figures should be called out within the text and numbered in the order of their citation in the text. Every figure must have a descriptive title beginning with ``Figure [Number] …'' All figure titles should be either a phrase or a sentence; do not mix the two styles. See Figure \ref{fig:1} for example.
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.5\textwidth]{./img/fig 1}
-%     \caption{This is an example figure.}
-%     \label{fig:1}
-% \end{figure}
-
-% Figures should be displayed on a white background. When preparing figures, consider that they can occupy either a single column (half page width) or two columns (full page width), and should be sized accordingly.
-
-% If a figure consists of multiple panels, they should be ordered logically and labelled with roman letters (i.e., A, B, C, etc.). All labels should be explained in the legend. See Figure \ref{fig:2} for example.
-
-% Upon acceptance, authors will be asked to provide the figures as separate electronic files. At that stage, figures should be supplied as Adobe Portable Document Format (PDF), PostScript (PS), or Encapsulated PostScript (EPS) for illustrations or diagrams; Tagged Image File Format (TIFF), JPEG, PNG, PhotoShop (PSD), EPS, or PDF for photography or microscopy. Bitmap (BMP) images should be of at least 300 dpi resolution, unless due to the limited resolution of a scientific instrument. If a bitmap image has labels, the image and labels should be embedded in separate layers.
-
-% \begin{figure}[h]
-%     \centering
-%     \begin{subfigure}{0.4\textwidth}
-%         \includegraphics[width=0.9\textwidth, height=2in]{./img/fig 1}
-%         \caption{\label{fig:2a}}
-%     \end{subfigure}
-%     \begin{subfigure}{0.4\textwidth}
-%         \includegraphics[width=0.9\textwidth, height=2in]{./img/fig 2}
-%         \caption{\label{fig:2b}}
-%     \end{subfigure}
-%     \caption{This is an example of a figure consisting of multiple panels.     (\subref{fig:2a}) This is the first panel. (\subref{fig:2b}) This is the second panel.}
-%     \label{fig:2}
-% \end{figure}
-
-% %%%%%% Tables %%%%%%
-% \subsection*{Tables}
-% Tables should supplement, not duplicate, the text. They should be called out consecutively within the text and numbered in the order of their citation in the text. 
-
-% Every table must have a descriptive title beginning with ``Table [Number] …'' as noted in Table \ref{tab:1}. If numerical measurements are given, the units should be included in the column heading. Every vertical column should have a heading, followed by a unit of measure (if any) in parentheses. Units should not change within a column. Vertical rules should not be used. 
-
-% Centered headings of the body of the table can be used to break the entries into groups. Do not use footnotes in column heads; include any such details in sentence form in the table legend. Footnotes should contain information relevant to specific cells of the table; use lowercase letters in alphabetical order, as needed: a, b, c, etc. 
-
-% \begin{table}[b]
-%     \caption{This is an example table.}    
-%     \centering
-%     \begin{tabular}{ccc}
-%             \hline
-%             Column 1 & Column 2 & Column 3 \\  
-%             \hline
-%             Cell 1 & Cell 2 & Cell 3\\ 
-%             Cell 4 & Cell 5 & Cell 6 \\
-%             \hline
-%             \end{tabular}
-
-%     \label{tab:1}
-% \end{table}
 
 \section{Materials and Methods}
-
-\section*{Materials and Methods}
 
 The Rio Summit in 1992 marked a significant turning point in the perception of natural resource management. It contributed to the democratization of community-based management, promoting a shift from an authoritarian vision of resource management to more integrated approaches \cite{delay_coming_2022}. This evolution recognized the importance of actively involving local stakeholders in decision-making and the management of their natural environments. However, integrating communities into resource management processes has introduced complex challenges, particularly regarding the co-construction of common representations and understandings of these environments.
 
