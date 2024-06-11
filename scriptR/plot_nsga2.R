@@ -1,26 +1,46 @@
+# Script pour analyser les résultats d'un algorithme génétique NSGA2
+# Auteur : Etienne Delay
+# Date : 11 juin 2024
+
+# Ce script lit un fichier CSV produit par un algorithme génétique NSGA2
+# qui cherche à maximiser le nombre de charrettes de bois sorties du territoire 
+# et le nombre de mil produit. Le script calcule ensuite la médiane des valeurs 
+# d'une colonne donnée et génère un graphique montrant l'évolution des objectifs.
+
+# Charger la bibliothèque nécessaire
 library(ggplot2)
 
+# Définir le répertoire de travail
 setwd("~/github/real-tree-model/data/results_nsga2/")
 
-## Openfiles 
-l.file <- list.files(path = ".")
-
-data.df <- data.frame()
-for(i in l.file){
-  tps <- read.csv(i, header = T)
-  data.df <- rbind(data.df, tps)
+# Fonction pour parser une chaîne de caractères en un vecteur numérique et calculer la médiane
+om_parseur <- function(string) {
+  # Enlever les crochets
+  string <- gsub("\\[|\\]", "", string)
+  # Convertir la chaîne de caractères en vecteur numérique
+  numbers <- as.numeric(unlist(strsplit(string, ",")))
+  # Calculer la médiane
+  median_value <- median(numbers)
+  # Retourner la médiane
+  return(median_value)
 }
 
-## les deux objectif sont maximisé 
-data.df$objective.om_stockMil <- data.df$objective.om_stockMil * -1
-data.df$objective.om_trees <- data.df$objective.om_trees * -1 
+# Lire le fichier CSV
+data.df <- read.csv("population6400.csv", header = TRUE)
 
-ggplot(data = data.df)+
-  geom_point(aes(x = objective.om_trees, y = objective.om_stockMil, colour = evolution.generation))+
-  labs(x = "nombre d'arbres", y = "Stock de Mil", 
+# Inverser les valeurs des deux objectifs pour les maximiser
+data.df$objective.om_stockMil <- data.df$objective.om_stockMil * -1
+data.df$objective.om_charette <- data.df$objective.om_charette * -1 
+
+# Appliquer la fonction om_parseur à toute la colonne 'om_trees'
+data.df$om_trees_med <- sapply(data.df$om_trees, om_parseur)
+
+# Créer un graphique avec ggplot2
+ggplot(data = data.df) +
+  geom_point(aes(x = objective.om_stockMil, y = objective.om_charette, colour = om_trees_med)) +
+  labs(x = "Production de Mil", y = "Production de Bois", 
        title = "Evolution de l'optimum sur un double objectif", subtitle = "Algorithme NSGA2", 
-       colour = "Génération NSGA2")+
+       colour = "Médiane des Arbres") +
   theme_bw()
-ggsave("../../img/om_nsga2_evolution.png", width = 8)  
 
 
