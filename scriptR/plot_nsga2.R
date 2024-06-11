@@ -38,9 +38,11 @@ data.df$om_trees_med <- sapply(data.df$om_trees, om_parseur)
 # Créer un graphique avec ggplot2
 ggplot(data = data.df) +
   geom_point(aes(x = objective.om_stockMil, y = objective.om_charette, colour = om_trees_med)) +
-  labs(x = "Production de Mil", y = "Production de Bois", 
-       title = "Evolution de l'optimum sur un double objectif", subtitle = "Algorithme NSGA2", 
-       colour = "Médiane des Arbres") +
+  geom_vline(xintercept = 54600, linetype = "dashed", color = "black") + # Ajouter une ligne verticale
+  geom_hline(yintercept = 56, linetype = "dashed", color = "black") +  # Ajouter une ligne horizontale
+  labs(x = "Millet prod.", y = "Firewood prod.", 
+       title = "NSGA2 - Evolution of the double objective optimum", subtitle = "30 years of simulations", 
+       colour = "median nb trees\nat end of simulation") +
   theme_bw()
 
 
