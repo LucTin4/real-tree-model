@@ -581,7 +581,7 @@ to go
   update-variables
   update-graph
   update-time
-  export-stuff ;; export views and plots for ComExp
+;  export-stuff ;; export views and plots for ComExp
 
 
   tick
@@ -1414,15 +1414,15 @@ to update-time
 
 end
 
-to export-stuff
-  if day-of-year > 363 [
-    export-view (word "views_exported/"run-seed "_year_" year ".png")
-
-  ]
-  if year = 33 AND day-of-year > 363 [
-    export-plot "nbArbres" (word "plots_exported/"run-seed "_year_" year "_nbarbres.csv")
-  ]
-end
+;to export-stuff
+;  if day-of-year > 363 [
+;    export-view (word "views_exported/"run-seed "_year_" year ".png")
+;
+;  ]
+;  if year = 33 AND day-of-year > 363 [
+;    export-plot "nbArbres" (word "plots_exported/"run-seed "_year_" year "_nbarbres.csv")
+;  ]
+;end
 
 to update-graph
 
@@ -2484,7 +2484,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.3.0
+NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -2889,6 +2889,60 @@ NetLogo 6.3.0
     <enumeratedValueSet variable="tps-au-champ">
       <value value="10"/>
       <value value="80"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="replication_treeKillers" repetitions="30" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="10192"/>
+    <metric>%-under-tree</metric>
+    <metric>coupeurs-attrapes</metric>
+    <metric>age-moy-arb</metric>
+    <metric>nb-arbres</metric>
+    <metric>pouss</metric>
+    <metric>pouss-prot</metric>
+    <metric>pouss-inter-prot</metric>
+    <metric>MoyN-interet-RNA</metric>
+    <metric>nb-engages</metric>
+    <metric>stock-mil-g</metric>
+    <metric>nbTreekilled_hearder</metric>
+    <metric>nbTreekilled_cutter</metric>
+    <metric>nbTreekilled_grower</metric>
+    <enumeratedValueSet variable="engagés-initiaux">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nombre-bergers">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-denonce">
+      <value value="90"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-discu">
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fréquence-réu">
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="q-présence-brousse">
+      <value value="0.7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-proTG-max">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-coupeurs">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RNA">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="participants">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tps-au-champ">
+      <value value="10"/>
+      <value value="30"/>
+      <value value="60"/>
+      <value value="99"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
