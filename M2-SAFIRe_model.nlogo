@@ -740,16 +740,13 @@ to récolte-machine
   ; les pousses sont détruites par les machines si elles ne sont pas signalées (signalé FALSE). Elles sont protégées par la jachère
   ; et sont sauvées à partir d'un certain âge (pousse-sauvée ~ 2 ans)
 
+  let _pousseToBeKilled pousses  with [age < pousse-sauvée]
+  let _pousseNotSignaled _pousseToBeKilled with[signalé = FALSE]
 
-  ask pousses with [age < pousse-sauvée] [
-    if signalé = FALSE [
-    if [culture] of patch-here != "jachère"[
-        let _nbPousseG count pousses with [age < pousse-sauvée]
-        set nbTreekilled_grower nbTreekilled_grower + _nbPousseG
-        die
-      ]
-      ]
-    ]
+  let toKillPousse  count _pousseNotSignaled with [ [culture] of patch-here != "jachère" ]
+
+  set nbTreekilled_grower nbTreekilled_grower + toKillPousse
+
 
 end
 
@@ -823,11 +820,11 @@ to berger-jachère
 
   ask bergers [
     move-to one-of patches with [culture ="jachère"]
-    if not any? agriculteurs with [engagé = TRUE] in-radius 10 [
-      let _myAgriEngage? [engagé] of agriculteurs with[who = [idAgri] of myself]
-      if _myAgriEngage? = FALSE [
+    if not any? agriculteurs with [engagé = true] in-radius 10 [ ; s'il n'y a pas d'agriculteur pour me voire dans un raduis de 10
+      let _myAgriEngage? [engagé] of agriculteurs with[who = [idAgri] of myself] ; est-ce que l'agriculteur qui m'emploi pour garder sont bétail est dans la RNA
+
+      if first _myAgriEngage? = false [   ; s'il n'est pas dans la RNA, je me permet de couper des pousse (sinon je ne coupe pas)
         if any? pousses in-radius 3 [
-          show "coupé"
           let _nbPousseH count pousses in-radius 3
           set nbTreekilled_hearder nbTreekilled_hearder + _nbPousseH
           ask pousses in-radius 3 [die]
@@ -1898,7 +1895,7 @@ SWITCH
 338
 coordination-RNA
 coordination-RNA
-1
+0
 1
 -1000
 
@@ -2093,8 +2090,8 @@ true
 false
 "" ""
 PENS
-"farmer" 1.0 0 -16777216 true "" "plot log nbTreekilled_grower 10"
-"cutter" 1.0 0 -7500403 true "" "plot log nbTreekilled_cutter 10"
+"farmer" 1.0 0 -16777216 true "" "plot nbTreekilled_grower"
+"cutter" 1.0 0 -7500403 true "" "plot nbTreekilled_cutter"
 "pen-2" 1.0 0 -2674135 true "" "plot nbTreekilled_hearder"
 
 @#$#@#$#@
