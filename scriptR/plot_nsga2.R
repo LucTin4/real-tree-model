@@ -36,7 +36,7 @@ extract_number_evol <- function(filename) {
 }
 
 
-filename <- "population7480.csv"
+filename <- "population20030.csv"
 
 # Appliquer la fonction
 number <- extract_number_evol(filename)
@@ -58,7 +58,9 @@ ggplot(data = data.df) +
   geom_hline(yintercept = 56, linetype = "dashed", color = "black") +  # Ajouter une ligne horizontale
   labs(x = "Millet prod.", y = "Firewood prod.", 
        title = paste0("NSGA2 - Evolution of the double objective optimum on ",number," evol."), subtitle = "30 years of simulations", 
-       colour = "median nb trees\nat end of simulation") +
+       colour = "median nb trees\nat end of simu.") +
+  xlim(c(40000,56000))+
+  ylim(c(15,70))+
   theme_bw()
-
+ggsave("../../papier/usage/img/nsga2_millet_firewood.png", width = 6)
 
