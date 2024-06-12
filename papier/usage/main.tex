@@ -1,24 +1,27 @@
+%% pubi
+%% Environmental Management
+%% JASSS
 
 
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{authblk}
-\usepackage{setspace}
-\usepackage[margin=1.25in]{geometry}
+%\usepackage[margin=1.25in]{geometry}
 \usepackage{graphicx}
 %\graphicspath{ {./figures/} }
-\usepackage{subcaption}
-\usepackage{amsmath}
-\usepackage{lineno}
-\usepackage{booktabs}% pour les table depuis R
-\usepackage{makecell}
+\usepackage{subcaption} % Allows the use of subfigures and subcaptions within figures
+%\usepackage{amsmath} % Provides advanced mathematical typesetting features
+\usepackage{lineno} % Enables the inclusion of line numbers in the document
+\usepackage{booktabs} % Enhances the quality of tables, particularly those generated from R
+\usepackage{makecell} % Provides better control over table cell formatting
+
 \linenumbers
 
 %%%%%% Bibliography %%%%%%
 
 \usepackage[
     style=nejm, 
-    citestyle=numeric-comp,
+    citestyle=authoryear-ibid,
     sorting=none, 
     backend=biber]{biblatex}
 
@@ -56,9 +59,6 @@
 % Date is optional
 \date{}
 
-%%%%%% Spacing %%%%%%
-% Use paragraph spacing of 1.5 or 2 (for double spacing, use command \doublespacing)
-\onehalfspacing
 
 \begin{document}
 
@@ -94,6 +94,12 @@ Ester Boserup \cite{boserup_conditions_1965} a avancé l'idée que la baisse de 
 Dans le contexte de la gestion durable des terres, les options de restauration identifiées par les paysans sont étroitement liées à la surveillance des arbres pour réduire les risques de prédation par les populations avoisinantes. Deux pistes d'exploration ont émergé des échanges avec les communautés locales : l'influence de la surveillance déléguée aux agents des eaux et forêt, ainsi que les conditions de développement du parc arboré lorsque la surveillance reste sous la responsabilité de la population. Cette étude vise à approfondir ces aspects dans le but de contribuer à une meilleure compréhension des pratiques de gestion durable des ressources naturelles et de la biodiversité dans un contexte sahélien en mutation.
 
 
+nd The cases also demonstrate that conservation agendas tend to promote preservation of nature without people, particularly without subsistence-oriented populations, despite the claim that they are sensitive to community livelihood needs. 
+
+ Or c'est bien comme ça que les population le vivent, exclue des ressource naturelle par les agens des eaux et forets. (C.f. selfa 2008)
+
+ This “reimagined” localized approach est appeller de ses voeux par Jansujwicz (2021), avec ACARDI et ComMod on coche toutes les cases
+
 \section{Materials and Methods}
 
 The Rio Summit in 1992 marked a significant turning point in the perception of natural resource management. It contributed to the democratization of community-based management, promoting a shift from an authoritarian vision of resource management to more integrated approaches \cite{delay_coming_2022}. This evolution recognized the importance of actively involving local stakeholders in decision-making and the management of their natural environments. However, integrating communities into resource management processes has introduced complex challenges, particularly regarding the co-construction of common representations and understandings of these environments.
@@ -125,7 +131,7 @@ In this section, we will describe the SAFIRe model (Simulation of Agents for Fer
 
         The objective of this study was co-defined with the participants based on their desire to restore trees and biodiversity. According to their perspective, the decline in tree population is strongly linked to individual practices associated with pastoralism. Thus, the aim was to reassess the functioning of their system, the role of "tree cutters," and the optimization of surveillance by comparing community-based surveillance efforts with centralized surveillance conducted by them and the forestry department.\\
 
-        Throughout the study, we also examined the role of farmers and agro-pastoralists in the disappearance of trees. It was observed that young tree seedlings are no longer marked and destroyed by animal-drawn tools.
+        Throughout the study, we also examined the role of farmers and agro-pastoralists in the disappearance of trees. It was observed that young tree seedlings are no longer marked and destroyed by animal-drawn tools.\\
 
         \textbf{Entities, state variables and scales}
 
@@ -146,8 +152,7 @@ In this section, we will describe the SAFIRe model (Simulation of Agents for Fer
 
         The simulated space, through which the agents interact, represents 100 hectares. It is composed of 1000 spatial entities (patches) with a size of 10 square meters (resolution). It is exclusively agricultural since the inhabited area of the village is condensed into a single point. (The areas that are not cultivated, such as wetlands and pathways, are rare and have not been represented.)
 
-        The irreducible time step is one day (tick). The various elements of the system (interactions, etc.) take into account the seasonality that structures agricultural activities. Every 364 days, a new year begins and the rhythm of the seasons continues. A second time unit can be considered: the year, which consists of seasons. Simulations are generally carried out over 23 years. At the beginning of the simulation, the first 3 years are considered to initialize the model.
-
+        The irreducible time step is one day (tick). The various elements of the system (interactions, etc.) take into account the seasonality that structures agricultural activities. Every 364 days, a new year begins and the rhythm of the seasons continues. A second time unit can be considered: the year, which consists of seasons. Simulations are generally carried out over 23 years. At the beginning of the simulation, the first 3 years are considered to initialize the model.\\
     
         \textbf{Process overview and scheduling}\\
 
@@ -198,17 +203,33 @@ In this section, we will describe the SAFIRe model (Simulation of Agents for Fer
 
 
     \subsubsection{Design Concepts}
+
         \textbf{Basic principles}\\
 
-        
+        In their paper \cite{roupsard_how_2020}, a link was established between the presence of \textit{Faidherbia albida} trees and the improvement of crop yields in the region. We have extended this work to calibrate the model on the relationship between these trees and cultivated plants. By engaging with stakeholders on their interactions with plants through food and livestock, we aimed to socially address the paradox of the non-renewal of these trees. Given that the area has been well-documented by agronomists since the establishment of the Niakhar observatory, we were able to collect quantitative data on historical \cite{pieri_fertilite_1989, pelissier_paysans_1966} and contemporary \cite{audouin_chapitre_2018, ba_impact_2018} forms of rural organization. This comprehensive documentation facilitated our understanding and analysis of the agricultural systems and social structures within the region. This work primarily involved adopting a systemic approach as identified by the stakeholders during participatory modeling workshops using the ARDI methodology \cite{etienne_ardi_2011,etienne_companion_2014}.\\
 
-        \textbf{Objectives}\\
+        % Which general concepts, theories, hypotheses, or modeling approaches are underlying the model’s design? Explain the relationship between these basic principles, the complexity expanded in this model, and the purpose of the study.
+
         \textbf{Adaptation}\\
         
-        Two agents exhibit adaptive/changing behaviors: the woodcutters and the farmers. The response of the woodcutters to being caught by a sapling protector varies according to the number of times they have been caught previously. Farmers have a score describing their interest in tree protection. This score evolves constantly according to several rules: encountering another engaged farmer, observing the success of a neighbor's protection system, participating in meetings, etc.
+        Two agents exhibit adaptive/changing behaviors: the woodcutters and the farmers. The response of the woodcutters to being caught by a sapling protector varies according to the number of times they have been caught previously. Farmers have a score describing their interest in tree protection. This score evolves constantly according to several rules: encountering another engaged farmer, observing the success of a neighbor's protection system, participating in meetings, etc.\\
 
         \textbf{Emergence}\\
+
+        %What key results or outputs of the model are modeled as emerging from the adaptive traits, or behaviors, of individuals?
+
+        There are several intriguing elements to examine, such as the emergence at the model level and the enhanced understanding of social and ecological interrelationships and solidarity among the actors. The model emphasizes the significant impact of agriculture (likely due to the introduction of plow-based farming) on the destruction of \textit{Faidherbia albida} saplings (weak emergence). Moreover, a strong emergence is observed when agents are permitted to organize on a community level, as neighbors gradually engage each other in sustaining interest in assisted tree regeneration.
+
+        Highlighting potential long-term trajectories to reach acceptable production volumes should be considered both from the viewpoint of weak emergence within the model, due to its mechanistic processes, and strong emergence, as it drives participants to actively engage and commit to the theme beyond the facilitation process.\\
+
+
         \textbf{Sensing}\\
+
+        %What internal and environmental state variables are individuals assumed to sense and consider in their decisions? 
+
+        The patches within the action radius of the trees will yield more. Agents are capable of perceiving the farmers around them. Shepherds will not cut young saplings if there is a concerned farmer nearby, and the same applies to woodcutters. Farmers, in turn, perceive their neighbors and will interact with them if they have adjacent fields. Through these interactions, they discuss assisted natural regeneration (ANR) to persuade each other to adopt this practice.
+
+
         \textbf{Interaction}\\
 
         The interaction between agents is direct. Woodcutters interact directly with the saplings by cutting them down. Similarly, shepherds interact directly with the trees by utilizing them for forage. Farmers and supervisors also have direct interactions with woodcutters by stopping them from cutting the saplings. Additionally, farmers destroy young saplings that are not protected.
@@ -257,6 +278,19 @@ In this section, we will describe the SAFIRe model (Simulation of Agents for Fer
 
         \textbf{Observation}\\
 
+        % What data are collected from the ABM for testing, understanding, and analyzing it, and how and when are they collected?
+
+        We will monitor several metrics:
+
+        \begin{itemize}
+            \item Millet and Groundnut Production: This indicator tracks the total production of millet and groundnut in the simulation. It helps assess the agricultural output and food security within the modeled environment.
+            \item Number of Trees at Each Development Stage: This metric measures the number of trees at various stages of development, such as saplings, young trees, and mature trees. It provides insight into the growth dynamics and regeneration of the forest.
+            \item Number of Trees Destroyed by Each Type of Agent: This indicator counts the number of trees destroyed by different agents, such as farmers, woodcutters, and livestock. It helps understand the impact of various human and animal activities on the forest.
+            \item Volume of Wood Cut for Cooking: This metric tracks the amount of wood harvested specifically for cooking purposes. It helps assess the pressure on forest resources for domestic energy needs.
+            \item Age of Each Tree Sapling: This indicator measures the age of each sapling in the simulation. It provides information on the regeneration rate and the survival of young trees.
+            \item Number of Farmers Engaged in the RNA: This metric tracks the number of farmers actively participating in the National Agricultural Network (RNA). It helps evaluate the level of community involvement and engagement in agricultural and environmental initiatives.\\
+        \end{itemize}
+
     \subsubsection{Details}
         
         \textbf{Initialization}\\
@@ -271,7 +305,7 @@ In this section, we will describe the SAFIRe model (Simulation of Agents for Fer
 
         \textbf{Input data}\\
 
-        We dont use input data.
+        We dont use input data.\\
 
         \textbf{Submodels}\\
 
@@ -386,7 +420,7 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
 
     \subsection{Patern Space exploration}
 
-    L'algorime de PSE demande à discretiser l'espace des sorties de modèles. Son objectif est alors de criblé la diversité de cet espace des sorties. Nous avons paramétré l'objectif pour qu'il ne conserve comme pertiant que les résultat qui sont atteinte dans 95\% des cas de la simulation. Les paramètre d'entrer -- tabe \ref{tab:PSEparamsPop} -- sont laissé libre pour permettre la recherche.\\
+    The PSE algorithm discretizes the model output space to systematically explore its diversity. We have configured it to retain only the results achieved in 95\% of the simulation cases. The input parameters -- shown in Table \ref{tab:PSEparamsPop} -- are left unrestricted to facilitate this exploration.
     
     \begin{table}
         \centering\begingroup\fontsize{10}{12}\selectfont
@@ -408,7 +442,13 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
         \endgroup{}
     \end{table}
 
-    Sur la figure \ref{fig:PSE} on a filtré les résultats qui ont été atteint plus de 4 fois par le modèle pour se concentré sur les situatiuon les plus probable. On constate qu'il y a une relation négative entre la production de mil et la production de bois de chauffe. 
+    On Figure \ref{fig:PSE}, we observe a negative relationship between millet production and firewood production. That is to say, the more we can harvest firewood, the less we can harvest millet.
+
+    If we then look at the influence of the type of tree surveillance. By comparing the two scenarios, we can see that simulations reaching the numbered spaces 1 and 2 on Figure \ref{fig:pseSPOP}, representing community surveillance, are less present on Figure \ref{fig:pseSDELEG}, which represents the delegated surveillance scenario. Conversely, on Figure \ref{fig:pseSDELEG}, the model tends to easily reach intermediate situations (large, dark blue points).
+
+    The extremes framed in 1 and 2 on Figure \ref{fig:pseSPOP} are associated with a high number of protected seedlings ($nbProTGMax$). This provides indications on the trajectories of the systems.
+
+    In both situations, reducing the harvesting of firewood leads to a higher number of seedlings. In both cases, these situations are reached by simulations where RNA and the diffusion of practices are present in the form of awareness meetings.
 
     \begin{figure}
         \centering
@@ -427,11 +467,16 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
         \caption{PSE results for two different management scenarios: (a) community management and (b) management delegated to an external 'operator'. The size of the points (GA. sample) represents the number of times the algorithm reached this space during its evolution. The color of the points represents the number of young tree saplings that were protected. The x-axis denotes the millet production that was achievable, and the y-axis corresponds to the wood fuel extraction for cooking that was realized in the system. In figure (a), the two numbered squares, 1 and 2, represent the two contrasting situations that were discussed.}\label{fig:PSE}
     \end{figure}
 
-Viabilité du système 
-
  \subsection{Unexpected Yet Attainable: Surprising Results with Minimal Calculations}
 
- Dans le cadre de la co-construction du modèle de simulation, en ayant intégré quelques indicateurs de base, nous avons mis en lumière un problème fondamental qui n'avait jusqu'alors jamais été évoqué par les participants du Living-Lab. En suivant attentivement le suivi du nombre d'arbres coupés, que ce soit par les bergers pour le bétail, par les femmes pour le bois de chauffage, ou encore par les agriculteurs lors de leurs activités agricoles, une tendance surprenante est apparue, comme illustré dans la Figure XX. Il ressort de cette analyse que ce sont les agriculteurs eux-mêmes qui contribuent de manière significative à la destruction d'arbres, bien que leur action soit, dans une certaine mesure, silencieuse. Plus précisément, cette destruction passe souvent inaperçue, car elle se manifeste par le désherbage de très jeunes pousses, effectué par les agriculteurs sans qu'ils en aient pleinement conscience. Cette observation remet en question certaines perceptions antérieures et soulève des questions essentielles quant à la gestion des ressources arborées au sein de la communauté.
+ In the context of the co-construction of the simulation model, by integrating some basic indicators, we highlighted a fundamental issue that had never before been raised by the participants of the Living Lab as a major problem. By closely monitoring the total number of trees cut down, whether by herders for livestock, women for firewood, or farmers during their agricultural activities, a surprising trend emerged for the participants (see fig. \ref{fig:treeKilled}). This analysis revealed that farmers themselves significantly contribute to tree destruction, albeit in a somewhat silent manner. Specifically, this destruction often goes unnoticed because it manifests through the weeding of very young seedlings, carried out by farmers without their full awareness. This result was extensively discussed during the workshop, which allowed for the clarification of farming techniques to ensure that the translation into the model was accurate. This observation challenges some previous perceptions and raises essential questions regarding the management of tree resources within the community.
+
+ \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{./img/rep_treeKilled.png}
+    \caption{Boxplot showing the total number of trees cut down at the end of the simulation by resource user category. It is evident that farmers are responsible for the highest number of trees removed from the system across all categories. These results are based on 30 replications of the same parameter set.}
+    \label{fig:treeKilled}
+\end{figure}
 
 % The results should describe the experiments performed and the findings observed. The results section should be divided into subsections to delineate different experimental themes. 
 % \begin{itemize}
@@ -441,7 +486,39 @@ Viabilité du système
 % \end{itemize}
 
 \section{Discussion}
-Include a Discussion that summarizes (but does not merely repeat) your conclusions and elaborates on their implications. There should be a paragraph outlining the limitations of your results and interpretation, as well as a discussion of the steps that need to be taken for the findings to be applied. Please avoid claims of priority. 
+
+The work we have carried out throughout the process allows us to discuss two dimensions: \textit{i)} the elements of the numerical results directly derived from the model co-constructed with the participants, and \textit{ii)} the transformative impact of the discussions that took place during the process, which have begun to change behaviors.
+
+He et al 2020 les bénéfice d'impliquer les popoulation locale dans la gestion de la nature
+ - c'est vrai en europe Obradović et al 2022
+ - it is necessary for conservation to consider the use of natural resources from a systematic view by linking the natural resource use of the local community to conservation (selfa 2008) and The cases also demonstrate that conservation agendas tend to promote preservation of nature without people, particularly without subsistence-oriented populations, despite the claim that they are sensitive to community livelihood needs. 
+
+ Or c'est bien comme ça que les population le vivent, exclue des ressource naturelle par les agens des eaux et forets.
+ 
+
+\subsection{Discussion des résultats du modèle}
+
+\begin{itemize}
+    \item Analyse de Sensibilité : L'analyse de sensibilité globale montre que, dans un scénario de surveillance communautaire, la probabilité de discuter de l'importance des arbres joue un rôle crucial tant pour la production de mil ($0.72$) que pour le nombre total d'arbres ($0.59$). Cela indique que les discussions et la sensibilisation au sein de la communauté sont essentielles pour la gestion des ressources arborées.
+    \item Influence de la Surveillance Déléguée : Dans un scénario où la surveillance est effectuée par un agent des eaux et forêts, la dynamique change. Le temps passé au champ et la probabilité de discuter de la préservation des arbres restent des paramètres influents, mais d'autres facteurs, comme le nombre de surveillants, prennent également de l'importance. La fréquence des réunions et la probabilité de dénoncer un coupeur ont une influence réduite, suggérant que la surveillance déléguée modifie les dynamiques de gestion communautaire.
+    \item Exploration de l'Espace de Modèles (PSE) : L'exploration PSE révèle une relation négative entre la production de mil et la production de bois de chauffage. Les simulations atteignant les extrêmes indiquent que la réduction de la récolte de bois de chauffage favorise un plus grand nombre de jeunes plants protégés. Les résultats montrent également que la sensibilisation et la diffusion des pratiques par le biais de réunions de sensibilisation sont présentes dans les simulations les plus efficaces.
+\end{itemize}
+
+\subsection{La porté tranformatice de la modélisation d'accompagnement}
+
+\begin{itemize}
+    \item mise en lumière des solutions réel et de leurs implications (surveillance communautaire améliore l'un ou l'autre des objectifs)
+    \item Identification de Problèmes Cachés : En intégrant des indicateurs de base dans le modèle, nous avons mis en lumière un problème fondamental que les participants du Living Lab n'avaient jamais considéré comme majeur : l'impact significatif des agriculteurs sur la destruction des arbres. Cette destruction passe souvent inaperçue car elle se manifeste par le désherbage des jeunes pousses, une action que les agriculteurs ne perçoivent pas toujours comme une menace pour les ressources arborées.
+    \item Clarification des Techniques Agricoles : La discussion de ces résultats pendant l'atelier a permis de clarifier les techniques agricoles et de s'assurer que leur traduction dans le modèle était fidèle à la réalité. Cela a renforcé la pertinence et la précision du modèle, tout en améliorant la compréhension des participants sur les dynamiques en jeu.
+    
+\end{itemize}
+
+\subsection{perspectives}
+
+\begin{itemize}
+    \item on peut également se posé la question de la mise en pépinière d'arbre pour essayer d'atteindre la fertilité
+    \item il faudrait trouver des mettrique qui permette d'identifier les grand changement dans les dynamique du modèle (mathas et al.)
+\end{itemize}
 
 \section*{Acknowledgments}
 
@@ -455,9 +532,9 @@ Describe contributions of each author to the paper, using the first initial and 
 
 ``E. Delay and L. Broutin animate multi-actor focus groups.''
 
-``E. Delay conducte the HPC exploration.''
+``E. Delay assisted L. Broutin in the development of the model and conducte the HPC exploration.''
 
-``E. Delay and L. Broutin realize the first draft of this manuscript.''
+``E. Delay realize the first draft of this manuscript.''
 
 ``All authors contributed equally to 2nd version of the manuscript.''
 
