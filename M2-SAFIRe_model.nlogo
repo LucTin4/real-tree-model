@@ -2929,7 +2929,7 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="nb-coupeurs">
       <value value="10"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="RNA">
+    <enumeratedValueSet variable="coordination-RNA">
       <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="participants">
