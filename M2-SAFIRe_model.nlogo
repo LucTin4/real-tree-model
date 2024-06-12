@@ -747,6 +747,7 @@ to récolte-machine
 
   set nbTreekilled_grower nbTreekilled_grower + toKillPousse
 
+  ask _pousseNotSignaled with [ [culture] of patch-here != "jachère" ][die]
 
 end
 
