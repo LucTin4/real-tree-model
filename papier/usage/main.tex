@@ -6,7 +6,7 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{authblk}
-\usepackage[margin=1.25in]{geometry}
+%\usepackage[margin=1.25in]{geometry}
 \usepackage{graphicx}
 \usepackage{subcaption} % Allows the use of subfigures and subcaptions within figures
 %\usepackage{amsmath} % Provides advanced mathematical typesetting features
@@ -14,7 +14,7 @@
 \usepackage{booktabs} % Enhances the quality of tables, particularly those generated from R
 \usepackage{makecell} % Provides better control over table cell formatting
 \usepackage{hyperref} % Combined with biblatex it create link with biblio
-
+\usepackage{placeins}
 \linenumbers
 
 %%%%%% Bibliography %%%%%%
@@ -322,6 +322,7 @@ Our work is grounded in the approach of companion modeling \parencite{barreteau_
         \caption{description of how the “pattern space exploration” genetic algorithm works. We see "p1" and "p2" as input parameters, and "s1" and "s2" as output parameters. The algorithm seeks to reach every cell in the grid of "s1" and "s2" to discover the model's output result domains. A and B and C are outputs of contrasting models}
         \label{fig:PSE_explained}
     \end{figure}
+    \FloatBarrier
     
 
     In addition, the PSE method usually takes stochasticity into account by estimating selected models using the median of multiple output values obtained from model runs. For our purposes, and as we are in a situation where the results need to be discussed with stakeholders, we have chosen to focus not on the median, but on the last decille. This means that simulations are retained if more than 90\% of the results converge towards the identified output.
@@ -366,6 +367,8 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
         
         \begin{table}[ht]
             \centering
+            \hspace*{-1cm}
+            \small
             \begin{minipage}{.45\linewidth}
                 \centering
                 \begingroup\fontsize{10}{12}\selectfont
@@ -388,6 +391,7 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
             \end{minipage}\hfill
             \begin{minipage}{.45\linewidth}
                 \centering
+                \small
                 \begingroup\fontsize{10}{12}\selectfont
                 \begin{tabular}[]{lll}
                     \toprule
@@ -443,7 +447,7 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
 
     In both situations, reducing the harvesting of firewood leads to a higher number of seedlings. In both cases, these situations are reached by simulations where RNA and the diffusion of practices are present in the form of awareness meetings.
 
-    \begin{figure}
+    \begin{figure}[h]
         \centering
         \begin{subfigure}[b]{0.85\textwidth}
            \includegraphics[width=1\linewidth]{./img/om_pse_sPop.png}
@@ -459,6 +463,7 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
         
         \caption{PSE results for two different management scenarios: (a) community management and (b) management delegated to an external 'operator'. The size of the points (GA. sample) represents the number of times the algorithm reached this space during its evolution. The color of the points represents the number of young tree saplings that were protected. The x-axis denotes the millet production that was achievable, and the y-axis corresponds to the wood fuel extraction for cooking that was realized in the system. In figure (a), the two numbered squares, 1 and 2, represent the two contrasting situations that were discussed.}\label{fig:PSE}
     \end{figure}
+    \FloatBarrier
 
  \subsection{Unexpected Yet Attainable: Surprising Results with Minimal Calculations}
 
@@ -470,6 +475,7 @@ Following this, we conducted a Pattern Space Exploration (PSE) to identify the s
     \caption{Boxplot showing the total number of trees cut down at the end of the simulation by resource user category. It is evident that farmers are responsible for the highest number of trees removed from the system across all categories. These results are based on 30 replications of the same parameter set.}
     \label{fig:treeKilled}
 \end{figure}
+\FloatBarrier
 
 % The results should describe the experiments performed and the findings observed. The results section should be divided into subsections to delineate different experimental themes. 
 % \begin{itemize}
