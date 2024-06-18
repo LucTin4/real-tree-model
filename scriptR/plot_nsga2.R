@@ -13,7 +13,7 @@ rm(list = ls())
 library(ggplot2)
 
 # Définir le répertoire de travail
-setwd("~/github/real-tree-model/data/resultats_nsga2/")
+setwd("~/github/real-tree-model/data/resultats_nsga2_sDeleg/")
 
 # Fonction pour parser une chaîne de caractères en un vecteur numérique et calculer la médiane
 om_parseur <- function(string) {
@@ -36,7 +36,7 @@ extract_number_evol <- function(filename) {
 }
 
 
-filename <- "population20030.csv"
+filename <- "population87230.csv"
 
 # Appliquer la fonction
 number <- extract_number_evol(filename)
@@ -57,10 +57,10 @@ ggplot(data = data.df) +
   geom_vline(xintercept = 54600, linetype = "dashed", color = "black") + # Ajouter une ligne verticale
   geom_hline(yintercept = 56, linetype = "dashed", color = "black") +  # Ajouter une ligne horizontale
   labs(x = "Millet prod.", y = "Firewood prod.", 
-       title = paste0("NSGA2 - Evolution of the double objective optimum on ",number," evol."), subtitle = "30 years of simulations", 
+       title = paste0("NSGA2 - Evolution of the double objective optimum on ",number," evol."), subtitle = "30 years of simulations under delegated supervision", 
        colour = "median nb trees\nat end of simu.") +
   xlim(c(40000,56000))+
-  ylim(c(15,70))+
+  ylim(c(10,70))+
   theme_bw()
-ggsave("../../papier/usage/img/nsga2_millet_firewood.png", width = 6)
+ggsave("../../papier/usage/img/nsga2_sDeleg_millet_firewood.png", width = 6)
 
