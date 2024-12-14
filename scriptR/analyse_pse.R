@@ -99,7 +99,13 @@ ggplot()+
        y = "Firewood prod.",
        colour="Nb of saplings\nprotected", 
        size="GA. samples")+
-  xlim(40000,55000)+
-  ylim(0,50)+
+  xlim(40000,56000)+
+  ylim(0,60)+
+  geom_hline(yintercept = 56, linetype = "dashed", color = "black", linewidth = 0.5) +
+  geom_vline(xintercept = 54600, linetype = "dashed", color = "black", linewidth = 0.5) +
+  geom_label(data = NULL, aes(x = 40000, y = 58, label = "a"), 
+             color = "white", fill = "black", size = 5, label.size = 0) + # "a" dans un cercle noir
+  geom_label(data = NULL, aes(x = 55000, y = 5, label = "b"), 
+             color = "white", fill = "black", size = 5, label.size = 0) + # "b" dans un cercle noir
   theme_bw()
 ggsave("../img/om_pse_bothSurveillance.png")
